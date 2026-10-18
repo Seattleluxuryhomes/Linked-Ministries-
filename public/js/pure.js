@@ -69,6 +69,33 @@ export const REPORT_REASONS = {
   other: "Something else",
 };
 
+/* the ministry's own public page (/m/<slug>): what its lead reads about it. "Public" only when it is. */
+export const PAGE_STATUS = {
+  draft: "A draft. Only your ministry can see it.",
+  waiting: "Waiting for a person at Linked Ministries to read it.",
+  sent_back: "A person at Linked Ministries sent your page back with a note. Change it and send it again.",
+  approved: "A person at Linked Ministries read your page. Anyone can see it.",
+  changes_waiting: "Your page is public. Your changes are waiting for a person at Linked Ministries to read them. Until then, people see the page as it was.",
+  changes_draft: "Your page is public. You have changes that are not sent yet. People see the page as it was.",
+  ministry_waiting: "Your page will be public after a person at Linked Ministries reads your ministry.",
+};
+export const MEET_DAYS = ["Every day", "Sundays", "Mondays", "Tuesdays", "Wednesdays", "Thursdays", "Fridays", "Saturdays", "Weekdays", "Weekends", "First of the month", "Once a month"];
+export const PAGE_LIMITS = { tagline: 140, about: 3000, meets: 8, photos: 2, photoBytes: 1572864 };
+
+/* dollars from whole cents, the way a person reads them: 123456 -> "$1,234.56". Money is only ever whole cents; never a float. */
+export function money(cents) {
+  const n = BigInt(cents == null || cents === "" ? 0 : cents), neg = n < 0n, a = neg ? -n : n;
+  const d = (a / 100n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","), c = (a % 100n).toString().padStart(2, "0");
+  return `${neg ? "-" : ""}$${d}.${c}`;
+}
+/* "1,234.56" or "20" -> whole cents, or null when it is not an amount (more than two decimals, a sign, letters) */
+export function parseCents(v) {
+  const t = String(v == null ? "" : v).trim().replace(/^\$/, "").replace(/,/g, "");
+  if (!/^\d{1,9}(\.\d{1,2})?$/.test(t)) return null;
+  const [d, c = ""] = t.split(".");
+  return Number(d) * 100 + Number((c + "00").slice(0, 2));
+}
+
 /* every sentence the pages say by themselves; the tests read all of them */
 export const WORDS = {
   joinTitle: "Join the network",
@@ -198,4 +225,47 @@ export const WORDS = {
   reportDecideHelp: "Say why, in plain words. If you close the post, its poster reads this note.",
   reportClose: "Close the post",
   reportKeep: "Keep the post",
+  pageTitle: "Your public page",
+  pageLead: "A page of your own at linkedm.org. You fill in one form. A person at Linked Ministries reads it before anyone sees it.",
+  pageStart: "Make your page",
+  pageEdit: "Change your page",
+  pageView: "See how it looks",
+  pageSave: "Save as a draft",
+  pageSend: "Send to be read",
+  pageSaved: "Saved as a draft. Only your ministry can see it.",
+  pageSent: "Sent. It is waiting for a person at Linked Ministries to read it.",
+  pageNoChange: "Nothing has changed since the page that is public.",
+  pageTagline: "One line about your ministry",
+  pageTaglineHelp: "Up to 140 letters. It shows under your name.",
+  pageAbout: "About your ministry",
+  pageAboutHelp: "Your own words. Who you are, who you serve, and how a person can help. This is public.",
+  pageMeets: "When and where you meet",
+  pageMeetsHelp: "Add a row for each time. Leave it empty if you do not meet.",
+  pageDay: "Day",
+  pageTime: "Time",
+  pagePlace: "Place",
+  pageAddRow: "Add a time",
+  pageRemoveRow: "Remove this row",
+  pageReach: "How to reach you",
+  pageReachHelp: "Each one is optional. It is public. It is not your private email for answers.",
+  pageEmail: "Email",
+  pagePhone: "Phone",
+  pageWebsite: "Website",
+  pageGive: "Where gifts to your ministry go",
+  pageGiveHelp: "A link you give us, to your own way of taking gifts. It shows as a Give button only when Linked Ministries has opened its giving door. Linked Ministries never touches these gifts.",
+  pagePhotos: "Pictures",
+  pagePhotosHelp: "One or two. A JPEG or a PNG, 1.5 MB or smaller. Where a picture was taken is taken out of it.",
+  pagePhotoAdd: "Add a picture",
+  pagePhotoAlt: "Say what is in the picture",
+  pagePhotoRemove: "Remove this picture",
+  pageVerse: "A verse for your page (optional)",
+  pageVerseNone: "No verse",
+  pageAddress: "Your page address",
+  pageAddressHelp: "You can change it once, before your page is public. Then it stays.",
+  pageAddressLocked: "This address is final.",
+  pageNeedMinistryRead: "A person at Linked Ministries must read your ministry first. Then your page can go public.",
+  pageNameNote: "Your ministry's name and city show on the board. If you change either one, a person reads your ministry again, and your page and posts come off the site until then.",
+  stewardPages: "Pages",
+  stewardPageChange: "A change to a page that is public",
+  stewardPageNew: "A new page",
 };

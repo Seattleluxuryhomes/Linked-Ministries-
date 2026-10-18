@@ -3,11 +3,42 @@
    A screen mirrors the database's decision; it is never the mechanism. */
 
 /* ---- THE ONE PLACE THE FOUNDER EDITS ----------------------------------------------------------------------------------------
-   The line at the bottom of every page about the nonprofit corporation. When the application for 501(c)(3) recognition is
-   filed, change FILING_STATUS here and nowhere else. Say only what is true on the day: no word about taxes or gifts. */
-export const FORMED = false; /* true on the day the Washington Secretary of State confirms the articles */
-export const FILING_STATUS = "not yet filed";
+   Three true-or-false facts about the corporation, and the date of one letter. A developer changes them on the day each becomes
+   true, and nowhere else; every page and every receipt reads them from here.
+     FORMED          true on the day the Washington Secretary of State confirms the articles
+     APPLIED_501C3   true on the day the application for 501(c)(3) recognition is filed with the IRS
+     IRS_LETTER_DATE the date on the IRS letter, as YYYY-MM-DD, and only when a letter has come ("" until then)
+   Until IRS_LETTER_DATE is set, no page and no email says a gift is deductible, and nothing says "tax-deductible" or "write-off"
+   at all. Once it is set, only the IRS's own sentence (IRS_PHRASE) says so, and a lawyer checks it against the letter. */
+export const FORMED = false;
+export const APPLIED_501C3 = false;
+export const IRS_LETTER_DATE = "";
+export const FLAGS = Object.freeze({ FORMED, APPLIED_501C3, IRS_LETTER_DATE });
+
+/* the footer line (the founder's own sentence, with a legal name in it: the one sentence allowed over grade 8) */
+export const FILING_STATUS = APPLIED_501C3 ? "filed" : "not yet filed";
 export const NONPROFIT_LINE = `Linked Ministries is ${FORMED ? "a Washington nonprofit corporation" : "forming as a Washington nonprofit corporation"}; its application for 501(c)(3) recognition is ${FILING_STATUS}.`;
+
+const MONTHS_ = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const letterDay = (d) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(d || "")); return m ? `${MONTHS_[Number(m[2]) - 1]} ${Number(m[3])}, ${m[1]}` : ""; };
+
+/** the status line on /giving: what is true today about the corporation and the IRS, and no more */
+export function statusLine(flags = FLAGS) {
+  const body = flags.FORMED ? "Linked Ministries is a Washington nonprofit corporation." : "Linked Ministries is forming as a Washington nonprofit corporation.";
+  if (flags.IRS_LETTER_DATE && letterDay(flags.IRS_LETTER_DATE)) return `${body} Linked Ministries is recognized under 501(c)(3), letter dated ${letterDay(flags.IRS_LETTER_DATE)}.`;
+  if (flags.APPLIED_501C3) return `${body} Linked Ministries has applied for 501(c)(3) status.`;
+  return `${body} Linked Ministries has not applied for 501(c)(3) status yet.`;
+}
+
+/** the one sentence a receipt says about the donor's gift. Before the IRS letter it says only what a receipt is. */
+export function receiptStatusLine(flags = FLAGS) {
+  if (flags.IRS_LETTER_DATE && letterDay(flags.IRS_LETTER_DATE)) return `Linked Ministries is recognized under 501(c)(3), letter dated ${letterDay(flags.IRS_LETTER_DATE)}. ${IRS_PHRASE}`;
+  if (flags.APPLIED_501C3) return "Linked Ministries has applied for 501(c)(3) status; this receipt is a record of your gift.";
+  return "Linked Ministries has not applied for 501(c)(3) status yet; this receipt is a record of your gift.";
+}
+
+/** The IRS's own sentence from its determination letter. Shown only when IRS_LETTER_DATE is set. A lawyer checks it against the letter. */
+export const IRS_PHRASE = "Donors may deduct contributions to you as provided in section 170 of the Code.";
 
 /* the database raises a short code (the message) and, for most, a hint in words; [status, words] when there is no hint */
 const REFUSALS = {
@@ -42,6 +73,12 @@ const REFUSALS = {
   contact_required: [400, "An email address is needed."],
   decision_not_known: [400, "Choose close the post, or keep it."],
   no_such_report: [404, "That report was not found."],
+  no_such_page: [404, "That page was not found."],
+  slug_taken: [409, "Another ministry has that address. Pick a different one."],
+  slug_locked: [409, "The address cannot change once the page has been public."],
+  slug_edited_once: [409, "The address can be changed once before the page is public. That one change is used."],
+  too_many_photos: [409, "A page holds two pictures at most."],
+  photo_not_found: [422, "That picture was not found. Add it again."],
 };
 
 /** Map a thrown error to { status, body } for the API. Never leaks a stack, a table name or a value. */

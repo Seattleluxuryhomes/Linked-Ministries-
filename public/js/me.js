@@ -2,6 +2,7 @@
    forms to post an ask or a give. A post says "On the board" only when a person at Linked Ministries has read it and the
    server says it is public; until then it says it is waiting. */
 import { h, get, post, msg, field, text, busy, ministryForm, postForm, toSignIn } from "/js/common.js";
+import { pageCard, pageForm } from "/js/page.js";
 import { WORDS, KIND, POST_STATUS, MINISTRY_STATUS, CLOSE_REASON, categoryLabel, dateWords } from "/js/pure.js";
 
 const app = document.getElementById("app");
@@ -9,14 +10,15 @@ let flash = null;          // one message shown at the top, from the last thing 
 let composer = null;       // the post form that is open, if any
 let editingProfile = false;
 let confirmingDelete = false;
+let editingPage = false;
 
 async function load() {
   const meR = await get("/api/me");
   if (!meR.ok || !meR.data.signed_in) return toSignIn("/me");
   const me = meR.data;
   if (!me.ministry) return location.assign("/join");
-  const [postsR, answersR, teamR] = await Promise.all([get("/api/my/posts"), get("/api/answers"), get("/api/team")]);
-  render(me, postsR.data.posts || [], answersR.data || { received: [], sent: [] }, teamR.data || { people: [], invites: [] });
+  const [postsR, answersR, teamR, pageR] = await Promise.all([get("/api/my/posts"), get("/api/answers"), get("/api/team"), get("/api/page")]);
+  render(me, postsR.data.posts || [], answersR.data || { received: [], sent: [] }, teamR.data || { people: [], invites: [] }, pageR.data || { exists: false });
 }
 
 function say(words, ok) { flash = { words, ok }; }
@@ -28,7 +30,7 @@ async function act(button, path, body, okWords) {
   });
 }
 
-function render(me, posts, answers, team) {
+function render(me, posts, answers, team, pg) {
   const m = me.ministry;
   const parts = [];
   parts.push(h("div", { class: "row between" }, h("h1", {}, m.name), h("span", { class: "status" + (m.status === "public" ? " public" : "") }, m.status === "public" ? "Read" : m.status === "sent_back" ? "Sent back" : "Waiting")));
@@ -42,6 +44,10 @@ function render(me, posts, answers, team) {
     h("button", { class: "btn", type: "button", on: { click: () => { composer = { kind: "ask" }; load(); } } }, WORDS.postAsk),
     h("button", { class: "btn", type: "button", on: { click: () => { composer = { kind: "give" }; load(); } } }, WORDS.postGive)));
   if (composer) parts.push(composerForm(me, posts, composer));
+
+  /* the ministry's own public page */
+  parts.push(h("div", { class: "sectionhead" }, h("h2", {}, WORDS.pageTitle)));
+  parts.push(editingPage && me.lead ? pageForm(me, pg, { onDone: (w) => { editingPage = false; say(w, true); load(); }, onCancel: () => { editingPage = false; load(); } }) : pageCard(me, pg, { onEdit: () => { editingPage = true; load().then(() => document.querySelector("[data-page-form]") && document.querySelector("[data-page-form]").scrollIntoView()); } }));
 
   /* posts */
   parts.push(h("div", { class: "sectionhead" }, h("h2", {}, WORDS.yourPosts), posts.length ? h("span", { class: "count-pill" }, posts.length === 1 ? "1 post" : `${posts.length} posts`) : null));

@@ -24,7 +24,7 @@ export function cleanFilters(q = {}) {
 
 const esc = (w) => w.replace(/[\\%_]/g, (c) => "\\" + c);
 const COLS = `p.id, p.kind, p.category, p.title, p.body, p.city, p.state, to_char(p.open_until, 'YYYY-MM-DD') as open_until,
-  to_char(p.approved_at at time zone 'utc', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as posted_at, m.name as ministry, m.city as ministry_city, m.state as ministry_state`;
+  to_char(p.approved_at at time zone 'utc', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as posted_at, m.name as ministry, m.city as ministry_city, m.state as ministry_state, lm.page_slug_of(m.id) as page_slug`;
 
 /** public posts, newest first. Returns { posts, total, page, pages, filters } */
 export async function boardQuery(input = {}, { limit = PAGE_SIZE } = {}) {

@@ -128,7 +128,7 @@ ok((await sam.post(`/api/steward/posts/${pid}/review`, { decision: "approve" }))
 const other = alex; // a second post stays waiting
 const board = (await anon.get("/api/board")).json;
 ok(board.total === 1 && board.posts.length === 1 && board.posts[0].id === pid && board.posts[0].ministry === "Alpha Table Ministry" && board.posts[0].ministry_city === "Seattle", "the board now lists the one approved post, with the ministry's name and city", board.posts);
-ok(Object.keys(board.posts[0]).sort().join() === "body,category,city,id,kind,ministry,ministry_city,ministry_state,open_until,posted_at,state,title", "and only the public fields: no contact, no note, no reader", Object.keys(board.posts[0]));
+ok(Object.keys(board.posts[0]).sort().join() === "body,category,city,id,kind,ministry,ministry_city,ministry_state,open_until,page_slug,posted_at,state,title", "and only the public fields: no contact, no note, no reader", Object.keys(board.posts[0]));
 ok(!JSON.stringify(board).match(/answers@alpha|alex@alpha|contact|review_note|approved_by/), "no address and no name of a person is in the public answer");
 const one = await anon.get("/api/board/" + pid); ok(one.status === 200 && one.json.post.title === "Ten folding tables, please", "a public post has a public address");
 const html = (await anon.get("/board")).text, front = (await anon.get("/")).text;

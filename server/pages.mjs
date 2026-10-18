@@ -27,7 +27,7 @@ export const ART = `<svg class="art" viewBox="0 0 480 400" fill="none" aria-hidd
 /* a quiet picture for a board with nothing on it yet: an empty tray with the two rings above it */
 export const ART_EMPTY = `<svg class="art-empty" viewBox="0 0 160 110" fill="none" aria-hidden="true"><path d="M20 70h34l6 12h40l6-12h34v28a8 8 0 0 1-8 8H28a8 8 0 0 1-8-8z" stroke="#1b2430" stroke-width="2.5" stroke-linejoin="round" fill="#ffffff"/><circle cx="68" cy="38" r="22" stroke="#1b2430" stroke-width="5"/><circle cx="92" cy="38" r="22" stroke="#d97706" stroke-width="5"/><path d="M83 57A22 22 0 0 1 72 55" stroke="#ffffff" stroke-width="9"/><path d="M82.5 56.9A22 22 0 0 1 72.7 55.2" stroke="#1b2430" stroke-width="5"/></svg>`;
 
-export function layout({ title, description, body, script, nav = "", base = "", path = "", noindex = false, notice = "", ogTitle = "" }) {
+export function layout({ title, description, body, script, nav = "", base = "", path = "", noindex = false, notice = "", ogTitle = "", image = "", imageAlt = "", ogType = "website" }) {
   const t = title ? `${title} · ${PRODUCT.name}` : `${PRODUCT.name}: ministries helping ministries`;
   const desc = description || "A free network where ministries post what they need or what they can give, and other ministries answer.";
   const abs = (p) => (base ? base.replace(/\/+$/, "") + p : p);
@@ -41,18 +41,18 @@ export function layout({ title, description, body, script, nav = "", base = "", 
 <meta name="theme-color" content="#fbf8f3">
 <title>${e(t)}</title>
 <meta name="description" content="${e(desc)}">
-${noindex ? '<meta name="robots" content="noindex,nofollow">\n' : ""}<meta property="og:type" content="website">
+${noindex ? '<meta name="robots" content="noindex,nofollow">\n' : ""}<meta property="og:type" content="${e(ogType)}">
 <meta property="og:site_name" content="${e(PRODUCT.name)}">
 <meta property="og:title" content="${e(share)}">
 <meta property="og:description" content="${e(desc)}">
-${base ? `<meta property="og:url" content="${e(abs(path || "/"))}">\n` : ""}<meta property="og:image" content="${e(abs("/img/share.png"))}">
-<meta property="og:image:width" content="1200">
+${base ? `<meta property="og:url" content="${e(abs(path || "/"))}">\n` : ""}<meta property="og:image" content="${e(abs(image || "/img/share.png"))}">
+${image ? "" : `<meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="The Linked Ministries mark, two linked rings, and the words: ministries helping ministries.">
+`}<meta property="og:image:alt" content="${e(imageAlt || "The Linked Ministries mark, two linked rings, and the words: ministries helping ministries.")}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${e(share)}">
 <meta name="twitter:description" content="${e(desc)}">
-<meta name="twitter:image" content="${e(abs("/img/share.png"))}">
+<meta name="twitter:image" content="${e(abs(image || "/img/share.png"))}">
 <link rel="icon" href="/img/icon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
@@ -91,7 +91,7 @@ export function postCard(p, { button = true, link = true, heading = "h3" } = {})
   return `<article class="post card lift" id="post-${e(p.id)}" data-post="${e(p.id)}" data-kind="${e(p.kind)}">
 <div class="meta"><span class="tag ${e(p.kind)}">${e(k.label)}</span><span class="cat">${e(categoryLabel(p.category))}</span></div>
 <${heading} class="post-title">${link ? `<a href="/board/${e(p.id)}">${e(p.title)}</a>` : e(p.title)}</${heading}>
-<p class="who">${e(p.ministry)} <span class="dot" aria-hidden="true">·</span> ${e(p.ministry_city)}, ${e(p.ministry_state)}</p>
+<p class="who">${p.page_slug ? `<a href="/m/${e(p.page_slug)}">${e(p.ministry)}</a>` : e(p.ministry)} <span class="dot" aria-hidden="true">·</span> ${e(p.ministry_city)}, ${e(p.ministry_state)}</p>
 ${place}
 <p class="words">${e(p.body)}</p>
 <p class="when">Posted ${e(dateWords(p.posted_at))} <span class="dot" aria-hidden="true">·</span> Open until ${e(dateWords(p.open_until))}</p>
@@ -254,3 +254,38 @@ ${sections}
 }
 export const termsPage = (o = {}) => legalPage(TERMS, { ...o, path: "/terms" });
 export const privacyPage = (o = {}) => legalPage(PRIVACY, { ...o, path: "/privacy" });
+
+/* ---- a ministry's own page, at /m/<slug>: built whole on the server from the copy a steward read ------------------------------------------- */
+const telHref = (p) => "tel:" + String(p).replace(/[^0-9+]/g, "");
+export function ministryPage({ page, base = "", notice = "", giving = { open: false }, preview = false }) {
+  const c = page.live || {}, name = page.name, place = `${page.city}, ${page.state}`;
+  const photos = (c.photos || []).map((ph) => `<figure class="mphoto"><img src="/photos/${e(ph.id)}" alt="${e(ph.alt || "A picture from " + name)}" width="800" height="600" loading="lazy" decoding="async"></figure>`).join("");
+  const meets = (c.meets || []).length ? `<section class="card mcard" aria-labelledby="m-meet"><h2 id="m-meet">When and where we meet</h2><ul class="meets">${c.meets.map((r) => `<li><strong>${e(r.day)}</strong><span class="when-at">${e(r.time)}</span><span class="where-at">${e(r.place)}</span></li>`).join("")}</ul></section>` : "";
+  const reach = [c.email ? `<dt>Email</dt><dd><a href="mailto:${e(c.email)}">${e(c.email)}</a></dd>` : "", c.phone ? `<dt>Phone</dt><dd><a href="${e(telHref(c.phone))}">${e(c.phone)}</a></dd>` : "", c.website ? `<dt>Website</dt><dd><a href="${e(c.website)}" rel="noopener nofollow">${e(c.website.replace(/^https?:\/\//, ""))}</a></dd>` : ""].join("");
+  const reachCard = reach ? `<section class="card mcard" aria-labelledby="m-reach"><h2 id="m-reach">How to reach us</h2><dl class="kv">${reach}</dl></section>` : "";
+  const canGive = !!(giving && giving.open && c.give_url);
+  const giveCard = canGive ? `<section class="card mcard give" aria-labelledby="m-give"><h2 id="m-give">Give to ${e(name)}</h2><p>This link is ${e(name)}'s own. It goes to their way of taking gifts. Linked Ministries does not collect or see a gift made there.</p><p><a class="btn" href="${e(c.give_url)}" rel="noopener nofollow">Give to ${e(name)}</a></p></section>` : "";
+  const read = preview ? `<p class="note">This is how your page will look. Only your ministry can see this. It is not public until a person at Linked Ministries reads it.</p>`
+    : `<p class="quiet mread">A person at Linked Ministries read this page on ${e(dateWords(page.live_at))}. Linked Ministries does not check or vouch for any ministry. ${notice ? `Something wrong? Write to <a href="mailto:${e(notice)}">${e(notice)}</a>.` : ""}</p>`;
+  const body = `<article class="mpage">
+<header class="mhero"><div class="wrap wide">
+${preview ? read : ""}<p class="eyebrow">A ministry on Linked Ministries</p>
+<h1>${e(name)}</h1>
+<p class="lead">${e(c.tagline)}</p>
+<p class="place">${e(place)}</p>
+<p class="cta">${canGive ? `<a class="btn" href="#m-give">Give to ${e(name)}</a>` : ""}${c.website ? `<a class="btn ghost" href="${e(c.website)}" rel="noopener nofollow">Visit our website</a>` : ""}</p>
+</div></header>
+<div class="wrap wide mgrid">
+${photos ? `<div class="mphotos${(c.photos || []).length === 1 ? " one" : ""}">${photos}</div>` : ""}
+<div class="mmain"><section class="card mcard" aria-labelledby="m-about"><h2 id="m-about">About us</h2><p class="words">${e(c.about)}</p></section></div>
+<div class="mside">${meets}${reachCard}${giveCard}</div>
+<div class="mfull">${c.verse ? verse(c.verse) : ""}</div>
+<div class="mfull">${preview ? "" : read}
+<p class="row mlinks"><a class="btn ghost" href="/board">See the board</a><a class="btn ghost" href="/giving">Where the money went</a></p></div>
+</div>
+</article>`;
+  const first = (c.photos || [])[0];
+  const desc = `${c.tagline} ${place}.`.slice(0, 200);
+  return layout({ title: name, body, base, path: "/m/" + page.slug, noindex: preview, ogType: "profile", ogTitle: `${name} · ${place}`, description: desc,
+    image: first ? "/photos/" + first.id : "", imageAlt: first ? (first.alt || "A picture from " + name) : "", notice });
+}

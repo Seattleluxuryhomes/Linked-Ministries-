@@ -247,3 +247,55 @@ input:focus,select:focus,textarea:focus{outline:3px solid var(--gold);outline-of
   .btn,.lift{transition:none}
   .btn:hover,.lift:hover{transform:none}
 }
+
+/* a ministry's own page, /m/<slug>: a pale hero with the name, then the words in white cards (two columns on a desk) */
+.mhero{background:var(--card);border-bottom:1px solid var(--line);padding:30px 0 26px}
+.mhero h1{font-size:36px;max-width:16em;margin-bottom:.3em;overflow-wrap:anywhere}
+@media (min-width:900px){.mhero{padding:60px 0 48px}.mhero h1{font-size:56px}}
+.mhero .lead{margin-bottom:.4em}
+.mhero .place{color:var(--muted);font-weight:600;margin-bottom:0}
+.mhero .cta{margin:18px 0 0}
+.mgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--gap);padding-top:var(--gap);padding-bottom:8px}
+@media (min-width:900px){.mgrid{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:20px;padding-top:28px;align-items:start}.mphotos,.mfull{grid-column:1/-1}}
+.mmain .card,.mside .card{margin-bottom:var(--gap)}
+.mside .card:last-child{margin-bottom:0}
+.mcard h2{font-size:24px}
+.mcard .words{white-space:pre-wrap;overflow-wrap:anywhere;font-size:18px;line-height:1.7}
+.mphotos{display:grid;grid-template-columns:1fr;gap:var(--gap)}
+@media (min-width:600px){.mphotos{grid-template-columns:1fr 1fr}.mphotos.one{grid-template-columns:minmax(0,720px)}}
+.mphoto{margin:0;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--soft);box-shadow:var(--shadow)}
+.mphoto img{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:cover}
+@media (min-width:900px){.mphotos.one{grid-template-columns:minmax(0,1fr)}.mphotos.one .mphoto img{aspect-ratio:21/9}.mphotos:not(.one) .mphoto img{aspect-ratio:3/2}}
+.mside .kv{grid-template-columns:1fr}.mside .kv dd{margin-bottom:10px}
+.meets{list-style:none;margin:0;padding:0}
+.meets li{display:grid;grid-template-columns:1fr;gap:0;padding:10px 0;border-top:1px solid var(--line)}
+.meets li:first-child{border-top:0;padding-top:0}
+.meets .when-at{color:var(--gold-ink);font-weight:600}
+.meets .where-at{color:var(--muted)}
+.mcard.give{border-top:4px solid var(--gold)}
+.mread{margin-top:var(--gap)}
+.mlinks{margin-top:8px}
+.mfull .scripture{margin:var(--gap) 0}
+
+/* the form that makes the page */
+.meetrow{display:grid;grid-template-columns:1fr;gap:0 12px;padding:8px 0 4px;border-top:1px solid var(--line)}
+@media (min-width:700px){.meetrow{grid-template-columns:170px 130px 1fr auto;align-items:end}.meetrow .link{margin-bottom:16px}}
+.photos{display:grid;gap:12px;margin:0 0 12px}
+.photo-edit{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+.photo-edit .field{flex:1 1 180px;margin:0}
+.photo-edit img,.thumb{width:160px;height:120px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
+.formcard h4{margin:22px 0 4px}
+input[type=file]{width:100%;font:400 16px var(--face);min-height:46px;padding:8px 0}
+
+@media print{
+  .skip,.nav,.foot .links,.cta,.mlinks,.btn,.reportlink{display:none}
+  body{background:#fff;font-size:12pt;min-height:0}
+  main{padding:0}
+  .top{border-bottom:2px solid var(--gold)}
+  .card,.mphoto{box-shadow:none;break-inside:avoid}
+  .mgrid{grid-template-columns:1fr}
+  .mhero{padding:12px 0}
+  .mhero h1{font-size:28pt}
+  a{text-decoration:none}
+  .mread a[href^="mailto"]::after,.kv a::after{content:" (" attr(href) ")";font-size:9pt;color:var(--muted)}
+}

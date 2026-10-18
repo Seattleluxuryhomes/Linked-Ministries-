@@ -11,7 +11,8 @@ import { mount, dayLimits } from "./api.mjs";
 import { emailConfigured } from "./mail.mjs";
 import { refusal } from "./words.mjs";
 import { boardQuery, boardPost } from "./board.mjs";
-import { frontPage, boardPage, postPage, missingPostPage, shellPage, notFoundPage, termsPage, privacyPage } from "./pages.mjs";
+import { publicPage, publicPageList, photo, myPage } from "./site.mjs";
+import { frontPage, boardPage, postPage, missingPostPage, shellPage, notFoundPage, termsPage, privacyPage, ministryPage } from "./pages.mjs";
 import { noticeEmail } from "../lib/email.mjs";
 import { PRODUCT, CATEGORIES, STATES } from "../public/js/pure.js";
 
@@ -117,6 +118,28 @@ export function buildApp({ env = process.env } = {}) {
   app.get("/", wrap(async (req, res) => { const r = await boardQuery({}, { limit: 6 }); res.set("cache-control", "no-cache"); html(res, 200, frontPage({ latest: r.posts, ...where(req) })); }));
   app.get("/board", wrap(async (req, res) => { const r = await boardQuery(req.query); res.set("cache-control", "no-cache"); html(res, 200, boardPage({ result: r, ...where(req) })); }));
   app.get("/board/:id", wrap(async (req, res) => { const p = await boardPost(req.params.id); res.set("cache-control", "no-cache"); p ? html(res, 200, postPage({ post: p, ...where(req) })) : html(res, 404, missingPostPage(where(req))); }));
+  /* a ministry's own page. The public sees the copy a steward read; a ministry's own people see their draft as a preview (never indexed). */
+  app.get("/m/:slug", wrap(async (req, res) => {
+    const pg = await publicPage(req.params.slug);
+    res.set("cache-control", "no-cache");
+    if (pg) return html(res, 200, ministryPage({ page: pg, ...where(req), giving: { open: false } }));
+    const t = cookies(req)[COOKIE]; let u = null; if (t) { try { u = await sessionUser(t); } catch (e) { u = null; } }
+    if (u) {
+      const mine = await myPage(u.id);
+      if (mine && mine.exists && mine.slug === String(req.params.slug).toLowerCase()) {
+        res.set("cache-control", "private, no-store");
+        return html(res, 200, ministryPage({ page: { slug: mine.slug, name: mine.ministry.name, city: mine.ministry.city, state: mine.ministry.state, live: mine.draft, live_at: null }, ...where(req), giving: { open: false }, preview: true }));
+      }
+    }
+    html(res, 404, notFoundPage(where(req)));
+  }));
+  /* a picture: public while the page a steward read names it; otherwise only to the ministry's own people, or a steward reading it */
+  app.get("/photos/:id", wrap(async (req, res) => {
+    const t = cookies(req)[COOKIE];
+    const ph = await photo(req.params.id, null) || (t ? await (async () => { try { const u = await sessionUser(t); return u ? photo(req.params.id, u.id) : null; } catch (e) { return null; } })() : null);
+    if (!ph) return res.status(404).type("text/plain").send("That picture was not found.");
+    res.set({ "content-type": ph.content_type, "cache-control": ph.is_public ? "public, max-age=300" : "private, no-store", "content-length": String(ph.bytes.length), "content-disposition": "inline" }).end(ph.bytes);
+  }));
   app.get("/terms", (req, res) => { res.set("cache-control", "public, max-age=300"); html(res, 200, termsPage(where(req))); });
   app.get("/privacy", (req, res) => { res.set("cache-control", "public, max-age=300"); html(res, 200, privacyPage(where(req))); });
   app.get("/join", (req, res) => html(res, 200, shellPage({ title: "Join the network", script: "/js/join.js", nav: "join", ...where(req) })));
@@ -127,7 +150,8 @@ export function buildApp({ env = process.env } = {}) {
   /* only what the public may read: the front, the board, the two legal pages, and each open post that a person read. Never a draft, a waiting post, a closed one or a post of a ministry nobody has read. */
   app.get("/sitemap.xml", wrap(async (req, res) => {
     const b = publicBase(req), r = await boardQuery({}, { limit: 500 });
-    const urls = [["/", null], ["/board", null], ["/terms", null], ["/privacy", null], ...r.posts.map((p) => ["/board/" + p.id, p.posted_at])];
+    const pg = await publicPageList();
+    const urls = [["/", null], ["/board", null], ["/terms", null], ["/privacy", null], ...pg.map((p) => ["/m/" + p.slug, p.live_at]), ...r.posts.map((p) => ["/board/" + p.id, p.posted_at])];
     res.type("application/xml").set("cache-control", "public, max-age=300").send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(([u, d]) => `<url><loc>${b}${u}</loc>${d ? `<lastmod>${d}</lastmod>` : ""}</url>`).join("\n")}\n</urlset>\n`);
   }));
   app.get("/favicon.ico", (req, res) => res.type("image/x-icon").set("cache-control", "public, max-age=86400").sendFile(path.join(PUBLIC, "favicon.ico")));

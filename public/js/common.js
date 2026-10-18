@@ -27,6 +27,14 @@ export async function api(method, path, body) {
   let data = null; try { data = await r.json(); } catch (e) { data = null; }
   return { ok: r.ok, status: r.status, data: data || {} };
 }
+/** send a file as the whole body (a picture); the type is the file's own, and the server checks the bytes, not the label */
+export async function upload(path, file) {
+  let r;
+  try { r = await fetch(path, { method: "POST", headers: { "content-type": file.type }, body: file, credentials: "same-origin" }); }
+  catch (e) { return { ok: false, status: 0, data: { words: "We could not reach the site. Check your connection and try again." } }; }
+  let data = null; try { data = await r.json(); } catch (e) { data = null; }
+  return { ok: r.ok, status: r.status, data: data || {} };
+}
 export const get = (p) => api("GET", p);
 export const post = (p, b = {}) => api("POST", p, b);
 

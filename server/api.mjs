@@ -8,6 +8,9 @@ import { sendEmail, emailConfigured } from "./mail.mjs";
 import { CATEGORY_IDS, STATE_CODES, KINDS, REPORT_REASONS } from "../public/js/pure.js";
 import { answerEmail, inviteEmail, reportEmail } from "./emails.mjs";
 import { boardPost } from "./board.mjs";
+import express from "express";
+import { cleanPhoto, MAX_BYTES } from "../lib/photo.mjs";
+import { VERSES } from "./scripture.mjs";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const bad = (words, status = 400, code = "bad_request") => Object.assign(new Error(code), { status, words, code });
@@ -53,6 +56,24 @@ function postFields(b, now) {
   return f;
 }
 
+/* the fields of a ministry's public page, cleaned for a friendlier sentence than the database's (the database holds every rule too) */
+function pageFields(b) {
+  const meets = (Array.isArray(b.meets) ? b.meets : []).slice(0, 8).map((r) => ({ day: str(r && r.day, 30), time: str(r && r.time, 30), place: str(r && r.place, 120) }));
+  const photos = (Array.isArray(b.photos) ? b.photos : []).slice(0, 2).map((p) => ({ id: str(p && p.id, 36).toLowerCase(), alt: str(p && p.alt, 160) }));
+  const verse = str(b.verse, 30);
+  if (verse && !Object.prototype.hasOwnProperty.call(VERSES, verse)) throw bad("Choose a verse from the list, or none.", 422, "verse_not_known");
+  const f = { name: str(b.name, 120), city: str(b.city, 80), state: str(b.state, 2).toUpperCase(), slug: str(b.slug, 60).toLowerCase(),
+    draft: { tagline: str(b.tagline, 140), about: str(b.about, 3000), meets, email: str(b.email, 254).toLowerCase(), phone: str(b.phone, 30), website: str(b.website, 200), give_url: str(b.give_url, 300), verse, photos } };
+  if (f.name.length < 2) throw bad("Type your ministry's name.", 422, "name_needed");
+  if (f.city.length < 2) throw bad("Type your city.", 422, "city_needed");
+  if (!STATE_CODES.includes(f.state)) throw bad("Choose your state.", 422, "state_needed");
+  if (f.draft.tagline.length < 5) throw bad("Write one line that says what your ministry is.", 422, "tagline_needed");
+  if (f.draft.about.length < 20) throw bad("Tell people about your ministry in your own words. At least 20 letters.", 422, "about_page_needed");
+  if (f.draft.email && !EMAIL.test(f.draft.email)) throw bad("That email address does not look right. Or leave it empty.", 422, "email_not_readable");
+  for (const p of photos) if (!UUID.test(p.id)) throw bad("That picture was not found. Add it again.", 422, "photo_not_found");
+  return f;
+}
+
 export function mount(app, { wrap, publicBase, now = () => Date.now() }) {
   const need = (req) => { if (!req.user) throw bad("Please sign in.", 401, "unauthenticated"); };
   const get = (path, fn) => app.get(path, wrap(async (req, res) => { need(req); res.set("cache-control", "no-store"); res.json(await fn(req)); }));
@@ -85,6 +106,26 @@ export function mount(app, { wrap, publicBase, now = () => Date.now() }) {
     const r = await one(req, "select lm.ministry_update($1,$2,$3,$4,$5,$6,$7) as status", [f.name, f.city, f.state, f.about, f.website || null, f.contact_name, f.contact_email]);
     return { ok: true, status: r.status };
   });
+
+  /* ---- the ministry's public page: one form, read by a steward before anyone sees it ---------------------------------------------- */
+  get("/api/page", async (req) => ({ ...((await one(req, "select lm.page_mine() as p")).p || { exists: false }), verses: Object.entries(VERSES).map(([key, v]) => ({ key, ref: v.ref, text: v.text })) }));
+  post("/api/page", async (req) => {
+    const b = req.body || {}, f = pageFields(b);
+    await slow(req, "page", 60);
+    const r = await one(req, "select lm.page_save($1,$2,$3,$4,$5::jsonb,$6) as r", [f.name, f.city, f.state, f.slug, JSON.stringify(f.draft), b.submit === true]);
+    return { ok: true, ...r.r };
+  });
+  /* a picture: the bytes of a JPEG or a PNG as the whole body. It is checked and cleaned (what a phone writes into it about where it was taken is taken out) before it is kept. */
+  app.post("/api/page/photos", express.raw({ type: ["image/jpeg", "image/png"], limit: MAX_BYTES + 4096 }), wrap(async (req, res) => {
+    need(req);
+    if (!Buffer.isBuffer(req.body) || !req.body.length) throw bad("Choose a JPEG or a PNG picture.", 415, "not_a_picture");
+    const c = cleanPhoto(req.body);
+    if (!c.ok) throw bad(c.words, c.code === "photo_too_big" ? 413 : 422, c.code);
+    await slow(req, "photo", 40);
+    const alt = str(req.query.alt, 160);
+    const r = await one(req, "select lm.photo_add($1,$2,$3) as id", [c.type, c.bytes, alt || null]);
+    res.status(201).json({ ok: true, id: r.id, alt, width: c.width, height: c.height });
+  }));
 
   /* ---- the team --------------------------------------------------------------------------------------------------------- */
   get("/api/team", async (req) => (await one(req, "select lm.team_list() as t")).t);
@@ -198,6 +239,12 @@ export function mount(app, { wrap, publicBase, now = () => Date.now() }) {
     const d = str((req.body || {}).decision, 12);
     if (d !== "approve" && d !== "send_back") throw bad("Choose approve or send back.", 400, "decision_needed");
     await one(req, "select lm.post_review($1, $2, $3)", [id(req.params.id), d === "approve", str((req.body || {}).note, 1000) || null]);
+    return { ok: true };
+  });
+  post("/api/steward/pages/:id/review", async (req) => {
+    const d = str((req.body || {}).decision, 12);
+    if (d !== "approve" && d !== "send_back") throw bad("Choose approve or send back.", 400, "decision_needed");
+    await one(req, "select lm.page_review($1, $2, $3)", [id(req.params.id), d === "approve", str((req.body || {}).note, 1000) || null]);
     return { ok: true };
   });
   post("/api/steward/reports/:id/resolve", async (req) => {

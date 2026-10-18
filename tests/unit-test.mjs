@@ -13,7 +13,7 @@ import { checkConfig } from "../server/config.mjs";
 import { refusal, NONPROFIT_LINE, FILING_STATUS, FORMED } from "../server/words.mjs";
 import { cleanFilters } from "../server/board.mjs";
 import { dayLimits } from "../server/api.mjs";
-import { frontPage, boardPage, postPage, missingPostPage, shellPage, notFoundPage, termsPage, privacyPage, e, postCard, MARK } from "../server/pages.mjs";
+import { frontPage, boardPage, postPage, missingPostPage, shellPage, notFoundPage, termsPage, privacyPage, e, postCard, MARK, ministryPage } from "../server/pages.mjs";
 import { noticeEmail } from "../lib/email.mjs";
 import { signInEmail, answerEmail, inviteEmail, reportEmail } from "../server/emails.mjs";
 import { TERMS, PRIVACY, DRAFT_LINE } from "../server/legal.mjs";
@@ -79,11 +79,12 @@ const sample = [
   { id: "11111111-1111-4111-8111-111111111111", kind: "ask", category: "furniture", title: "Ten folding tables, please", body: "We need ten tables for the Saturday meal.\nNear the church.", city: "Seattle", state: "WA", open_until: "2026-11-17", posted_at: "2026-10-18T10:00:00Z", ministry: "Alpha Table Ministry", ministry_city: "Seattle", ministry_state: "WA" },
   { id: "22222222-2222-4222-8222-222222222222", kind: "give", category: "food", title: "Surplus canned goods", body: "Forty cases to give away.", city: "Tacoma", state: "WA", open_until: "2026-11-02", posted_at: "2026-10-17T10:00:00Z", ministry: "Gamma Outreach", ministry_city: "Seattle", ministry_state: "WA" },
 ];
+const samplePage = { slug: "alpha-table-ministry", name: "Alpha Table Ministry", city: "Seattle", state: "WA", live_at: "2026-10-18T10:00:00Z", live: { tagline: "A hot meal every Saturday", about: "We serve a hot meal every Saturday.\nEveryone is welcome.", meets: [{ day: "Saturdays", time: "12:00 pm", place: "Grace Hall" }], email: "hello@alpha.example", phone: "206-555-0100", website: "https://alpha.example.org", give_url: "https://pay.alpha.example/give", verse: "heb_13_2", photos: [{ id: "33333333-3333-4333-8333-333333333333", alt: "Tables" }] } };
 const result = (posts, filters = {}) => ({ posts, total: posts.length, page: 1, pages: 1, filters: { kind: "", category: "", state: "", city: "", q: "", ...filters } });
 const built = {
   front: frontPage({ latest: sample }), frontEmpty: frontPage({ latest: [] }), board: boardPage({ result: result(sample) }), boardEmpty: boardPage({ result: result([]) }),
   boardFiltered: boardPage({ result: result([], { kind: "ask", q: "zebra" }) }), post: postPage({ post: sample[0] }), missing: missingPostPage(), notFound: notFoundPage(),
-  terms: termsPage({ notice: "notices@linkedm.example" }), privacy: privacyPage({ notice: "notices@linkedm.example" }), termsNoAddress: termsPage({}),
+  ministry: ministryPage({ page: samplePage, notice: "notices@linkedm.example" }), ministryOpen: ministryPage({ page: samplePage, giving: { open: true } }), ministryPreview: ministryPage({ page: samplePage, preview: true }), terms: termsPage({ notice: "notices@linkedm.example" }), privacy: privacyPage({ notice: "notices@linkedm.example" }), termsNoAddress: termsPage({}),
   join: shellPage({ title: "Join the network", script: "/js/join.js", nav: "join" }), me: shellPage({ title: "Your ministry", script: "/js/me.js", nav: "me" }), steward: shellPage({ title: "Waiting to be read", script: "/js/steward.js" }),
 };
 for (const [name, html] of Object.entries(built)) {
@@ -105,6 +106,16 @@ ok(/No posts match/.test(built.boardFiltered) && /Clear/.test(built.boardFiltere
 ok(!/<script(?![^>]*src)/.test(built.me) && /<script type="module" src="\/js\/me\.js">/.test(built.me) && /<noscript>/.test(built.me), "the signed-in pages are a shell and one script, with a plain note if scripts are off");
 { const m = built.board.match(/<main[\s\S]*<\/main>/)[0]; ok(!/\bred\b|alarm|danger-zone|error-red/i.test(m), "no alarm styling on the board"); }
 
+
+/* ---- a ministry's own page: built whole on the server, escaped, honest about the giving door ---- */
+{ const m = built.ministry, o = built.ministryOpen, pv = built.ministryPreview;
+  ok(/<h1>Alpha Table Ministry<\/h1>/.test(m) && /A hot meal every Saturday/.test(m) && /Grace Hall/.test(m) && /mailto:hello@alpha\.example/.test(m) && /tel:2065550100/.test(m) && /Hebrews 13:2/.test(m), "a ministry page shows the name, the line, where it meets, how to reach it and the verse the ministry chose");
+  ok(!/Give to Alpha/.test(m) && !/pay\.alpha\.example/.test(m) && /Give to Alpha Table Ministry/.test(o) && /href="https:\/\/pay\.alpha\.example\/give"/.test(o) && /This link is Alpha Table Ministry's own/.test(o) && /does not collect or see a gift/.test(o), "the Give button is there only when the giving door is open, goes to the ministry's own link, and says whose link it is");
+  ok(/Only your ministry can see this/.test(pv) && /noindex/.test(pv) && !/noindex/.test(m) && /read this page on October 18, 2026/.test(m) && /does not check or vouch/.test(m), "a preview is marked private and not indexed; a public page says a person read it and that Linked Ministries does not vouch");
+  ok(/og:type" content="profile"/.test(m) && /og:image" content="\/photos\/33333333-3333-4333-8333-333333333333"/.test(m) && /<title>Alpha Table Ministry · Linked Ministries<\/title>/.test(m), "its share card is its own: its title and its first picture");
+  const evil = ministryPage({ page: { ...samplePage, name: "<b>X</b> & Co", live: { ...samplePage.live, about: '<script>alert(1)</script>"><img src=x onerror=alert(1)>', website: 'https://a.example/"><script>x</script>', verse: "not_a_key" } } });
+  ok(!/<script>alert|<b>X|<img src=x/.test(evil) && /&lt;script&gt;alert/.test(evil), "a ministry's words are escaped: text is never markup");
+  ok(!/blockquote class="scripture/.test(evil.replace(/<footer[\s\S]*<\/footer>/, "")), "a verse key the file does not hold shows nothing: never a guess"); }
 
 /* ---- what a lawyer will ask about, answered in code (founder, 2026-10-18: nothing we can be sued for) ---- */
 {

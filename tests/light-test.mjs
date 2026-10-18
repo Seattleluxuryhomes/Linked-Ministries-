@@ -9,7 +9,7 @@ import path from "node:path";
 import { counter, ownDatabase, startServer, client, ROOT } from "./helpers.mjs";
 import { launch, open, SHOTS, shots } from "./browser-lib.mjs";
 import { smtpStandIn } from "./helpers.mjs";
-import { seedWorld, seedAlexExtras } from "./seed.mjs";
+import { seedWorld, seedAlexExtras, seedAlexPage } from "./seed.mjs";
 
 const T = counter("light-test"); const { ok } = T;
 const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
@@ -48,6 +48,7 @@ ok(s.up, "the server is up");
 const { pool } = await import("../server/db.mjs");
 const world = await seedWorld({ base: s.base, smtp, sql: (q) => pool.query(q) });
 const extras = await seedAlexExtras({ world, smtp });
+const alexPage = await seedAlexPage({ world });
 const browser = await launch(); const snap = shots(SHOTS);
 const lightCheck = (page) => page.evaluate(() => {
   const lum = (r, g, b) => { const c = [r, g, b].map((v) => v / 255).map((x) => (x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4))); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
@@ -67,7 +68,7 @@ const lightCheck = (page) => page.evaluate(() => {
 const cookieOf = (cl) => cl.jar().split("=").slice(1).join("=");
 const firstPost = world.ids["Ten folding tables for our Saturday meal"];
 const anyId = (extras.erin, firstPost);
-const PUBLIC = ["/", "/board", "/board?kind=ask&state=WA", "/board?q=zebra", "/board/" + firstPost, "/terms", "/privacy", "/join", "/me", "/steward", "/nope", "/board/00000000-0000-4000-8000-000000000000"];
+const PUBLIC = ["/", "/board", "/board?kind=ask&state=WA", "/board?q=zebra", "/board/" + firstPost, "/terms", "/privacy", "/join", "/me", "/steward", "/nope", "/board/00000000-0000-4000-8000-000000000000", "/m/" + alexPage.slug, "/m/not-a-page"];
 await pool.query("select lm.report_create($1, 'scam', 'This looks wrong to me.', 'reporter@example.org')", [firstPost]);   /* so the steward's page has a report to paint */
 let pages = 0;
 for (const kind of ["phone", "desk"]) {
@@ -94,6 +95,7 @@ for (const kind of ["phone", "desk"]) {
   const alex = world.c["alex@alpha.example"];
   const c1 = await who(alex, ["/me", "/join", "/steward"], "a lead's");
   await c1.page.goto("/me"); await c1.page.waitForSelector("button:has-text('Post an ask')"); await c1.page.click("button:has-text('Post an ask')"); await c1.page.waitForSelector("form select[name=category]"); { const bad = await lightCheck(c1.page); pages++; ok(bad.length === 0, `${kind}: the form to post an ask is light`, bad.slice(0, 3)); }
+  await c1.page.goto("/me"); await c1.page.waitForSelector("[data-act=page-edit]"); await c1.page.click("[data-act=page-edit]"); await c1.page.waitForSelector("[data-page-form]"); await c1.page.waitForSelector("[data-photos] img"); { const bad = await lightCheck(c1.page); pages++; ok(bad.length === 0, `${kind}: the form that makes the ministry's page is light`, bad.slice(0, 3)); }
   await c1.page.goto("/me"); await c1.page.waitForSelector("details[data-fold=profile]"); for (const k of ["profile", "team", "account"]) await c1.page.click(`details[data-fold=${k}] summary`);
   await c1.page.click("button:has-text('Change this page')"); await c1.page.waitForSelector("form input[name=contact_email]"); { const bad = await lightCheck(c1.page); pages++; ok(bad.length === 0, `${kind}: the form to change the page is light`, bad.slice(0, 3)); }
   await c1.page.goto("/me"); await c1.page.waitForSelector("details[data-fold=account]"); await c1.page.click("details[data-fold=account] summary"); await c1.page.click("button:has-text('Delete my account')"); await c1.page.waitForSelector("button:has-text('Yes, delete my account and my data')"); { const bad = await lightCheck(c1.page); pages++; ok(bad.length === 0, `${kind}: the page that asks if you are sure you want to delete your account is light, and calm`, bad.slice(0, 3)); }

@@ -18,9 +18,10 @@ async function load() {
 function render(q) {
   const parts = [h("h1", {}, WORDS.stewardTitle), h("p", { class: "lead" }, WORDS.stewardLead)];
   if (flash) { parts.push(msg(flash.words, flash.ok ? "ok" : undefined)); flash = null; }
-  if (!q.ministries.length && !q.posts.length && !(q.reports || []).length) parts.push(h("div", { class: "empty card compact" }, h("h2", {}, WORDS.stewardEmptyTitle), h("p", {}, WORDS.stewardEmpty)));
+  if (!q.ministries.length && !q.posts.length && !(q.pages || []).length && !(q.reports || []).length) parts.push(h("div", { class: "empty card compact" }, h("h2", {}, WORDS.stewardEmptyTitle), h("p", {}, WORDS.stewardEmpty)));
   if ((q.reports || []).length) parts.push(h("h2", {}, "Reports"), ...q.reports.map(reportCard));
   if (q.ministries.length) parts.push(h("h2", {}, "Ministries"), ...q.ministries.map(ministryCard));
+  if ((q.pages || []).length) parts.push(h("h2", {}, WORDS.stewardPages), ...q.pages.map(pageCard));
   if (q.posts.length) parts.push(h("h2", {}, "Posts"), ...q.posts.map(postCard));
   parts.push(h("h2", {}, "Stewards"), stewardsCard(q.stewards));
   parts.push(h("p", {}, h("a", { href: "/me" }, "Back to my ministry")));
@@ -83,6 +84,26 @@ function ministryCard(m) {
       h("dt", {}, "Contact"), h("dd", {}, `${m.contact_name} · ${m.contact_email}`)),
     decide("ministries", m.id));
 }
+/* a ministry's page: read every word, every picture and every link, then approve it or send it back */
+function pageCard(g) {
+  const d = g.draft || {};
+  const photos = (d.photos || []).map((p) => h("img", { class: "thumb", src: "/photos/" + p.id, alt: p.alt || "A picture on the page", width: 160, height: 120 }));
+  return h("div", { class: "card", "data-page": g.ministry_id },
+    h("h3", {}, g.ministry), h("p", { class: "when" }, `${g.city}, ${g.state} · /m/${g.slug} · ${g.is_change ? WORDS.stewardPageChange : WORDS.stewardPageNew}`),
+    g.ministry_status !== "public" ? h("p", { class: "msg" }, "This ministry has not been read yet. Read the ministry first, then its page.") : null,
+    h("dl", { class: "kv" },
+      h("dt", {}, "One line"), h("dd", {}, d.tagline),
+      h("dt", {}, "About"), h("dd", {}, d.about),
+      h("dt", {}, "Meets"), h("dd", {}, (d.meets || []).length ? (d.meets || []).map((r) => `${r.day}, ${r.time}, ${r.place}`).join(" | ") : "None"),
+      h("dt", {}, "Email"), h("dd", {}, d.email || "None"),
+      h("dt", {}, "Phone"), h("dd", {}, d.phone || "None"),
+      h("dt", {}, "Website"), h("dd", {}, d.website || "None"),
+      h("dt", {}, "Link for gifts"), h("dd", {}, d.give_url || "None"),
+      h("dt", {}, "Verse"), h("dd", {}, d.verse || "None")),
+    photos.length ? h("div", { class: "row" }, photos) : null,
+    decide("pages", g.ministry_id));
+}
+
 function postCard(p) {
   return h("div", { class: "card", "data-post": p.id },
     h("div", { class: "meta row" }, h("span", { class: "tag " + p.kind }, KIND[p.kind].label), h("span", { class: "cat" }, categoryLabel(p.category))),

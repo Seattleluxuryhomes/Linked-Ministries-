@@ -10,8 +10,8 @@ import { visibleText } from "./banned.mjs";
 import { verdict, failures } from "../lib/plainwords.mjs";
 import { WORDS, POST_STATUS, MINISTRY_STATUS, CLOSE_REASON, KIND, NO_MONEY, CRISIS, STAY_SAFE, REPORT_REASONS } from "../public/js/pure.js";
 import { signInEmail, answerEmail, inviteEmail, reportEmail } from "../server/emails.mjs";
-import { NONPROFIT_LINE } from "../server/words.mjs";
-import { frontPage, boardPage, postPage, missingPostPage, notFoundPage, shellPage, termsPage, privacyPage, postCard } from "../server/pages.mjs";
+import { NONPROFIT_LINE, IRS_PHRASE } from "../server/words.mjs";
+import { ministryPage, frontPage, boardPage, postPage, missingPostPage, notFoundPage, shellPage, termsPage, privacyPage, postCard } from "../server/pages.mjs";
 
 const T = counter("plainwords-test"); const { ok } = T;
 const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
@@ -36,7 +36,7 @@ const LEGAL = NONPROFIT_LINE;
 ok(verdict(LEGAL, { ceiling: 14 }).ok && !plain(LEGAL) && LEGAL.split(/\s+/).length <= 25, `the nonprofit line is the one named exception (grade ${verdict(LEGAL).grade.toFixed(1)}, ${LEGAL.split(/\s+/).length} words): the founder's sentence, with a legal name in it`);
 
 /* every public page's own words (the posts in them are other people's, and Scripture is the Bible's, so both are left out here) */
-const pages = { front: frontPage({ latest: [] }), board: boardPage({ result: { posts: [], total: 0, page: 1, pages: 1, filters: { kind: "", category: "", state: "", city: "", q: "" } } }),
+const pages = { ministry: ministryPage({ page: { slug: "alpha", name: "Alpha Table Ministry", city: "Seattle", state: "WA", live_at: "2026-10-18T10:00:00Z", live: { tagline: "x", about: "x", meets: [{ day: "Sundays", time: "9 am", place: "The hall" }], email: "a@b.example", website: "https://a.example", give_url: "https://pay.example/g", photos: [] } }, notice: "notices@linkedm.example", giving: { open: true } }), front: frontPage({ latest: [] }), board: boardPage({ result: { posts: [], total: 0, page: 1, pages: 1, filters: { kind: "", category: "", state: "", city: "", q: "" } } }),
   missing: missingPostPage(), notFound: notFoundPage(), terms: termsPage({ notice: "notices@linkedm.example" }), privacy: privacyPage({ notice: "notices@linkedm.example" }), termsNoAddress: termsPage({}),
   card: postCard({ id: "11111111-1111-4111-8111-111111111111", kind: "ask", category: "furniture", title: "x", body: "x", city: "Seattle", state: "WA", open_until: "2026-11-17", posted_at: "2026-10-18T10:00:00Z", ministry: "x", ministry_city: "Seattle", ministry_state: "WA" }), join: shellPage({ title: "Join the network", script: "/js/join.js" }), me: shellPage({ title: "Your ministry", script: "/js/me.js" }), steward: shellPage({ title: "Waiting to be read", script: "/js/steward.js" }) };
 let sentences = 0;
@@ -49,8 +49,8 @@ ok(sentences >= 120, `${sentences} blocks of words on the public pages were read
 /* every sentence the server can speak: refusals, answers, the emails */
 const strings = (src) => [...src.matchAll(/"((?:[^"\\\n]|\\.)*)"|`((?:[^`\\\n$]|\\.)*)`/g)].map((m) => (m[1] != null ? m[1] : m[2]).replace(/\\"/g, '"').replace(/\\'/g, "'")).filter((s) => /^[A-Z]/.test(s) && /\s[a-z]+\s+[a-z]+\s+[a-z]+/i.test(s) && s.split(/\s+/).length >= 5 && !/^(select|insert|update|delete|Mozilla|default-src|Contact:)/i.test(s) && !/[{}<>=;]|function|return |\.mjs|\.js\b/.test(s));
 let spoken = 0;
-for (const file of ["server/words.mjs", "server/api.mjs", "server/index.mjs", "server/auth.mjs"]) for (const s of strings(read(file))) { spoken++; check(file, s); }
-for (const file of ["public/js/common.js", "public/js/join.js", "public/js/me.js", "public/js/steward.js", "public/js/board.js"]) for (const s of strings(read(file))) { spoken++; check(file, s); }
+for (const file of ["server/words.mjs", "server/api.mjs", "server/index.mjs", "server/auth.mjs"]) for (const s of strings(read(file))) { if (s === IRS_PHRASE) continue; /* the IRS's own sentence, quoted exactly from its letter; shown only once IRS_LETTER_DATE is set (the second named exception) */ spoken++; check(file, s); }
+for (const file of ["public/js/common.js", "public/js/page.js", "public/js/join.js", "public/js/me.js", "public/js/steward.js", "public/js/board.js"]) for (const s of strings(read(file))) { spoken++; check(file, s); }
 ok(spoken >= 40, `${spoken} sentences in the server and the scripts were read`);
 
 /* every email, as the server writes it: each sentence of the words that are ours (what a person typed is theirs) */

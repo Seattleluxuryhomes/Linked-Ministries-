@@ -1,6 +1,7 @@
 /* tests/seed.mjs — a small, made-up network built through the real API, the way people would build it: four ministries, a steward
    (set by SQL), and posts in every state. The light test and the browser test paint it. Nothing here is on any real host. */
 import { client, signIn, sleep } from "./helpers.mjs";
+import { makeJpeg } from "./fixtures.mjs";
 
 const day = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
 export const MINISTRIES = [
@@ -59,4 +60,18 @@ export async function seedAlexExtras({ world, smtp }) {
   await erin.post("/api/ministry", { name: "Echo Fellowship", city: "Olympia", state: "WA", about: "We run a Wednesday supper and a clothing swap for neighbors in need.", contact_name: "Erin Walsh", contact_email: "erin@echo.example", website: "https://echo.example.org" });
   await erin.post("/api/posts", { kind: "ask", category: "equipment", title: "A commercial coffee maker", body: "Our Wednesday supper serves sixty people and our old coffee maker has failed.", open_until: day(30), submit: true });
   return { draft, waiting, back, closed, erin };
+}
+
+/** Alpha Table's own public page, with a picture, read by the steward: /m/alpha-table-ministry */
+export async function seedAlexPage({ world }) {
+  const { c, sam, base } = world; const alex = c["alex@alpha.example"];
+  const up = await fetch(base + "/api/page/photos?alt=" + encodeURIComponent("Tables set for the Saturday meal"), { method: "POST", headers: { "content-type": "image/jpeg", cookie: alex.jar() }, body: makeJpeg({ pad: 3000 }) });
+  if (up.status !== 201) throw new Error("seed photo failed " + up.status);
+  const photo = (await up.json()).id;
+  const body = { name: "Alpha Table Ministry", city: "Seattle", state: "WA", slug: "", tagline: "A hot meal every Saturday for our neighbors", about: "We serve a hot meal every Saturday at noon. Everyone is welcome.\nOn Thursday nights we run a small youth night.", verse: "heb_13_2",
+    meets: [{ day: "Saturdays", time: "12:00 pm", place: "Grace Hall, 12 Main Street" }, { day: "Thursdays", time: "6:30 pm", place: "The church basement" }], email: "hello@alpha.example", phone: "206-555-0100", website: "https://alpha.example.org", give_url: "https://pay.alpha.example/give", photos: [{ id: photo, alt: "Tables set for the Saturday meal" }], submit: true };
+  const r = await alex.post("/api/page", body); if (r.status !== 200) throw new Error("seed page failed " + r.text);
+  const id = (await alex.get("/api/me")).json.ministry.id;
+  const a = await sam.post(`/api/steward/pages/${id}/review`, { decision: "approve" }); if (a.status !== 200) throw new Error("approve page failed " + a.text);
+  return { slug: r.json.slug, photo, ministryId: id };
 }

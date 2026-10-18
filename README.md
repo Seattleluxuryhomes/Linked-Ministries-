@@ -32,6 +32,7 @@ copied are listed in `commons.json`, each with where it came from.
 | Route | What it is |
 |---|---|
 | `/`, `/board`, `/board/<id>`, `/terms`, `/privacy` | Public pages, built whole on the server from the database's public view. The terms and the privacy page are drafts a lawyer has not read, and say so at the top |
+| `/m/<slug>`, `/photos/<id>` | A ministry's own public page and its pictures. Built whole on the server from the copy a steward read; a picture is served only while that copy names it. The ministry's own people see a private preview of the draft at the same address |
 | `/join`, `/me`, `/steward` | Signed-in pages (a shell and a script) |
 | `/api/health` | `{"status":"ok","service":"Linked Ministries"}` and nothing else |
 | `/api/board`, `/api/board/<id>`, `/api/product` | Public reads |
@@ -40,10 +41,23 @@ copied are listed in `commons.json`, each with where it came from.
 | `/api/auth/start`, `/verify`, `/signout` | Sign in by emailed code |
 | `/api/me`, `/api/ministry`, `/api/ministry/update` | The person and the ministry |
 | `/api/me/export`, `/api/me/delete` | A person downloads what is held about them, or deletes their account (the database does it in one transaction) |
+| `/api/page`, `/api/page/photos` | The ministry's page: the form's draft and send, and a picture (checked on the server, where it was taken is taken out) |
 | `/api/team`, `/invite`, `/accept`, `/<id>/role`, `/<id>/remove` | The ministry's people |
 | `/api/my/posts`, `/api/posts`, `/<id>/update`, `/submit`, `/close` | Posts |
 | `/api/posts/<id>/answer`, `/api/answers` | Answering |
-| `/api/steward/queue`, `/ministries/<id>/review`, `/posts/<id>/review`, `/reports/<id>/resolve`, `/stewards` | Stewards |
+| `/api/steward/queue`, `/ministries/<id>/review`, `/pages/<id>/review`, `/posts/<id>/review`, `/reports/<id>/resolve`, `/stewards` | Stewards |
+
+## The ministry's own page (migration 0007)
+
+| # | Where | What happens |
+|---|---|---|
+| 1 | `/me` | "Your public page": a lead presses "Make your page" and fills in one form: name, one line, about, city and state, where and when the ministry meets (rows of day, time and place), how to reach it (email, phone, website, each optional), one or two pictures, an optional verse from a list, and the address (chosen from the name, one edit allowed before it is public). |
+| 2 | `/me` | "Save as a draft", or "Send to be read". A sent page says "Waiting for a person at Linked Ministries to read it." and never "public". "See how it looks" opens a private preview. |
+| 3 | `/steward` | The page is in the same queue as ministries and posts. A steward reads every word and picture, then approves or sends it back with a note. A page cannot go public before its ministry has been read. |
+| 4 | `/m/<slug>` | Anyone, signed out, reads the page: phone first, with its own title, description and share card (its first picture), and in the sitemap. |
+| 5 | `/me` | The lead edits any time. The public keeps seeing the copy a steward read until a steward reads the change. A change to the public name or city sends the whole ministry back to be read, as before. |
+
+A "Give" button shows on the page only when the giving door is open (see below) and the ministry has set a link of its own for gifts. The link is the ministry's, is labelled as theirs, and Linked Ministries never collects or sees that gift.
 
 ## Run it on your machine
 

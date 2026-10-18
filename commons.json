@@ -2,7 +2,7 @@
   "version": 1,
   "about": "Pieces this repository copied from another of the founder's products (Cross Universal), the sharing map. origin_sha256 is the origin file's SHA-256 at origin_commit; local_sha256 is this file's. A verbatim piece equals its origin; an adapted piece says what changed; a shaped-on piece is written new on the same model, rulings and defaults. 'Do not rebuild what has been built: copy it.' Regenerate with: node tools/commons.mjs",
   "origin_repo": "cross-univeral",
-  "origin_commit": "124e730b7d84dd5971204b5ff827ec310b7ed0f5",
+  "origin_commit": "51b290b3332af7e78724780557659e990a7d3e0c",
   "pieces": [
     {
       "id": "plainwords",
@@ -177,7 +177,7 @@
       "origin_path": "behavioral-health-app/server/api.mjs",
       "origin_sha256": "8ee33e9349c194104e91d85d9ce378f4c820e10d25fc8485156f98c03a40a4e5",
       "local_path": "server/api.mjs",
-      "local_sha256": "98119d2501d71db71b6acd3fde996dd296dba1c82a042496ab6ca1bbe33e4277",
+      "local_sha256": "daeaffd3a799ec052a4afc2b4ba31813fec2c20d5d342b0b9ff1239a448ff1d3",
       "note": "Same pattern (asUser, functions decide, early friendly checks). The routes are this product's: ministries, team, posts, answers, stewards."
     },
     {
@@ -188,7 +188,7 @@
       "origin_path": "behavioral-health-app/server/index.mjs",
       "origin_sha256": "b1375df160f0be6f55b551c26472bdeb63eef9c9af918fff8ba44584fd168e21",
       "local_path": "server/index.mjs",
-      "local_sha256": "d7eb547f466ee0720fee4e4ef73431252d9254a8f1b8965d37b197e3c5e921b1",
+      "local_sha256": "32c1f35901a6e1929720d9b797eed7f8328165e44c99fd1960dc4adbd5d41c15",
       "note": "Same boot order and health answer (two words). Public pages are built on the server."
     },
     {
@@ -199,7 +199,7 @@
       "origin_path": "behavioral-health-app/server/words.mjs",
       "origin_sha256": "7d66d59b2ffd109e7ba740ea0f66090185974bb339207889072108b8262c41e8",
       "local_path": "server/words.mjs",
-      "local_sha256": "990d8420aabadff2d2ab1e4682e71853e4372a4aba518cb037726a6509d789c3",
+      "local_sha256": "c72740ee86b60ced34283ca3d238e38a9b5324d96463b30349ee2c9fc441503e",
       "note": "Same refusal mapping (a code and a hint); the codes are this product's. The founder's one editable line lives here."
     },
     {
@@ -210,7 +210,7 @@
       "origin_path": "behavioral-health-app/public/js/common.js",
       "origin_sha256": "2fdb3638d46193dd3d4184ed2dd793e5595b006bed5c73821c076fdfe8c75358",
       "local_path": "public/js/common.js",
-      "local_sha256": "92f4638fcf0e6d7e65cf0f6fb5f21c184d7744b50cd856e8c32925d4be4ff069",
+      "local_sha256": "e12aa69307da03acac3ee8fd061c7e3f3a61e7d17bdecbb4c16f44eb9760c0ec",
       "note": "Same h() and api() helpers; the forms are this product's."
     },
     {
@@ -287,7 +287,7 @@
       "origin_path": "behavioral-health-app/tests/run-all.mjs",
       "origin_sha256": "80f53d81c295c1fdc207a38feffe49b76b305d0106fb5057868e7219cbd201f0",
       "local_path": "tests/run-all.mjs",
-      "local_sha256": "81a6540469ef15067f312540af11c81b5f2d9c377845b480d06eae64c0dc6fea",
+      "local_sha256": "2ea97b313265bfedf0901ca80670f7e201fed18bdb961125bcb5a260ca070d43",
       "note": "This product's test list; drops the image and mutation tests."
     },
     {
@@ -309,7 +309,7 @@
       "origin_path": "behavioral-health-app/tests/light-test.mjs",
       "origin_sha256": "e3e7289a423a030c9427e2617334f909a8f0f8104ccd5466a3be72e8aa063881",
       "local_path": "tests/light-test.mjs",
-      "local_sha256": "8e24b4d1223b1597cad47a7d5cda7eacc19ca0cf238f8140d05e21b21a4d3e76",
+      "local_sha256": "a353a1abd2dd6c223f424c7ed9b538b2065d858d73e8abdff1a93b3d4548f040",
       "note": "Same method (stylesheet tokens, painted pages, a dark panel is caught); adds a check for red and for contrast."
     },
     {
@@ -320,7 +320,7 @@
       "origin_path": "behavioral-health-app/tests/db-test.mjs",
       "origin_sha256": "e3ed64b0c1321e3ae22fbf7d18c5eb918907b5f1d46a55359eef58061c35b71a",
       "local_path": "tests/db-test.mjs",
-      "local_sha256": "09530da4715e9a7f1dcb1c72b283864f0cdf37540f85cecb1d51d7ef7a800f25",
+      "local_sha256": "77a176e5be0f13129a8b0dc079b4c7cf0c811c899ec5ea8995513726f09c9cb5",
       "note": "Same method; this product's rules."
     },
     {
@@ -331,7 +331,7 @@
       "origin_path": "behavioral-health-app/tests/api-test.mjs",
       "origin_sha256": "b9aed98a7b54da362b31cbf559aa6e2637b2a6d38db924b6335cfdd21d646f7c",
       "local_path": "tests/api-test.mjs",
-      "local_sha256": "187fe92c0f35309863774200ba6291eaaf2750c1e8e2ded0b9736933d9ed4dfd",
+      "local_sha256": "c73e3748c3b85fd5baccb6f9a7acf99a2a84b71cb1ff3848a6b180eb78cfd74e",
       "note": "Same method; adds the stand-in mail server."
     },
     {
@@ -353,7 +353,7 @@
       "origin_path": "behavioral-health-app/tests/unit-test.mjs",
       "origin_sha256": "6bead93056daa8752e1c7eaca4e74352772b4d62cc6832e2916b8d739b6ab620",
       "local_path": "tests/unit-test.mjs",
-      "local_sha256": "7576f1387ba93f2b1a1ed67e37c3308b775a686d3d00ef0adb5e8ce36806d16d",
+      "local_sha256": "902abfa53b6720574781e8a1a513bc64682d741dcb2dd5449bcbc2a5db7a9bbe",
       "note": "The licence check, the commons check, the no-key scan and the migration checks are the original's."
     },
     {
