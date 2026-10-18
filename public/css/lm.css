@@ -361,18 +361,34 @@ section[aria-labelledby] h2{margin-bottom:.6em}
 .people-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:var(--gap)}
 .people-list .card{margin:0;display:flex;flex-direction:column;gap:2px}
 
-/* Eden, the writing helper: a small orange orb and a quiet card. The orb is drawn on a canvas; the page around it stays light. */
-.eden{border:1.5px dashed var(--line-strong);border-radius:14px;padding:14px;margin:0 0 var(--gap);background:var(--soft)}
-.eden-head{display:flex;gap:12px;align-items:center}
+/* Eden: a glowing orb fixed to the side of the screen, above the content, that a person can drag. Warm gold glow on the pale page. */
+.eden-anchor{display:none}
+.eden-float{position:fixed;left:0;top:0;z-index:90;width:72px;height:72px;margin:0;padding:0;pointer-events:none}
+@media (min-width:700px){.eden-float{width:84px;height:84px}}
+.eden-float[hidden],.eden-panel[hidden]{display:none}
+.eden-float.dragging{transition:none}
+.eden-float.gliding{transition:left 2.4s cubic-bezier(.45,.05,.35,1),top 2.4s cubic-bezier(.45,.05,.35,1)}
+.eden-float.snapping{transition:left .48s cubic-bezier(.22,1,.36,1),top .48s cubic-bezier(.22,1,.36,1)}
+.eden-orb-glow{position:absolute;left:50%;top:50%;width:200%;height:200%;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(245,158,11,.80) 0%,rgba(217,119,6,.46) 36%,rgba(217,119,6,.16) 56%,rgba(217,119,6,0) 72%)}
+.eden-orb-btn{position:absolute;inset:0;width:100%;height:100%;padding:0;margin:0;border:0;border-radius:50%;background:transparent;cursor:grab;touch-action:none;pointer-events:auto;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;color:inherit}
+.eden-float.dragging .eden-orb-btn{cursor:grabbing}
+.eden-orb-btn:focus-visible{outline:3px solid var(--ink);outline-offset:4px}
+.eden-orb-canvas{width:100%;height:100%;display:block;border-radius:50%;filter:brightness(1.35) saturate(1.2) drop-shadow(0 0 14px rgba(245,158,11,.75));animation:eden-drift 19s ease-in-out infinite}
+@keyframes eden-drift{0%,100%{transform:translate(0,0)}20%{transform:translate(2px,-3px)}45%{transform:translate(-3px,-1px)}68%{transform:translate(2px,3px)}85%{transform:translate(-1px,1px)}}
+.eden-float[data-state=off] .eden-orb-glow{background:radial-gradient(circle,rgba(120,120,120,.34) 0%,rgba(150,150,150,.16) 40%,rgba(150,150,150,0) 70%)}
+.eden-float[data-state=off] .eden-orb-canvas{filter:grayscale(1) opacity(.82) drop-shadow(0 3px 8px rgba(100,100,100,.4))}
+@media (prefers-reduced-motion:reduce){.eden-float,.eden-float.gliding,.eden-float.snapping{transition:none}.eden-orb-canvas{animation:none}}
+.eden-panel:focus{outline:none}
+.eden-panel{position:fixed;left:12px;top:12px;z-index:91;width:min(380px,calc(100vw - 24px));max-height:calc(100vh - 24px);overflow-y:auto;overscroll-behavior:contain;background:var(--card);border:1px solid var(--line);border-top:4px solid var(--gold);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow-up)}
+.eden-head{display:flex;gap:12px;align-items:flex-start}
 .eden-head p{margin:0}
-.eden-orb{display:inline-flex;width:44px;height:44px;flex:none;filter:drop-shadow(0 0 9px rgba(255,140,50,.55))}
-.eden-orb-canvas{width:44px;height:44px;display:block}
+.eden-head .grow{flex:1;min-width:0}
 .eden-note{font-size:14.5px;color:var(--muted)}
 .eden-body{margin-top:6px}
 .eden-card{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:12px;padding:14px 16px;margin:8px 0}
 .eden-draft{white-space:pre-wrap;overflow-wrap:anywhere}
 .eden-card .scripture{margin:10px 0}
-.eden input[type=checkbox]{width:20px;height:20px;min-height:0;vertical-align:-3px;margin-right:6px}
+.eden-panel input[type=checkbox]{width:20px;height:20px;min-height:0;vertical-align:-3px;margin-right:6px}
 
 /* Scripture: a quiet quotation with a gold line at its side, a short measure, and the reference under it. (It had no rule of its own,
    so it showed as a browser's default indented block, a hundred and thirty characters wide on a desk.) */
