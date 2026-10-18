@@ -6,6 +6,7 @@ import { WORDS } from "/js/pure.js";
 const app = document.getElementById("app");
 const next = safeNext(new URLSearchParams(location.search).get("next"));
 const title = () => h("h1", {}, WORDS.joinTitle);
+let wantsMinistry = false;
 
 async function start() {
   const r = await get("/api/me");
@@ -57,6 +58,11 @@ function codeStep(to) {
 
 function signedIn(me) {
   if (me.ministry) { if (new URLSearchParams(location.search).has("next")) return location.assign(next); return location.assign("/me"); }
+  if (me.steward && !wantsMinistry) {
+    return app.replaceChildren(h("h1", {}, WORDS.stewardWelcome), h("p", { class: "lead" }, WORDS.stewardWelcomeLead),
+      h("p", { class: "row" }, h("a", { class: "btn", href: "/steward" }, WORDS.stewardOpen), h("button", { class: "btn ghost", type: "button", on: { click: () => { wantsMinistry = true; signedIn(me); } } }, WORDS.alsoMinistry)),
+      h("p", { class: "quiet" }, `${WORDS.signedInAs} ${me.user.email}. `, h("button", { class: "link", type: "button", on: { click: signOut } }, WORDS.signOut)));
+  }
   const parts = [h("h1", {}, WORDS.profileTitle), h("p", { class: "lead" }, WORDS.profileLead)];
   const done = () => location.assign(next === "/me" || !next ? "/me" : next);
   for (const inv of me.invites || []) parts.push(inviteCard(inv, me, done));

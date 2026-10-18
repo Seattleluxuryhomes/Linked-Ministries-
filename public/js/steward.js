@@ -51,9 +51,9 @@ function ministryCard(m) {
   return h("div", { class: "card", "data-ministry": m.id },
     h("h3", {}, m.name), h("p", { class: "when" }, `${m.city}, ${m.state}`),
     h("dl", { class: "kv" },
-      h("dt", {}, WORDS.fieldAbout), h("dd", {}, m.about),
-      h("dt", {}, WORDS.fieldWebsite), h("dd", {}, m.website || "None"),
-      h("dt", {}, WORDS.fieldContact), h("dd", {}, `${m.contact_name} · ${m.contact_email}`)),
+      h("dt", {}, "What it does"), h("dd", {}, m.about),
+      h("dt", {}, "Website"), h("dd", {}, m.website || "None"),
+      h("dt", {}, "Contact"), h("dd", {}, `${m.contact_name} · ${m.contact_email}`)),
     decide("ministries", m.id));
 }
 function postCard(p) {

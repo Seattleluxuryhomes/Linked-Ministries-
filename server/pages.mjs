@@ -4,7 +4,6 @@
    never markup. No inline script, no style attribute, nothing from anyone else's server (every face is in /fonts). */
 import { PRODUCT, CATEGORIES, KIND, KINDS, STATES, categoryLabel, dateWords, CRISIS, NO_MONEY, WORDS } from "../public/js/pure.js";
 import { NONPROFIT_LINE } from "./words.mjs";
-import { PAGE_SIZE } from "./board.mjs";
 
 const AMP = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
 export const e = (v) => String(v == null ? "" : v).replace(/[&<>"']/g, (c) => AMP[c]);

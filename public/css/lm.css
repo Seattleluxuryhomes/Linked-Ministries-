@@ -144,3 +144,4 @@ input:focus,select:focus,textarea:focus{outline:3px solid var(--gold);outline-of
 @media (min-width:600px){.kv{grid-template-columns:200px 1fr}}
 .kv dt{font-weight:600;color:var(--muted)} .kv dd{margin:0 0 8px;overflow-wrap:anywhere}
 .quote{white-space:pre-wrap;overflow-wrap:anywhere;border-left:4px solid var(--gold);padding:2px 0 2px 14px;margin:8px 0}
+.posts+.note{margin-top:var(--gap)}

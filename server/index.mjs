@@ -69,12 +69,12 @@ export function buildApp({ env = process.env } = {}) {
   /* ---- the board, read by anyone: the database hands back public posts only ---------------------------------------------------- */
   app.get("/api/board", wrap(async (req, res) => {
     const r = await boardQuery(req.query);
-    res.set("cache-control", "public, max-age=30").json({ posts: r.posts, total: r.total, page: r.page, pages: r.pages });
+    res.set("cache-control", "no-cache").json({ posts: r.posts, total: r.total, page: r.page, pages: r.pages });
   }));
   app.get("/api/board/:id", wrap(async (req, res) => {
     const p = await boardPost(req.params.id);
     if (!p) return res.status(404).json({ error: "not_found", words: "That post is not on the board." });
-    res.set("cache-control", "public, max-age=30").json({ post: p });
+    res.set("cache-control", "no-cache").json({ post: p });
   }));
 
   /* ---- sign in by a code, by email ------------------------------------------------------------------------------------------ */
@@ -103,9 +103,9 @@ export function buildApp({ env = process.env } = {}) {
 
   /* ---- the pages ----------------------------------------------------------------------------------------------------------- */
   const html = (res, status, body) => res.status(status).type("html").send(body);
-  app.get("/", wrap(async (req, res) => { const r = await boardQuery({}, { limit: 6 }); res.set("cache-control", "public, max-age=30"); html(res, 200, frontPage({ latest: r.posts })); }));
-  app.get("/board", wrap(async (req, res) => { const r = await boardQuery(req.query); res.set("cache-control", "public, max-age=30"); html(res, 200, boardPage({ result: r })); }));
-  app.get("/board/:id", wrap(async (req, res) => { const p = await boardPost(req.params.id); res.set("cache-control", "public, max-age=30"); p ? html(res, 200, postPage({ post: p })) : html(res, 404, missingPostPage()); }));
+  app.get("/", wrap(async (req, res) => { const r = await boardQuery({}, { limit: 6 }); res.set("cache-control", "no-cache"); html(res, 200, frontPage({ latest: r.posts })); }));
+  app.get("/board", wrap(async (req, res) => { const r = await boardQuery(req.query); res.set("cache-control", "no-cache"); html(res, 200, boardPage({ result: r })); }));
+  app.get("/board/:id", wrap(async (req, res) => { const p = await boardPost(req.params.id); res.set("cache-control", "no-cache"); p ? html(res, 200, postPage({ post: p })) : html(res, 404, missingPostPage()); }));
   app.get("/join", (req, res) => html(res, 200, shellPage({ title: "Join the network", script: "/js/join.js", nav: "join" })));
   app.get("/me", (req, res) => html(res, 200, shellPage({ title: "Your ministry", script: "/js/me.js", nav: "me" })));
   app.get("/steward", (req, res) => html(res, 200, shellPage({ title: "Waiting to be read", script: "/js/steward.js", nav: "" })));
