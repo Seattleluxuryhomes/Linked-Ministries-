@@ -44,7 +44,7 @@ export function dateWords(v) {
 
 export const CRISIS = "If someone is in danger, call 911. If someone is thinking of hurting themselves, call or text 988.";
 export const STAY_SAFE = "Stay safe: meet in a public place, bring someone with you, and never send money.";
-export const NO_MONEY = "The board moves no money. Ministries ask for and give things, time, space and skills. A gift to Linked Ministries is a different door, not the board.";
+export const NO_MONEY = "The board moves no money between ministries. Ministries ask for and give things, time, space and skills. Linked Ministries may fund an ask from its gifts when its board says yes.";
 
 /* what a poster reads about a post, and what a lead reads about the ministry. "On the board" only when it is. */
 export const POST_STATUS = {
