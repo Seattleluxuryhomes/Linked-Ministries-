@@ -15,7 +15,7 @@ import { parseCents, receiptCode, methodLabel, GIFT_METHODS } from "../public/js
 import { receiptEmail } from "./emails.mjs";
 import { toCsv, dollars } from "../lib/csv.mjs";
 import { noticeEmail } from "../lib/email.mjs";
-import { runEden, JOBS as EDEN_JOBS } from "./eden.mjs";
+import { runEden, JOBS as EDEN_JOBS, FREEFORM as EDEN_FREEFORM } from "./eden.mjs";
 import { keyIsSet } from "./eden-engine.mjs";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -127,7 +127,7 @@ export function mount(app, { wrap, publicBase, env = process.env, now = () => Da
   app.post("/api/eden", wrap(async (req, res) => {
     need(req);
     const b = req.body || {}, job = str(b.job, 20);
-    if (!Object.prototype.hasOwnProperty.call(EDEN_JOBS, job)) throw bad("Eden does not do that.", 400, "no_such_job");
+    if (job !== EDEN_FREEFORM && !Object.prototype.hasOwnProperty.call(EDEN_JOBS, job)) throw bad("Eden does not do that.", 400, "no_such_job");
     const me = await whoami(req.user);
     const allow = (who) => (who === "treasurer" ? !!me.treasurer : who === "lead" ? !!(me.ministry && me.lead) : !!me.ministry);
     const perHour = Math.max(1, Number(env.EDEN_LIMIT_HOUR) || 8), perDay = Math.max(1, Number(env.EDEN_LIMIT_DAY) || 40);   /* a person's limit; the defaults are 8 an hour and 40 a day */

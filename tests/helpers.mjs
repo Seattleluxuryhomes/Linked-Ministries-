@@ -122,6 +122,20 @@ export async function signIn(c, server, email, { smtp } = {}) {
 
 /* ---- a stand-in for the model's server (Eden): a real HTTP server on a local port that keeps every request and answers by the job in
    the system prompt, or as the test tells it to. No test spends money or reaches the internet. */
+/** The stand-in's idea of the classifier: a few plain keywords, so a test can see the server put the right job to work. It answers only
+    from the kinds the request offered (the schema's enum), exactly as the real model is held to, and says "none" for the rest. This is not
+    the real model's judgment; it proves the server's plumbing (the offered list, the check, the mapping to a job, the name check). */
+export function standInClassify(body) {
+  const text = String((body && body.messages && body.messages[0] && body.messages[0].content) || "");
+  const words = (text.match(/words: ([\s\S]*?)\n<\/person_input>/) || [, ""])[1];
+  const offered = (((body || {}).output_config || {}).format || {}).schema.properties.kind.enum || [];
+  const w = words.toLowerCase();
+  let kind = /\bthank/.test(w) ? "thank_you" : /\bgrant\b/.test(w) ? "grant_letter" : /\b(give|giving|offer|offering|spare|donate)\b/.test(w) ? "give" : /\b(need|needs|ask|looking for|want)\b/.test(w) ? "ask" : "none";
+  if (!offered.includes(kind)) kind = "none";
+  const m = words.match(/ to ((?:[A-Z][\w']*)(?: [A-Z][\w']*)*)/);
+  return { kind, name: (kind === "thank_you" || kind === "grant_letter") && m ? m[1] : "" };
+}
+
 export async function modelStandIn() {
   const seen = []; const state = { next: null, verse: "none" };
   const server = http.createServer((req, res) => {
@@ -130,7 +144,8 @@ export async function modelStandIn() {
       let body = null; try { body = JSON.parse(b); } catch (e) { /* not json */ }
       seen.push({ url: req.url, headers: req.headers, body });
       const sys = (body && body.system) || "";
-      const dflt = /Task: write the title and the words/.test(sys) ? { title: "Ten folding tables for our meal", body: "We feed about eighty neighbors every Saturday. We need ten folding tables, and we can pick them up near Seattle." }
+      const classify = /Task: choose the kind of writing/.test(sys);
+      const dflt = classify ? standInClassify(body) : /Task: write the title and the words/.test(sys) ? { title: "Ten folding tables for our meal", body: "We feed about eighty neighbors every Saturday. We need ten folding tables, and we can pick them up near Seattle." }
         : /Task: write the one line/.test(sys) ? { tagline: "A hot meal every Saturday for our neighbors", about: "We serve a hot meal at noon every Saturday. Everyone is welcome here.\nOn Thursday nights we run a small youth night." }
         : { letter: "Thank you for your gift. It helps us serve meals to our neighbors." };
       const out = state.next ? state.next : { text: JSON.stringify({ verse_key: state.verse, ...dflt }) };

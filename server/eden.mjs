@@ -13,7 +13,7 @@
      * One row in lm.events per call (lm.eden_log): the job, the outcome and the token counts, never a word. A person has a limit per hour and per day. */
 import { isCrisis } from "./crisis.mjs";
 import { VERSES } from "./scripture.mjs";
-import { createMessage, keyIsSet, modelName, isAuthError, isBusyError } from "./eden-engine.mjs";
+import { createMessage, keyIsSet, modelName, isAuthError, isBusyError, EngineError } from "./eden-engine.mjs";
 import { CRISIS } from "../public/js/pure.js";
 import { verdict } from "../lib/plainwords.mjs";
 
@@ -93,8 +93,85 @@ export function buildRequest(job, f, includeVerse, env = process.env) {
   };
 }
 
+/** the words a person typed in the one free box: the only field the "freeform" job reads */
+export const FREEFORM = "freeform";
+const FREE_WORDS_MAX = 1500;
+/* the short classifier. It is part of the server prompt and is never sent to a page: the page sends its words and nothing else, and the
+   server decides which of the four jobs they are. Only the kinds this person may have are put to the model, and the answer is checked
+   against that same list again, so a model cannot hand a person a job that is not for their role. */
+const KIND_HELP = {
+  ask: "ask = the ministry needs something (things, time, space or skills) and wants to post that need on the board",
+  give: "give = the ministry has something to give or share (things, time, space or skills) and wants to post that on the board",
+  grant_letter: "grant_letter = a letter from the money team to an organization about a grant the board is considering",
+  thank_you: "thank_you = a thank-you letter to a person or a group who gave a gift",
+};
+const KIND_JOB = { ask: "ask_give", give: "ask_give", grant_letter: "grant_letter", thank_you: "thank_you" };
+const classifyTask = (kinds) => `Task: choose the kind of writing the person is asking for, and name who it is for. Choose exactly one kind from this list, and choose none if the words are none of these or you cannot tell:
+${kinds.map((k) => "- " + KIND_HELP[k]).join("\n")}
+- none = anything else
+Set name to the organization or person a letter is to, copied exactly as the person typed it. Set name to an empty string for an ask, a give, or when no name was typed. Never invent a name. Do not write the draft now; only choose.`;
+const classifySchema = (kinds) => ({ type: "object", properties: { kind: { type: "string", enum: [...kinds, "none"] }, name: { type: "string" } }, required: ["kind", "name"], additionalProperties: false });
+const classifyRequest = (kinds, words, env) => ({
+  model: modelName(env), max_tokens: 400,
+  system: `${SYSTEM}\n\n${classifyTask(kinds)}`,
+  output_config: { effort: "low", format: { type: "json_schema", schema: classifySchema(kinds) } },
+  messages: [{ role: "user", content: `<person_input>\nwords: ${esc(words)}\n</person_input>` }],
+});
+/** the kinds of writing this person may have, by role */
+export const kindsFor = (allow) => ["ask", "give", "grant_letter", "thank_you"].filter((k) => allow(k === "grant_letter" || k === "thank_you" ? "treasurer" : "ministry"));
+/** the fields the chosen job is given, from the person's words and the name the classifier copied out of them */
+export function freeformFields(kind, words, name) {
+  const job = KIND_JOB[kind], f = pickFields(job, { fields: {} });
+  f.notes = words;
+  if (job === "ask_give") f.kind = kind;
+  if (kind === "grant_letter") f.recipient = clean(name, 120);
+  if (kind === "thank_you") f.donor = clean(name, 120);
+  return { job, f };
+}
+const failed = (inTokens = 0, outTokens = 0) => ({ status: 502, body: { ok: false, reason: "failed", words: "Eden could not write that now. Nothing was written. Try again in a minute." }, outcome: "failed", inTokens, outTokens });
+
+/** the whole of the free box: words in, a kind chosen on the server, a draft out. One call to this route, one record. */
+async function runFreeform({ body, env, allow }) {
+  const given = body && typeof body.fields === "object" && body.fields ? body.fields : {};
+  const words = typeof given.words === "string" ? clean(given.words, FREE_WORDS_MAX) : "";
+  /* danger to life first, before a key or a role is looked at: the model is never asked what to do about it */
+  if (isCrisis(words)) return { status: 200, body: { ok: true, crisis: true, words: CRISIS }, outcome: "crisis", inTokens: 0, outTokens: 0 };
+  const kinds = kindsFor(allow || (() => true));
+  if (!kinds.length) return { status: 403, body: { ok: false, reason: "not_yours", words: "Eden writes for a ministry. Start your ministry first, and then ask Eden." }, outcome: null };
+  if (!keyIsSet(env)) return { status: 503, body: { ok: false, reason: "not_set_up", words: "Eden is not set up on this server yet. Nothing was written." }, outcome: "not_set_up", inTokens: 0, outTokens: 0 };
+  if (words.length < 3) return { status: 422, body: { ok: false, reason: "need_words", words: "Tell Eden a little more first. Say what it is about, in a few words." }, outcome: null };
+  let inT = 0, outT = 0, pick = null;
+  try {
+    const resp = await createMessage(classifyRequest(kinds, words, env), env);
+    inT += (resp.usage && resp.usage.input_tokens) || 0; outT += (resp.usage && resp.usage.output_tokens) || 0;
+    if (resp.stop_reason === "refusal") return { status: 200, body: { ok: false, reason: "refused", words: "Eden would not write that. Nothing was written." }, outcome: "refused", inTokens: inT, outTokens: outT };
+    const t = (resp.content || []).find((b) => b.type === "text");
+    pick = JSON.parse(String((t && t.text) || "").replace(/^```(?:json)?|```$/g, "").trim());
+  } catch (e) {
+    if (e instanceof EngineError) {
+      console.error(isAuthError(e) ? "eden: the key was refused" : "eden: call failed " + String(e.status || e.kind).slice(0, 40));
+      return isBusyError(e) ? { status: 429, body: { ok: false, reason: "busy", words: "Eden is busy right now. Try again in a minute." }, outcome: "failed", inTokens: 0, outTokens: 0 } : failed();
+    }
+    return failed(inT, outT);   /* an answer that is not the agreed shape */
+  }
+  if (!pick || typeof pick !== "object" || typeof pick.kind !== "string" || typeof pick.name !== "string") return failed(inT, outT);
+  if (!kinds.includes(pick.kind)) {
+    const unclear = kinds.length > 2 ? { ok: false, reason: "unclear", words: "Eden could not tell what to write. Say if it is an ask, a give, a grant request letter or a thank-you letter." } : { ok: false, reason: "unclear", words: "Eden could not tell what to write. Say if it is an ask or a give, and what it is about." };
+    return { status: 200, body: unclear, outcome: "unclear", inTokens: inT, outTokens: outT };
+  }
+  /* a name is kept only when the person really typed it: a name the model made up is dropped */
+  const name = pick.name.trim() && words.toLowerCase().includes(pick.name.trim().toLowerCase()) ? pick.name.trim() : "";
+  const { job, f } = freeformFields(pick.kind, words, name);
+  if (missing(job, f).length) return { status: 422, body: { ok: false, reason: "need_words", words: "Say who the letter is to, like the name of a church or a person. Then ask Eden again." }, outcome: "unclear", inTokens: inT, outTokens: outT };
+  const r = await draftJob(job, f, false, env, JOBS[job]);
+  r.inTokens += inT; r.outTokens += outT;
+  if (r.body.ok === true) r.body = { ...r.body, job: FREEFORM, kind: pick.kind };
+  return r;
+}
+
 /** run one job. Returns { status, body } for the API and { outcome, inTokens, outTokens } for the record. */
 export async function runEden({ job, body, env = process.env, allow }) {
+  if (job === FREEFORM) return runFreeform({ body, env, allow });
   const spec = Object.prototype.hasOwnProperty.call(JOBS, job) ? JOBS[job] : null;
   if (!spec) return { status: 400, body: { ok: false, reason: "no_such_job", words: "Eden does not do that." }, outcome: null };
   const f = pickFields(job, body), includeVerse = !!(body && body.include_verse === true);
@@ -105,6 +182,11 @@ export async function runEden({ job, body, env = process.env, allow }) {
   if (!keyIsSet(env)) return { status: 503, body: { ok: false, reason: "not_set_up", words: "Eden is not set up on this server yet. Nothing was written." }, outcome: "not_set_up", inTokens: 0, outTokens: 0 };
   const need = missing(job, f);
   if (need.length) return { status: 422, body: { ok: false, reason: "need_words", words: "Tell Eden a little more first. Say what it is about, in a few words." }, outcome: null };
+  return draftJob(job, f, includeVerse, env, spec);
+}
+
+/** the call to the model for one job, and the checks on what comes back */
+async function draftJob(job, f, includeVerse, env, spec) {
   let resp;
   try { resp = await createMessage(buildRequest(job, f, includeVerse, env), env); }
   catch (e) {
