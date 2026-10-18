@@ -61,8 +61,14 @@ Founder, 2026-10-18: "So if a ministry wants something or needs something we nee
     (it was the signed-in pages only: /me, the page form, /money). A person can drag it, it slides to the nearest edge, it wanders slowly on
     its own and holds still for a person, and it never moves for less motion (`public/js/eden.js`, `eden-place.js`, `eden-orb.js`, `orb.js`;
     `tests/browser-orb-test.mjs`). Before sign-in the orb makes no call to Eden or to anyone for it: tapping it shows words only (who Eden is,
-    what she never does, the 911 and 988 line) and a "Join the network" button. After sign-in the panel is the writing helper, and the writing
-    forms (/me, the page form, /money) are where it writes. Its prompt and its key live in the server; a client sends a job name and fields, never a prompt. Danger-to-life words
+    what she never does, the 911 and 988 line) and a "Join the network" button. After sign-in the panel is the writing helper, anywhere (founder,
+    2026-10-18: "tap the orb anywhere while signed in, say what you want, she writes it"): with no form open it is one box, "Say what to
+    draft", a Draft button and the 911 and 988 line; inside a form (/me, the page form, /money) the same box sits above the form's own
+    writing. The page sends only `{ job: "freeform", fields: { words } }`; the server's own short classifier (part of the server prompt,
+    offered only the kinds the person's role may have, and checked again after) chooses ask, give, grant letter or thank-you, and the
+    existing per-job prompt and rules write the draft. The answer carries the kind and the draft. "Use this in a new ask" or "...give" opens
+    the form on /me with the draft in it (not saved; it never replaces words a person typed); "Copy letter" copies a letter. One call to the
+    route is one record (job `freeform`) and counts once toward the eight an hour and forty a day. Its prompt and its key live in the server; a client sends a job name and fields, never a prompt. Danger-to-life words
     stop the call and show 911 and 988. Nothing Eden writes is saved or sent until the person presses the form's own Save or Send, and
     every draft says "Eden wrote this; read it before you use it." Scripture is only ever an exact verse from `server/scripture.mjs` by
     its key. No legal, tax or medical advice. One event per call, with token counts and never a word. `tests/eden-test.mjs` holds each.

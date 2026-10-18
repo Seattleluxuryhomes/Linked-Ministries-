@@ -116,7 +116,7 @@ function grantRow(g, me) {
     h("div", { class: "sub" }, `${GRANT_STATUS[g.status]} Proposed by ${g.proposed_by_name}.${g.approved_by_name ? ` Approved by ${g.approved_by_name}.` : ""}${g.paid_ref ? ` Paid by ${g.paid_by_name}, reference ${g.paid_ref}.` : ""}${g.decline_note ? ` Why: ${g.decline_note}` : ""}`),
     g.vote ? h("div", { class: "sub" }, voteWords(g.vote)) : null);
   if (g.status === "proposed") {
-    row.append(mine ? h("div", { class: "sub" }, WORDS.grantNeedOther) : null);
+    if (mine) row.append(h("div", { class: "sub" }, WORDS.grantNeedOther));
     row.append(h("div", { class: "row" },
       mine ? null : h("button", { class: "btn small", type: "button", "data-act": "approve", on: { click: () => { openForm = { id: g.id, kind: "approve" }; load(); } } }, WORDS.grantApprove),
       h("button", { class: "btn small ghost", type: "button", "data-act": "decline", on: { click: () => { openForm = { id: g.id, kind: "decline" }; load(); } } }, WORDS.grantDecline)));

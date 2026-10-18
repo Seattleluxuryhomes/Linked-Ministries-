@@ -3,11 +3,32 @@
    Eden's panel beside it. The pieces of arithmetic are in public/js/eden-place.js; the drawing is public/js/eden-orb.js. This script holds no rule and no prompt: it sends a job name and what the
    person typed to /api/eden, and shows what comes back. The server decides everything (its prompt, its key, its limits, the crisis check,
    the verse list). What Eden writes is shown, marked, and goes into a form field only when the person presses "Use these words"; the
-   form's own Save or Send is still the only way anything is kept or sent. With no key on the server it says so and offers nothing. */
+   form's own Save or Send is still the only way anything is kept or sent. With no key on the server it says so and offers nothing.
+   The free box (founder, 2026-10-18: "tap the orb anywhere while signed in, say what you want, she writes it"): a signed-in person says what
+   they want in their own words and the page sends ONLY { job: "freeform", fields: { words } }. The server decides which kind of writing it is
+   and answers with the kind and the draft; this script shows both, with one button. "Use this in a new ask / give" opens the form on /me
+   with the draft in it (not saved); "Copy letter" copies a letter. */
 import { h, get, post, msg, field, area, select, busy } from "/js/common.js";
 import { WORDS, CRISIS } from "/js/pure.js";
 import { mountEdenOrb } from "/js/eden-orb.js";
 import { TAP_LIMIT, NUDGE, GAP, IDLE_MS, ROAM_MS, GLIDE_MS, SNAP_MS, NEAR, orbSize, clampToViewport, snapToEdge, isTap, nudge, placePanel, roamAnchors, nextAnchor, overlaps } from "/js/eden-place.js";
+
+/* append only what is there: a missing piece is skipped, never written as the word "null" */
+const add = (el, ...kids) => { el.append(...kids.flat(Infinity).filter((k) => k != null && k !== false)); return el; };
+
+/* the free box's way into the new-post form. /me sets this; on every other page the draft travels in the address, after the #, which never
+   leaves the browser, and /me reads it once and clears it. Nothing is stored. */
+let handoff = null;
+export function onEdenDraft(fn) { handoff = fn; }
+export const HAND = "#eden=";
+export function readHandoff(hash) {
+  if (typeof hash !== "string" || !hash.startsWith(HAND)) return null;
+  try {
+    const o = JSON.parse(decodeURIComponent(hash.slice(HAND.length)));
+    if (!o || (o.kind !== "ask" && o.kind !== "give")) return null;
+    return { kind: o.kind, title: String(o.title || "").slice(0, 120), body: String(o.body || "").slice(0, 2000) };
+  } catch (e) { return null; }
+}
 
 const draftView = (job, d) => {
   if (job === "ask_give") return [h("p", {}, h("strong", {}, d.title)), h("p", { class: "eden-draft" }, d.body)];
@@ -36,7 +57,7 @@ function makeShell() {
   document.body.append(root, panel);
   const orb = mountEdenOrb(btn, { size: 84, small: false, seed: 11, glowEl: glow });
 
-  const S = { cfg: null, job: "", member: null, memberAsked: false, open: false, pos: null, edge: "right", placed: false, drag: null, idleSince: Date.now(), pointer: null, status: null, statusAsked: false,
+  const S = { cfg: null, job: "", member: null, memberAsked: false, open: false, pos: null, edge: "right", placed: false, drag: null, idleSince: Date.now(), pointer: null, status: null, statusAsked: false, me: null, free: { words: "", data: null, note: "" },
     thinking: false, speaking: false, listening: false, speakTimer: 0, glideTimer: 0, snapTimer: 0, roamTimer: 0, anchorAt: 0, skipClick: false };
   const size = () => root.offsetWidth || orbSize(window.innerWidth);
   const vw = () => document.documentElement.clientWidth || window.innerWidth, vh = () => window.innerHeight;
@@ -104,7 +125,7 @@ function makeShell() {
   async function askMember() {
     if (S.memberAsked) return; S.memberAsked = true;
     const r = await get("/api/me");
-    S.member = !!(r.ok && r.data && r.data.signed_in);
+    S.member = !!(r.ok && r.data && r.data.signed_in); S.me = S.member ? r.data : null;
     if (S.member) askStatus();
     show(); if (S.open) buildPanel();
   }
@@ -124,22 +145,74 @@ function makeShell() {
       h("button", { class: "btn ghost small", type: "button", "data-act": "eden-close", on: { click: () => closePanel(true) } }, WORDS.edenClose));
     const body = h("div", { class: "eden-body" });
     panel.replaceChildren(head, body);
-    if (problem) { body.append(msg(problem)); return; }
-    if (S.member === null) { body.append(msg(WORDS.edenChecking)); return; }
+    if (problem) { add(body, msg(problem)); return; }
+    if (S.member === null) { add(body, msg(WORDS.edenChecking)); return; }
     if (!S.member) { buildPublic(body); return; }
-    if (!S.status) { body.append(msg(WORDS.edenChecking)); return; }
-    if (!S.status.configured) { body.append(msg(WORDS.edenNotSetUp)); return; }
+    if (!S.status) { add(body, msg(WORDS.edenChecking)); return; }
+    if (!S.status.configured) { add(body, msg(WORDS.edenNotSetUp)); return; }
     if (!cfg) { buildMember(body); return; }
     buildWriter(cfg, body);
   }
   /* before sign-in: who Eden is, what she never does, and the way in. Words only. */
   function buildPublic(body) {
-    body.append(h("p", {}, WORDS.edenPublicWho), h("p", {}, WORDS.edenPublicMark), h("p", {}, WORDS.edenPublicNever), h("p", { class: "eden-note", "data-eden-crisis-line": "" }, CRISIS),
+    add(body, h("p", {}, WORDS.edenPublicWho), h("p", {}, WORDS.edenPublicMark), h("p", {}, WORDS.edenPublicNever), h("p", { class: "eden-note", "data-eden-crisis-line": "" }, CRISIS),
       h("p", { class: "row" }, h("a", { class: "btn small", href: "/join", "data-act": "eden-join" }, WORDS.edenJoin)));
   }
-  /* signed in, with no form open: Eden writes inside a form */
+  /* signed in, with no form open: the free box. A person with no ministry and no seat on the money team has nothing Eden can write yet. */
   function buildMember(body) {
-    body.append(h("p", {}, WORDS.edenMemberNoForm), location.pathname === "/me" ? null : h("p", { class: "row" }, h("a", { class: "btn small", href: "/me" }, WORDS.edenMemberGo)));
+    if (!canWrite()) { add(body, h("p", {}, WORDS.edenNeedMinistry), h("p", { class: "row" }, h("a", { class: "btn small", href: "/join" }, WORDS.edenStartMinistry)), h("p", { class: "eden-note", "data-eden-crisis-line": "" }, CRISIS)); return; }
+    add(body, freeBox());
+  }
+  const canWrite = () => !!(S.me && (S.me.ministry || S.me.treasurer));
+  const KIND_WORDS = { ask: "edenAsAsk", give: "edenAsGive", grant_letter: "edenAsGrant", thank_you: "edenAsThanks" };
+  /* what the free box did with the draft the person pressed "Use" on */
+  function useFree(d, out) {
+    const draft = d.draft || {};
+    if (d.kind === "ask" || d.kind === "give") {
+      const p = { kind: d.kind, title: draft.title || "", body: draft.body || "" };
+      if (handoff) { if (handoff(p) === true) { S.free = { words: "", data: null, note: "" }; closePanel(false); } else out.replaceChildren(msg(WORDS.edenFormBusy)); return; }
+      location.assign("/me" + HAND + encodeURIComponent(JSON.stringify(p)));
+      return;
+    }
+    const t = draft.letter || "";
+    navigator.clipboard.writeText(t).then(() => out.replaceChildren(msg(WORDS.edenCopied, "ok")), () => out.replaceChildren(msg(WORDS.edenSelect)));
+  }
+  /* the box itself: words in, the draft and its kind out. It sends { job, fields: { words } } and nothing else. */
+  function freeBox(inForm) {
+    const ta = area("words", S.free.words, 1500); ta.setAttribute("placeholder", WORDS.edenFreePlaceholder);
+    ta.addEventListener("input", () => { S.free.words = ta.value; });
+    ta.addEventListener("focus", () => { S.listening = true; show(); }); ta.addEventListener("blur", () => { S.listening = false; show(); });
+    const out = h("div", { class: "out", "aria-live": "polite" }), result = h("div", { class: "eden-result" });
+    const go = h("button", { class: "btn small", type: "button", "data-act": "eden-free-draft" }, WORDS.edenFreeButton);
+    function showResult(d) {
+      const letter = d.kind === "grant_letter" || d.kind === "thank_you";
+      const card = h("div", { class: "eden-card", "data-eden-free-draft": "", "data-kind": d.kind },
+        h("p", { "data-eden-kind": "" }, h("strong", {}, WORDS[KIND_WORDS[d.kind]])), h("p", { class: "label" }, d.mark), ...draftView(letter ? "letter" : "ask_give", d.draft),
+        d.grade != null && d.grade > 8 ? h("p", { class: "eden-note" }, WORDS.edenHard) : null);
+      const label = d.kind === "ask" ? WORDS.edenUseAsk : d.kind === "give" ? WORDS.edenUseGive : WORDS.edenCopyLetter;
+      add(card, h("p", { class: "row" }, h("button", { class: "btn small", type: "button", "data-act": "eden-free-use", on: { click: () => useFree(d, out) } }, label),
+        h("button", { class: "btn small ghost", type: "button", on: { click: () => { S.free.data = null; result.replaceChildren(); out.replaceChildren(); } } }, WORDS.edenAgain)));
+      result.replaceChildren(card);
+      try { card.scrollIntoView({ block: "nearest" }); } catch (e) { /* a browser without it leaves the panel where it is */ }
+    }
+    go.addEventListener("click", async () => {
+      out.replaceChildren(); result.replaceChildren(); S.free.data = null; S.thinking = true; show();
+      await busy(go, async () => {
+        const r = await post("/api/eden", { job: "freeform", fields: { words: ta.value } });
+        S.thinking = false; show();
+        if (!r.ok) return out.replaceChildren(msg(r.data.words || WORDS.tryAgain));
+        if (r.data.crisis) return out.replaceChildren(h("p", { class: "msg", "data-eden-crisis": "" }, r.data.words || CRISIS));
+        if (!r.data.ok) return out.replaceChildren(msg(r.data.words || WORDS.tryAgain));
+        S.free.data = r.data; showResult(r.data);
+        S.speaking = true; show(); clearTimeout(S.speakTimer); S.speakTimer = setTimeout(() => { S.speaking = false; show(); }, 3500);
+      });
+    });
+    if (S.free.data) showResult(S.free.data);
+    return h("div", { class: "eden-free", "data-eden-free": "" },
+      field(WORDS.edenFreeLabel, ta, S.me && S.me.treasurer ? WORDS.edenFreeHelpMoney : WORDS.edenFreeHelp),
+      out, h("p", { class: "row" }, go), result,
+      h("p", { class: "eden-note", "data-eden-crisis-line": "" }, CRISIS),
+      inForm ? null : h("p", { class: "eden-note" }, WORDS.edenNothingSaved));
   }
   function buildWriter({ job, getFields, onUse, useLabel = WORDS.edenUse, withVerse = false, notesLabel = WORDS.edenNotes, notesHelp = WORDS.edenNotesHelp }, body) {
     const notes = area("notes", "", 1500), verse = h("input", { type: "checkbox", name: "include_verse", id: "eden-verse-" + job });
@@ -169,7 +242,7 @@ function makeShell() {
       acts.append(h("button", { class: "btn small ghost", type: "button", on: { click: () => { result.replaceChildren(); out.replaceChildren(); } } }, WORDS.edenAgain));
       card.append(acts); result.replaceChildren(card);
     }
-    body.replaceChildren(...[field(notesLabel, notes, notesHelp),
+    body.replaceChildren(...[canWrite() ? freeBox(true) : null, canWrite() ? h("p", { class: "eden-sub" }, h("strong", {}, WORDS.edenFormTitle)) : null, field(notesLabel, notes, notesHelp),
       withVerse ? h("p", {}, h("label", { for: verse.id }, verse, " ", WORDS.edenVerse)) : null, out, h("p", { class: "row" }, go), result, h("p", { class: "eden-note" }, WORDS.edenNothingSaved)].filter(Boolean));
   }
 

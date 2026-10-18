@@ -3,7 +3,7 @@
    server says it is public; until then it says it is waiting. */
 import { h, get, post, msg, field, text, busy, ministryForm, postForm, toSignIn } from "/js/common.js";
 import { pageCard, pageForm } from "/js/page.js";
-import { edenPanel } from "/js/eden.js";
+import { edenPanel, onEdenDraft, readHandoff } from "/js/eden.js";
 import { installCard } from "/js/install.js";
 import { values as formValues } from "/js/common.js";
 import { WORDS, KIND, POST_STATUS, MINISTRY_STATUS, CLOSE_REASON, categoryLabel, dateWords } from "/js/pure.js";
@@ -14,6 +14,19 @@ let composer = null;       // the post form that is open, if any
 let editingProfile = false;
 let confirmingDelete = false;
 let editingPage = false;
+let lastFilled = null;     // the title and words Eden's free box last put in a new form, so a second draft may replace them but never a person's own words
+
+/* Eden's free box: "Use this in a new ask" lands here, on /me or from any other page (the draft arrives after the # and is cleared at once).
+   The new form is opened with the draft in it. Nothing is saved: Save and Send are still the form's own. */
+const ownWordsInForm = () => {
+  const t = document.querySelector("form.formcard input[name=title]"), b = document.querySelector("form.formcard textarea[name=body]");
+  if (!t || !b) return false;
+  const tv = t.value.trim(), bv = b.value.trim();
+  return (tv || bv) && !(lastFilled && tv === lastFilled.title && bv === lastFilled.body);
+};
+function openWithDraft(p) { lastFilled = { title: p.title.trim(), body: p.body.trim() }; composer = { kind: p.kind, prefill: { title: p.title, body: p.body } }; }
+onEdenDraft((p) => { if (ownWordsInForm()) return false; openWithDraft(p); load().then(() => scrollTo(0, 0)); return true; });
+{ const handed = readHandoff(location.hash); if (handed) { history.replaceState(null, "", location.pathname + location.search); openWithDraft(handed); } }
 
 async function load() {
   const meR = await get("/api/me");
@@ -125,11 +138,13 @@ function composerForm(me, posts, c) {
     if (!r.ok) return { error: r.data.words || WORDS.tryAgain };
     done(submit ? WORDS.sentToRead : WORDS.draftSaved);
   };
-  const form = postForm({ kind: c.kind, v: editing || {}, ministry: me.ministry, limits, submitLabel: editing ? WORDS.saveChanges : WORDS.saveDraft, onSave: (v) => send(v, false), onSend: (v) => send(v, true) });
+  const pre = c.prefill || null; c.prefill = null;
+  const form = postForm({ kind: c.kind, v: editing || pre || {}, ministry: me.ministry, limits, submitLabel: editing ? WORDS.saveChanges : WORDS.saveDraft, onSave: (v) => send(v, false), onSend: (v) => send(v, true) });
   /* Eden: a draft from a few words. It goes into the two fields only when the person presses "Use these words"; Save and Send are still theirs. */
   const eden = edenPanel({ job: "ask_give", getFields: () => { const v = formValues(form); return { kind: v.kind, category: v.category, city: v.city, title: v.title, body: v.body }; },
     onUse: (d) => { form.elements.title.value = d.title; form.elements.body.value = d.body; } });
   form.insertBefore(eden, form.querySelector(".out"));
+  if (pre) form.querySelector(".out").append(msg(WORDS.edenUsed, "ok"));
   form.append(h("p", {}, h("button", { class: "link", type: "button", on: { click: () => { composer = null; load(); } } }, "Cancel")));
   return form;
 }
