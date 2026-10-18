@@ -135,7 +135,7 @@ const html = (await anon.get("/board")).text, front = (await anon.get("/")).text
 ok(html.includes("Ten folding tables, please") && html.includes("I can help") && html.includes("Alpha Table Ministry") && /Open until/.test(html), "the board page shows the post: kind, title, ministry, city, dates, and one button");
 ok(front.includes("Ten folding tables, please") && !front.includes("I can help") && !front.includes("We need this"), "the front shows the latest posts and no button");
 ok(!html.includes("A draft I keep"), "the draft is not on the board");
-for (const p of ["/", "/board", "/board/" + pid]) { const r = await anon.get(p); const bad = checkPage(r.text); ok(r.status === 200 && bad.length === 0, `${p}: no script inline, no style attribute, no banned thing`, bad); }
+for (const p of ["/", "/board", "/board/" + pid]) { const r = await anon.get(p); const bad = checkPage(r.text, { money: p === "/" }); ok(r.status === 200 && bad.length === 0, `${p}: no script inline, no style attribute, no banned thing`, bad); }
 const give = await alex.post("/api/posts", { kind: "give", category: "food", title: "Surplus canned goods", body: "We have forty cases of canned goods to give away. Pickup in Seattle.", open_until: day(20), submit: true });
 await sam.post(`/api/steward/posts/${give.json.id}/review`, { decision: "approve" });
 
