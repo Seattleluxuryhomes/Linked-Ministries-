@@ -4,6 +4,7 @@
 import { h, get, post, msg, field, text, busy, ministryForm, postForm, toSignIn } from "/js/common.js";
 import { pageCard, pageForm } from "/js/page.js";
 import { edenPanel } from "/js/eden.js";
+import { installCard } from "/js/install.js";
 import { values as formValues } from "/js/common.js";
 import { WORDS, KIND, POST_STATUS, MINISTRY_STATUS, CLOSE_REASON, categoryLabel, dateWords } from "/js/pure.js";
 
@@ -41,6 +42,8 @@ function render(me, posts, answers, team, pg) {
   if (flash) { parts.push(msg(flash.words, flash.ok ? "ok" : undefined)); flash = null; }
   if (me.steward) parts.push(h("p", { class: "row" }, h("a", { class: "btn ghost", href: "/steward" }, "Open the page for stewards"), me.treasurer ? h("a", { class: "btn ghost", href: "/treasury", "data-act": "treasury" }, WORDS.treasuryOpen) : null));
 
+  /* the one calm card that asks to put the site on a phone (only on a phone, never when it is already an app, quiet for 30 days after) */
+  const installHere = h("div", { class: "install-slot" }); parts.push(installHere);
   /* post */
   parts.push(h("div", { class: "row" },
     h("button", { class: "btn", type: "button", on: { click: () => { composer = { kind: "ask" }; load(); } } }, WORDS.postAsk),
@@ -74,6 +77,7 @@ function render(me, posts, answers, team, pg) {
   parts.push(fold("account", WORDS.accountTitle, accountCard(me, team)));
   parts.push(h("p", { class: "quiet" }, `${WORDS.signedInAs} ${me.user.email}. `, h("button", { class: "link", type: "button", on: { click: async () => { await post("/api/auth/signout"); location.assign("/"); } } }, WORDS.signOut)));
   app.replaceChildren(...parts);
+  installCard(installHere);
 }
 
 /* a folded section that remembers whether it was open when the page is drawn again */

@@ -2,15 +2,15 @@
 /* tests/run-all.mjs — every test, one after another, each in its own process and its own database (linkedm_t_<name>), to the true end:
    one red test does not hide another. Needs a local Postgres 16 (LEXOS_PG_ADMIN_URL, default
    postgres://postgres:lexos-local@127.0.0.1:5432/postgres) and, for the browser tests, a Chromium (CHROMIUM_PATH).
-     npm test                 everything: unit, plain words, database, API, boot, light, browser
+     npm test                 everything: unit, installable app, plain words, database, API, boot, light, browser
      npm run test:fast        the unit, plain-words, database, API and boot tests only (no browser) */
 import { spawn } from "node:child_process";
 import path from "node:path";
 import { ROOT } from "./helpers.mjs";
 
 const fast = process.env.LM_FAST === "1" || process.argv.includes("--fast");
-const ALL = [["migrations are recorded", "tools/freeze-migrations.mjs", ["--check"]], ["unit", "tests/unit-test.mjs"], ["plain words", "tests/plainwords-test.mjs"], ["database", "tests/db-test.mjs"], ["database: pages", "tests/db-pages-test.mjs"], ["database: giving", "tests/db-giving-test.mjs"], ["api", "tests/api-test.mjs"], ["api: pages", "tests/api-pages-test.mjs"], ["api: giving", "tests/api-giving-test.mjs"], ["eden", "tests/eden-test.mjs"], ["boot", "tests/boot-test.mjs"],
-  ...(fast ? [] : [["light", "tests/light-test.mjs"], ["browser", "tests/browser-test.mjs"], ["browser: pages", "tests/browser-page-test.mjs"], ["browser: giving", "tests/browser-giving-test.mjs"], ["browser: eden", "tests/browser-eden-test.mjs"], ["browser: desktop", "tests/browser-desktop-test.mjs"]])];
+const ALL = [["migrations are recorded", "tools/freeze-migrations.mjs", ["--check"]], ["unit", "tests/unit-test.mjs"], ["installable app (unit)", "tests/pwa-unit-test.mjs"], ["plain words", "tests/plainwords-test.mjs"], ["database", "tests/db-test.mjs"], ["database: pages", "tests/db-pages-test.mjs"], ["database: giving", "tests/db-giving-test.mjs"], ["api", "tests/api-test.mjs"], ["api: pages", "tests/api-pages-test.mjs"], ["api: giving", "tests/api-giving-test.mjs"], ["eden", "tests/eden-test.mjs"], ["boot", "tests/boot-test.mjs"],
+  ...(fast ? [] : [["light", "tests/light-test.mjs"], ["browser", "tests/browser-test.mjs"], ["browser: pages", "tests/browser-page-test.mjs"], ["browser: giving", "tests/browser-giving-test.mjs"], ["browser: eden", "tests/browser-eden-test.mjs"], ["browser: installable app", "tests/browser-pwa-test.mjs"], ["browser: desktop", "tests/browser-desktop-test.mjs"]])];
 const results = [];
 for (const [name, file, args = []] of ALL) {
   console.log(`\n=== ${name} (${file}) ===`);

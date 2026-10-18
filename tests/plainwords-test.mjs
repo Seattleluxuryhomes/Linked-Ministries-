@@ -46,13 +46,18 @@ for (const [name, html] of Object.entries(pages)) {
   const blocks = html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<svg[\s\S]*?<\/svg>|<select[\s\S]*?<\/select>|<blockquote class="scripture[\s\S]*?<\/blockquote>/gi, " ").replace(/<\/(p|h1|h2|h3|li|label|div|a|button|span|td|th|tr|caption|figcaption)>/gi, "\n").split("\n").map((b) => visibleText(b)).filter((b) => b.split(/\s+/).length >= 4);
   for (const b of blocks) { if (b === LEGAL) continue; sentences++; check(`page ${name}`, b); }
 }
+{ /* the offline page is a plain file, so its sentences are read from the file itself */
+  const off = read("public/offline.html"); const blocks = off.replace(/<svg[\s\S]*?<\/svg>|<head>[\s\S]*?<\/head>/gi, " ").replace(/<\/(p|h1|h2|li|a|span|div)>/gi, "\n").replace(/<[^>]+>/g, " ").split("\n").map((x) => x.replace(/\s+/g, " ").trim()).filter((x) => x.split(" ").length >= 3 && x !== "Linked Ministries linkedm.org");
+  for (const b of blocks) { if (b === CRISIS) { check("offline page: the emergency line", b); continue; } sentences++; check("the offline page", b); }
+  ok(blocks.length >= 3 && blocks.some((b) => /offline/.test(b)), "the offline page's words were read", blocks);
+  ok(WORDS.offlineBody === "This phone cannot reach Linked Ministries right now. Nothing was sent and nothing was saved since the connection dropped." && blocks.includes(WORDS.offlineBody), "and they are the same words as the shared list, so the two cannot drift apart"); }
 ok(sentences >= 120, `${sentences} blocks of words on the public pages were read`);
 
 /* every sentence the server can speak: refusals, answers, the emails */
 const strings = (src) => [...src.matchAll(/"((?:[^"\\\n]|\\.)*)"|`((?:[^`\\\n$]|\\.)*)`/g)].map((m) => (m[1] != null ? m[1] : m[2]).replace(/\\"/g, '"').replace(/\\'/g, "'")).filter((s) => /^[A-Z]/.test(s) && /\s[a-z]+\s+[a-z]+\s+[a-z]+/i.test(s) && s.split(/\s+/).length >= 5 && !/^(select|insert|update|delete|Mozilla|default-src|Contact:)/i.test(s) && !/[{}<>=;]|function|return |\.mjs|\.js\b/.test(s));
 let spoken = 0;
 for (const file of ["server/words.mjs", "server/api.mjs", "server/index.mjs", "server/auth.mjs"]) for (const s of strings(read(file))) { if (s === IRS_PHRASE) continue; /* the IRS's own sentence, quoted exactly from its letter; shown only once IRS_LETTER_DATE is set (the second named exception) */ spoken++; check(file, s); }
-for (const file of ["public/js/common.js", "public/js/page.js", "public/js/treasury.js", "public/js/eden.js", "public/js/join.js", "public/js/me.js", "public/js/steward.js", "public/js/board.js"]) for (const s of strings(read(file))) { spoken++; check(file, s); }
+for (const file of ["public/js/common.js", "public/js/page.js", "public/js/treasury.js", "public/js/eden.js", "public/js/join.js", "public/js/me.js", "public/js/steward.js", "public/js/board.js", "public/js/install.js"]) for (const s of strings(read(file))) { spoken++; check(file, s); }
 ok(spoken >= 40, `${spoken} sentences in the server and the scripts were read`);
 
 /* every email, as the server writes it: each sentence of the words that are ours (what a person typed is theirs) */

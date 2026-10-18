@@ -417,3 +417,16 @@ section[aria-labelledby] h2{margin-bottom:.6em}
   .hero{margin-top:-16px}
   .hero-grid{gap:72px}
 }
+
+/* the card that asks to put the site on a phone: the mark, one sentence, one button; quiet and light, with a gold line over it */
+.install{border-top:4px solid var(--gold);margin:0 0 var(--gap)}
+.install-head{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.install-head h2{font-size:20px;margin:0}
+.install-mark{width:44px;height:44px;flex:none;border-radius:11px}
+.install-body p{margin:0 0 .7em}
+.install-body .row{margin-top:4px}
+.install-steps{margin:0 0 .7em;list-style:none;padding:0;counter-reset:step}
+.install-steps li{counter-increment:step;display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.install-steps li::before{content:counter(step);display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;flex:none;border:2px solid var(--gold);border-radius:50%;font:600 15px var(--display)}
+.share-ico{width:22px;height:22px;color:var(--ink)}
+.install-slot:empty{display:none}

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* tools/make-images.mjs — draws the pictures that cannot be inline SVG in a page: the icon file, the home-screen icon, the old-style
+/* tools/make-images.mjs — draws the pictures that cannot be inline SVG in a page: the icon file, the old-style
    favicon and the share card (1200 by 630), from the same mark and picture the pages draw (server/pages.mjs). Run it after the mark
    changes:  node tools/make-images.mjs   (needs a Chromium: CHROMIUM_PATH, or the one the tests use).
    The share card is a static PNG under 150 KB, in the light look: an ivory ground, a gold line, the mark, the name, one line. */
@@ -44,11 +44,11 @@ async function shot(html, w, h, file, { transparent = false, scale = 1 } = {}) {
   if (file) fs.writeFileSync(out(...file), buf); return buf;
 }
 const share_ = await shot(share, 1200, 630, ["img", "share.png"]);
-await shot(tile(180), 180, 180, ["img", "apple-touch-icon.png"], { transparent: true });
+/* the home-screen icon is drawn by tools/make-pwa.mjs (a square to the edge, which iOS needs), not here */
 const png48 = await shot(tile(48), 48, 48, null, { transparent: true });
 /* an .ico file that holds one 48-pixel PNG: every current browser reads it */
 const head = Buffer.alloc(22); head.writeUInt16LE(0, 0); head.writeUInt16LE(1, 2); head.writeUInt16LE(1, 4); head[6] = 48; head[7] = 48; head.writeUInt16LE(1, 10); head.writeUInt16LE(32, 12); head.writeUInt32LE(png48.length, 14); head.writeUInt32LE(22, 18);
 fs.writeFileSync(out("favicon.ico"), Buffer.concat([head, png48]));
 await browser.close();
-for (const f of ["img/icon.svg", "img/share.png", "img/apple-touch-icon.png", "favicon.ico"]) console.log(f.padEnd(28), fs.statSync(out(...f.split("/"))).size, "bytes");
+for (const f of ["img/icon.svg", "img/share.png", "favicon.ico"]) console.log(f.padEnd(28), fs.statSync(out(...f.split("/"))).size, "bytes");
 console.log("the mark alone:", Buffer.byteLength(markSvg), "bytes");

@@ -164,7 +164,7 @@ export function buildApp({ env = process.env } = {}) {
     res.type("application/xml").set("cache-control", "public, max-age=300").send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(([u, d]) => `<url><loc>${b}${u}</loc>${d ? `<lastmod>${d}</lastmod>` : ""}</url>`).join("\n")}\n</urlset>\n`);
   }));
   app.get("/favicon.ico", (req, res) => res.type("image/x-icon").set("cache-control", "public, max-age=86400").sendFile(path.join(PUBLIC, "favicon.ico")));
-  app.use(express.static(PUBLIC, { index: false, maxAge: "5m", setHeaders: (res, p) => { if (/\.(woff2)$/.test(p)) res.setHeader("Cache-Control", "public, max-age=31536000, immutable"); } }));
+  app.use(express.static(PUBLIC, { index: false, maxAge: "5m", setHeaders: (res, p) => { if (/\.(woff2)$/.test(p)) res.setHeader("Cache-Control", "public, max-age=31536000, immutable"); else if (/[\\/]sw\.js$/.test(p)) res.setHeader("Cache-Control", "no-cache"); else if (/\.webmanifest$/.test(p)) res.type("application/manifest+json"); } }));
   app.use((req, res) => html(res, 404, notFoundPage(where(req))));
   return app;
 }

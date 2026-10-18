@@ -133,8 +133,8 @@
       "origin_path": "behavioral-health-app/server/headers.mjs",
       "origin_sha256": "c79f7055ae97ebabb0a679717d188451d557f1f3dae2c0aec331f2385972923c",
       "local_path": "server/headers.mjs",
-      "local_sha256": "964413a31f07e7bf49c934c47e54fa689e9703f03e91cb42686557524df54b25",
-      "note": "The no-index and no-store paths are this site's. The policy is the original's: script-src 'self', no inline script, no nonce to forget."
+      "local_sha256": "b40a7fc94029f9c56efde4ad2f524a32a03e5f46490adfeef1998568a26bd807",
+      "note": "The no-index and no-store paths are this site's. The policy is the original's: script-src 'self', no inline script, no nonce to forget; one line added, worker-src 'self', for the service worker (this site's own file, no blob)."
     },
     {
       "id": "config",
@@ -188,7 +188,7 @@
       "origin_path": "behavioral-health-app/server/index.mjs",
       "origin_sha256": "b1375df160f0be6f55b551c26472bdeb63eef9c9af918fff8ba44584fd168e21",
       "local_path": "server/index.mjs",
-      "local_sha256": "d35a25b2012949e43bbd32dcf07a1bfce90b05b0661715f1f410bfc71e3857f1",
+      "local_sha256": "6b521b808a28b91b70cd39a801e21ffabfb8c5dc01d1b39e2c995730c7d0cd05",
       "note": "Same boot order and health answer (two words). Public pages are built on the server."
     },
     {
@@ -287,7 +287,7 @@
       "origin_path": "behavioral-health-app/tests/run-all.mjs",
       "origin_sha256": "80f53d81c295c1fdc207a38feffe49b76b305d0106fb5057868e7219cbd201f0",
       "local_path": "tests/run-all.mjs",
-      "local_sha256": "fcd907ce22df58e760e2ef39701425366af5a7076cf6a6720d64ffecaab9be0c",
+      "local_sha256": "b2efc8ca158e90fa246f1b9a58d97c2a6df6ce501c60271f327c28ff2779e34a",
       "note": "This product's test list; drops the image and mutation tests."
     },
     {
@@ -353,7 +353,7 @@
       "origin_path": "behavioral-health-app/tests/unit-test.mjs",
       "origin_sha256": "6bead93056daa8752e1c7eaca4e74352772b4d62cc6832e2916b8d739b6ab620",
       "local_path": "tests/unit-test.mjs",
-      "local_sha256": "57062c757fef333255217047d2b49e5783a98547b4557dd9c235b1a509a67945",
+      "local_sha256": "726ebc245371a22ae06eee0bac70e6cf3d7dd23a0530fdb60140969fad2377ff",
       "note": "The licence check, the commons check, the no-key scan and the migration checks are the original's."
     },
     {
@@ -366,6 +366,50 @@
       "local_path": "public/js/eden-orb.js",
       "local_sha256": "9c1430f435f5159b8300cdc3f9da9c738f0c0c175f1b331f461d3e653a230c74",
       "note": "The drawing (state table, four blobs, seeded mesh, nucleus, vignette, glint, the amber and copper numbers) is copied as it was; only the framework layer changed, a plain mount function instead of a component. Read only at the origin; the origin file is not edited."
+    },
+    {
+      "id": "pwa-worker",
+      "name": "The service worker (D-290): the shell only, never a page, a form or anything under /api",
+      "mode": "adapted",
+      "origin_repo": "cross-univeral",
+      "origin_path": "lexos/pwa/sw.js",
+      "origin_sha256": "4bdf43f568b98f221b051815b055c5254b34b90cf8d3cff3ed7b79779d920bd6",
+      "local_path": "public/sw.js",
+      "local_sha256": "0d1d7f161a96553fa3d3a1fcb517619c50a4fc6199c03835ae80987bc90b0c10",
+      "note": "Same shape and the same rule (a write is never touched, /api is never touched, a page is always the network and offline is answered by one plain page). Changes: the shell here is the stylesheet, six faces, the mark and the offline page; the signed-in paths, /photos and every other path are named as never kept; the stylesheet and the mark go network-first so a release shows at once; the build stamp, the app chunks and the runners' push alerts are removed."
+    },
+    {
+      "id": "pwa-offline",
+      "name": "The offline page (D-290): plainly offline, nothing sent, nothing kept",
+      "mode": "adapted",
+      "origin_repo": "cross-univeral",
+      "origin_path": "lexos/pwa/offline.html",
+      "origin_sha256": "837d54963f6a015436fab4cd16d9e612daf4602ffc117b0e29bd3d9176ee6e12",
+      "local_path": "public/offline.html",
+      "local_sha256": "7bcdd6d683beb8392eb6c729b17fc1799c1f4dcccc8c41ca6af0707207e29686",
+      "note": "Same page and same promise in this site's own light look (it reads /css/lm.css, as every page does) and its own words; the dark ground and the inline style are gone because this site's policy allows neither."
+    },
+    {
+      "id": "pwa-make",
+      "name": "Writes the manifest and the icons from the brand mark (D-290)",
+      "mode": "adapted",
+      "origin_repo": "cross-univeral",
+      "origin_path": "lexos/pwa/make.mjs",
+      "origin_sha256": "3cf3378bc9037136e32f89c8024de7a91b719a0c92c087ba57dc921635c911f6",
+      "local_path": "tools/make-pwa.mjs",
+      "local_sha256": "59c24f8f93e4b137d2c5dad3aad82e1971dc01d43ef8d0c88ab499b781890e64",
+      "note": "Same outputs (manifest, 192 and 512 icons, a maskable icon, an apple-touch icon, all drawn from the existing mark) with Linked Ministries' own mark, name and light palette. The original renders with a package this repository does not have; here the Chromium the tests use draws them, as tools/make-images.mjs does. One manifest, not three."
+    },
+    {
+      "id": "pwa-register",
+      "name": "Registering the worker at the root scope",
+      "mode": "shaped-on",
+      "origin_repo": "cross-univeral",
+      "origin_path": "lexos/src/app.jsx",
+      "origin_sha256": "9270f08cd1dd84169fe05fd89bfbd5d805434b4762e0b174f04e0d29b357276a",
+      "local_path": "public/js/pwa.js",
+      "local_sha256": "73ce0ebd527541a6f9d8709b9190d7709815c8e0273ebf514619f718febb2f37",
+      "note": "The same one line, navigator.serviceWorker.register('/sw.js', { scope: '/' }) with the failure ignored, in its own external file because this site's policy allows no inline script."
     },
     {
       "id": "workflow",
@@ -397,7 +441,7 @@
       "origin_path": "behavioral-health-app/CLAUDE.md",
       "origin_sha256": "3c403645fae7028168c5ee3e1201d85863a7ebbf30225d2007cef282ce16842e",
       "local_path": "CLAUDE.md",
-      "local_sha256": "31030d7a395b51b1c4af48548aba892982ad253d9fc990387448cdabf3097c69",
+      "local_sha256": "2762a66bc368c60136b736fc422aa41fb71207b31432795d908247fa1aab3c27",
       "note": "Same form; this product's hard rules."
     },
     {

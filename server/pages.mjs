@@ -57,6 +57,11 @@ ${image ? "" : `<meta property="og:image:width" content="1200">
 <link rel="icon" href="/img/icon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Linked M">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="stylesheet" href="/css/lm.css">
 </head>
 <body>
@@ -78,6 +83,7 @@ ${verse("jas_1_27","small")}
 <p class="links"><a href="/board">Board</a> <a href="/giving">Giving</a> <a href="/join">Join the network</a> <a href="/terms">Terms</a> <a href="/privacy">Privacy</a> <a href="${e(PRODUCT.da.url)}" rel="noopener">${e(PRODUCT.da.name)}</a></p>
 </div>
 </div></footer>
+<script type="module" src="/js/pwa.js"></script>
 ${script ? `<script type="module" src="${e(script)}"></script>` : ""}
 </body>
 </html>

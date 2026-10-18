@@ -2,6 +2,8 @@
    The pages here carry no inline script and no inline style attribute and load nothing from anyone else (every face is
    self-hosted; no font host, no analytics, no third-party script), so the policy is the strictest one that works:
    script-src 'self' (no 'unsafe-inline', no 'unsafe-eval', and therefore no nonce to forget), style-src 'self'.
+   The service worker (public/sw.js, D-290's pattern) is allowed by one line, worker-src 'self': this site's own file and no other,
+   no blob, no data. Nothing else is loosened.
    That is stricter than a nonce: a nonce lets one inline script run, and this policy lets none. Referrer-Policy: no-referrer
    keeps a page address from travelling to another site. */
 
@@ -13,6 +15,7 @@ export const POLICY = [
   "font-src 'self'",
   "connect-src 'self'",
   "manifest-src 'self'",
+  "worker-src 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
   "base-uri 'none'",

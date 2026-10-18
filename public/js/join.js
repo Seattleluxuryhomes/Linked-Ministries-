@@ -2,6 +2,7 @@
    own. Nothing says "sent" unless the server said the mail provider took it. */
 import { h, get, post, msg, field, text, busy, values, ministryForm, safeNext, agreeLine } from "/js/common.js";
 import { WORDS } from "/js/pure.js";
+import { installCard } from "/js/install.js";
 
 const app = document.getElementById("app");
 const next = safeNext(new URLSearchParams(location.search).get("next"));
@@ -60,11 +61,15 @@ function codeStep(to) {
 function signedIn(me) {
   if (me.ministry) { if (new URLSearchParams(location.search).has("next")) return location.assign(next); return location.assign("/me"); }
   if (me.steward && !wantsMinistry) {
-    return app.replaceChildren(h("h1", {}, WORDS.stewardWelcome), h("p", { class: "lead" }, WORDS.stewardWelcomeLead),
+    const slot = h("div", { class: "install-slot" });
+    app.replaceChildren(h("h1", {}, WORDS.stewardWelcome), h("p", { class: "lead" }, WORDS.stewardWelcomeLead), slot,
       h("p", { class: "row" }, h("a", { class: "btn", href: "/steward" }, WORDS.stewardOpen), h("button", { class: "btn ghost", type: "button", on: { click: () => { wantsMinistry = true; signedIn(me); } } }, WORDS.alsoMinistry)),
       h("p", { class: "quiet" }, `${WORDS.signedInAs} ${me.user.email}. `, h("button", { class: "link", type: "button", on: { click: signOut } }, WORDS.signOut)));
+    installCard(slot);
+    return;
   }
-  const parts = [h("h1", {}, WORDS.profileTitle), h("p", { class: "lead" }, WORDS.profileLead)];
+  const slot = h("div", { class: "install-slot" });
+  const parts = [h("h1", {}, WORDS.profileTitle), h("p", { class: "lead" }, WORDS.profileLead), slot];
   const done = () => location.assign(next === "/me" || !next ? "/me" : next);
   for (const inv of me.invites || []) parts.push(inviteCard(inv, me, done));
   if ((me.invites || []).length) parts.push(h("h2", {}, WORDS.orOwn));
@@ -78,6 +83,7 @@ function signedIn(me) {
   }));
   parts.push(h("p", { class: "quiet" }, `${WORDS.signedInAs} ${me.user.email}. `, h("button", { class: "link", type: "button", on: { click: signOut } }, WORDS.signOut)));
   app.replaceChildren(...parts);
+  installCard(slot);
 }
 
 function inviteCard(inv, me, done) {

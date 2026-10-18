@@ -66,6 +66,18 @@ Founder, 2026-10-18: "So if a ministry wants something or needs something we nee
     authenticated in the same migration, and grant only what a signed-in person needs (0004's blanket revoke covered only what existed then).
     Whatever reads a contact address, or erases a person, runs on the service connection alone.
 
+## Installable app
+
+The site installs to a phone (founder, 2026-10-18: "Make sure the app is downloadable to a phone"). The pattern is Cross Universal's D-290,
+copied (commons.json: `pwa-worker`, `pwa-offline`, `pwa-make`, `pwa-register`). `public/manifest.webmanifest` and the icons are written by
+`node tools/make-pwa.mjs` from the existing mark; `public/sw.js` keeps **only the shell** (the stylesheet, the six faces, the mark, the offline
+page) and never `/api`, a signed-in page, a picture, a form or a non-GET; `public/offline.html` says plainly that the phone is offline and nothing
+was sent. The policy gains one line, `worker-src 'self'`. `public/js/pwa.js` registers the worker; `public/js/install.js` is the one calm card
+on `/me` and the signed-in `/join` that asks a person to add the site to a phone (Android: the browser's own event, and "Added" only after
+`appinstalled`; iPhone: the two real steps). It never shows on a computer, in the app window or on a public page, and after "Not now" or an install it
+stays away 30 days (the one `localStorage` key, `lm_install_until`, the single named exception in `tests/unit-test.mjs`). Tests:
+`tests/pwa-unit-test.mjs`, `tests/browser-pwa-test.mjs`, `tests/browser-desktop-test.mjs`.
+
 ## Copy, never rebuild
 
 Pieces copied from another product are listed in `commons.json`, each with where it came from and its hash (`node tools/commons.mjs`
