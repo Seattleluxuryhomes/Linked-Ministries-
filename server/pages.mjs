@@ -184,7 +184,7 @@ ${verse("cor2_9_7")}
 <div class="three">
 <div class="card"><p class="label">How it works</p><h3>Gifts come in. Grants go out.</h3><p>People give to Linked Ministries. The board picks where the money goes. It can go to a ministry's ask. It can go to housing for people in recovery. It can go to the free program. The board votes. The vote is written down.</p></div>
 <div class="card"><p class="label">What you can see</p><h3>Every grant, published.</h3><p>Who got it, how much, what for, and the day the board said yes. Every gift gets a numbered receipt. No one person can move money alone.</p></div>
-<div class="card"><p class="label">Today</p>${giving && giving.open ? `<h3>Gifts online are open.</h3><p>The board says the registration is filed. A gift gets a numbered receipt, and every grant is shown on the giving page.</p>` : `<h3>Not taking gifts online yet.</h3><p>Linked Ministries is forming as a Washington nonprofit. Online giving opens after the state registration is filed. <a href="/giving">We will say there when it does.</a></p>`}<p><a class="btn ghost small" href="/giving">Where the money went</a></p></div>
+<div class="card"><p class="label">Today</p>${giving && giving.open ? `<h3>Gifts online are open.</h3><p>The board says the registration is filed. A gift gets a numbered receipt, and every grant is shown on the giving page.</p>` : `<h3>Not taking gifts online yet.</h3><p>Linked Ministries is ${flags.FORMED ? "a Washington nonprofit" : "forming as a Washington nonprofit"}. Online giving opens after the state registration is filed. <a href="/giving">We will say there when it does.</a></p>`}<p><a class="btn ghost small" href="/giving">Where the money went</a></p></div>
 </div>
 </div></section>
 ${people}

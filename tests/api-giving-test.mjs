@@ -23,7 +23,7 @@ const g0 = await anon.get("/giving");
 ok(g0.status === 200, "/giving answers 200 signed out");
 { const bad = checkPage(g0.text, { money: true }); ok(bad.length === 0, "/giving carries nothing banned: no inline script, no style attribute, no other host, no tax-deductible, no write-off", bad); }
 ok(/Where the money went/.test(g0.text) && /Linked Ministries is not taking gifts online yet/.test(g0.text) && /registration/.test(g0.text) && !/href="\/give"/.test(g0.text), "with the door closed it says in words that Linked Ministries is not taking gifts online yet, and why (the registration), and has no Give button");
-ok(/Linked Ministries is forming as a nonprofit in Washington\. Linked Ministries has not applied for 501\(c\)\(3\) status yet\./.test(visibleText(g0.text)), "the status line says what is true today and no more");
+ok(/Linked Ministries is a nonprofit in Washington\. Linked Ministries has not applied for 501\(c\)\(3\) status yet\./.test(visibleText(g0.text)), "the status line says what is true today and no more");
 ok(/<svg class="chart"/.test(g0.text) && (g0.text.match(/<tr><th scope="row">/g) || []).length === 12 && /\$0\.00/.test(g0.text), "the chart is drawn inline as SVG, with twelve months in a table under it, all $0.00");
 ok(!/tax-deductible|write-off|deductible/i.test(g0.text), "nothing says a gift is deductible");
 ok(/When Linked Ministries files a Form 990, the link is here\./.test(g0.text), "the Form 990 link is not there until a URL is set");

@@ -3,6 +3,8 @@
    not do: no tax words, no status the corporation does not have yet, no promise that an ask is met, no name of another company.
    {notice} stands for the address the site gives for notices (lib/email.mjs noticeEmail). Each section is [heading, [paragraph or
    ["list", item, item ...]]]. */
+import { FORMED } from "./words.mjs";
+
 export const LAST_CHANGED = "2026-10-18";
 export const DRAFT_LINE = "Draft. A lawyer has not read this yet.";
 
@@ -12,7 +14,7 @@ export const TERMS = {
   sections: [
     ["What Linked Ministries is", [
       "Linked Ministries is a free board. A ministry posts what it needs, or what it can give. Another ministry answers.",
-      "Linked Ministries is forming as a Washington nonprofit corporation. A small group of people, the Linked Ministries team, runs it.",
+      `Linked Ministries is ${FORMED ? "a Washington nonprofit corporation" : "forming as a Washington nonprofit corporation"}. A small group of people, the Linked Ministries team, runs it.`,
     ]],
     ["Who can use it", [
       "This site is for ministries and for adults. You must be 18 or older to join, to post, or to answer. No one under 18 may post.",
