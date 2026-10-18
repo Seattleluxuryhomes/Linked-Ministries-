@@ -1,4 +1,4 @@
-# Behavioral Health by Cross Universal on Railway (or any Docker host): one image, the server and its pages. No build step.
+# Linked Ministries on Railway (or any Docker host): one image, the server and its pages. No build step.
 # Railway reads railway.json, which points here.
 FROM node:22-slim
 WORKDIR /app
