@@ -145,7 +145,7 @@ export function frontPage({ latest, base = "", notice = "" }) {
 <section class="band"><div class="wrap wide">
 <h2>Giving</h2>
 <div class="three">
-<div class="card"><p class="label">How it works</p><h3>Gifts come in. Grants go out.</h3><p>People give to Linked Ministries. The board picks where the money goes. It can go to a ministry's ask, to housing for people in recovery, or to the free program. The board votes. The vote is written down.</p></div>
+<div class="card"><p class="label">How it works</p><h3>Gifts come in. Grants go out.</h3><p>People give to Linked Ministries. The board picks where the money goes. It can go to a ministry's ask. It can go to housing for people in recovery. It can go to the free program. The board votes. The vote is written down.</p></div>
 <div class="card"><p class="label">What you can see</p><h3>Every grant, published.</h3><p>Who got it, how much, what for, and the day the board said yes. Every gift gets a numbered receipt. No one person can move money alone.</p></div>
 <div class="card"><p class="label">Today</p><h3>Not taking gifts online yet.</h3><p>Linked Ministries is forming as a Washington nonprofit. Online giving opens after the state registration is filed. We will say here when it does.</p></div>
 </div>
