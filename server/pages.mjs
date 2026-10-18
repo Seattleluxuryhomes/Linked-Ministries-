@@ -252,8 +252,8 @@ export function missingPostPage({ base = "" } = {}) {
 }
 
 /* ---- the signed-in pages: a shell, and a script that builds the rest from the API ------------------------------------------------ */
-export function shellPage({ title, script, nav, lead, base = "" }) {
-  const body = `<div class="wrap narrow">
+export function shellPage({ title, script, nav, lead, base = "", width = "narrow" }) {
+  const body = `<div class="wrap ${e(width)}">
 <div id="app" class="stack" aria-live="polite">
 <h1>${e(title)}</h1>
 ${lead ? `<p class="lead">${e(lead)}</p>` : ""}

@@ -152,8 +152,8 @@ export function buildApp({ env = process.env } = {}) {
   app.get("/privacy", (req, res) => { res.set("cache-control", "public, max-age=300"); html(res, 200, privacyPage(where(req))); });
   app.get("/join", (req, res) => html(res, 200, shellPage({ title: "Join the network", script: "/js/join.js", nav: "join", ...where(req) })));
   app.get("/me", (req, res) => html(res, 200, shellPage({ title: "Your ministry", script: "/js/me.js", nav: "me", ...where(req) })));
-  app.get("/treasury", (req, res) => html(res, 200, shellPage({ title: "The treasury", script: "/js/treasury.js", nav: "", ...where(req) })));
-  app.get("/steward", (req, res) => html(res, 200, shellPage({ title: "Waiting to be read", script: "/js/steward.js", nav: "", ...where(req) })));
+  app.get("/treasury", (req, res) => html(res, 200, shellPage({ title: "The treasury", script: "/js/treasury.js", nav: "", width: "mid", ...where(req) })));
+  app.get("/steward", (req, res) => html(res, 200, shellPage({ title: "Waiting to be read", script: "/js/steward.js", nav: "", width: "mid", ...where(req) })));
   /* the front, the board, the terms and the privacy page are the public pages; the signed-in pages and the API are kept out of search */
   app.get("/robots.txt", (req, res) => res.type("text/plain").send(["User-agent: *", "Disallow: /me", "Disallow: /steward", "Disallow: /treasury", "Disallow: /join", "Disallow: /api", "Allow: /", "", `Sitemap: ${publicBase(req)}/sitemap.xml`, ""].join("\n")));
   /* only what the public may read: the front, the board, the two legal pages, and each open post that a person read. Never a draft, a waiting post, a closed one or a post of a ministry nobody has read. */

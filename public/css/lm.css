@@ -373,3 +373,47 @@ section[aria-labelledby] h2{margin-bottom:.6em}
 .eden-draft{white-space:pre-wrap;overflow-wrap:anywhere}
 .eden-card .scripture{margin:10px 0}
 .eden input[type=checkbox]{width:20px;height:20px;min-height:0;vertical-align:-3px;margin-right:6px}
+
+/* Scripture: a quiet quotation with a gold line at its side, a short measure, and the reference under it. (It had no rule of its own,
+   so it showed as a browser's default indented block, a hundred and thirty characters wide on a desk.) */
+.scripture{margin:var(--gap) 0;padding:2px 0 2px 16px;border-left:4px solid var(--gold);max-width:40rem}
+.scripture p{margin:0 0 .3em;font-size:17.5px;line-height:1.6}
+.scripture cite{display:block;font-style:italic;font-size:15px;color:var(--muted)}
+.scripture.small{margin:0 0 12px;border-left-width:3px}
+.scripture.small p{font-size:14.5px;color:var(--muted)}
+.scripture.small cite{font-size:13.5px}
+.scripture.tight{margin-top:12px}
+.scripture.small cite,.scripture.small p{line-height:1.5}
+
+/* a calm measure: no line of reading runs past about seventy characters, at any width */
+.lead{max-width:36em}
+.note{max-width:44rem}
+.card .note,.formcard .note{max-width:none}
+.wrap.prose{max-width:660px}
+.foot-words{max-width:38rem}
+.plain{max-width:46rem}
+.mread{max-width:38rem}
+
+/* wide screens (a laptop and up). Layout only: the colours, faces and sizes above are unchanged. */
+:root{--main-top:28px}
+.wrap.mid{max-width:880px}
+@media (min-width:900px){
+  :root{--main-top:44px}
+  main{padding:var(--main-top) 0 72px}
+  /* the signed-in pages: a column a little wider than a phone's, so rows and forms do not squeeze */
+  .wrap.narrow{max-width:720px}
+  .meetrow{grid-template-columns:150px 120px 1fr auto}
+  .stack>h2{margin-top:28px}
+  /* the first screen and a ministry's page sit flush under the top line; their own padding is the space */
+  .hero{margin-top:-24px}
+  .mpage{margin-top:calc(-1 * var(--main-top))}
+  /* the top of every page: the ways around sit beside the name, and the Join button sits at the right edge of the page's column */
+  .top .wrap{flex-wrap:nowrap;gap:0 40px}
+  .nav{flex:1;gap:4px 24px}
+  .nav .btn{margin-left:auto}
+  .foot .wrap{padding-top:32px;padding-bottom:36px}
+}
+@media (min-width:1200px){
+  .hero{margin-top:-16px}
+  .hero-grid{gap:72px}
+}

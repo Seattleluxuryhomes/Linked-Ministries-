@@ -2,7 +2,7 @@
   "version": 1,
   "about": "Pieces this repository copied from another of the founder's products (Cross Universal), the sharing map. origin_sha256 is the origin file's SHA-256 at origin_commit; local_sha256 is this file's. A verbatim piece equals its origin; an adapted piece says what changed; a shaped-on piece is written new on the same model, rulings and defaults. 'Do not rebuild what has been built: copy it.' Regenerate with: node tools/commons.mjs",
   "origin_repo": "cross-univeral",
-  "origin_commit": "51b290b3332af7e78724780557659e990a7d3e0c",
+  "origin_commit": "a5cb2f3cf76c20251127848e2ee113f422ca8fdc",
   "pieces": [
     {
       "id": "plainwords",
@@ -188,7 +188,7 @@
       "origin_path": "behavioral-health-app/server/index.mjs",
       "origin_sha256": "b1375df160f0be6f55b551c26472bdeb63eef9c9af918fff8ba44584fd168e21",
       "local_path": "server/index.mjs",
-      "local_sha256": "331f20a049f862c581243e4e62de95234e3cbad923a615918213516a3ba23293",
+      "local_sha256": "d35a25b2012949e43bbd32dcf07a1bfce90b05b0661715f1f410bfc71e3857f1",
       "note": "Same boot order and health answer (two words). Public pages are built on the server."
     },
     {
@@ -287,7 +287,7 @@
       "origin_path": "behavioral-health-app/tests/run-all.mjs",
       "origin_sha256": "80f53d81c295c1fdc207a38feffe49b76b305d0106fb5057868e7219cbd201f0",
       "local_path": "tests/run-all.mjs",
-      "local_sha256": "5e2271dfbafe3df15bd0efe9f0f537cfd39aeb8f9729f527844bb4fd20e0e1ea",
+      "local_sha256": "fcd907ce22df58e760e2ef39701425366af5a7076cf6a6720d64ffecaab9be0c",
       "note": "This product's test list; drops the image and mutation tests."
     },
     {
