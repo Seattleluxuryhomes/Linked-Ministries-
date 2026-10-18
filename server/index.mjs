@@ -122,7 +122,7 @@ export function buildApp({ env = process.env } = {}) {
   app.get("/", wrap(async (req, res) => { const r = await boardQuery({}, { limit: 6 }); res.set("cache-control", "no-cache"); html(res, 200, frontPage({ latest: r.posts, giving: { open: await givingDoor() }, ...where(req) })); }));
   app.get("/board", wrap(async (req, res) => { const r = await boardQuery(req.query); res.set("cache-control", "no-cache"); html(res, 200, boardPage({ result: r, ...where(req) })); }));
   app.get("/board/:id", wrap(async (req, res) => { const p = await boardPost(req.params.id); res.set("cache-control", "no-cache"); p ? html(res, 200, postPage({ post: p, ...where(req) })) : html(res, 404, missingPostPage(where(req))); }));
-  /* a ministry's own page. The public sees the copy a steward read; a ministry's own people see their draft as a preview (never indexed). */
+  /* a ministry's own page. The public sees the copy a person on the team read; a ministry's own people see their draft as a preview (never indexed). */
   app.get("/m/:slug", wrap(async (req, res) => {
     const pg = await publicPage(req.params.slug);
     res.set("cache-control", "no-cache");
@@ -137,7 +137,7 @@ export function buildApp({ env = process.env } = {}) {
     }
     html(res, 404, notFoundPage(where(req)));
   }));
-  /* a picture: public while the page a steward read names it; otherwise only to the ministry's own people, or a steward reading it */
+  /* a picture: public while the page a person on the team read names it; otherwise only to the ministry's own people, or a team member reading it */
   app.get("/photos/:id", wrap(async (req, res) => {
     const t = cookies(req)[COOKIE];
     const ph = await photo(req.params.id, null) || (t ? await (async () => { try { const u = await sessionUser(t); return u ? photo(req.params.id, u.id) : null; } catch (e) { return null; } })() : null);
@@ -152,10 +152,13 @@ export function buildApp({ env = process.env } = {}) {
   app.get("/privacy", (req, res) => { res.set("cache-control", "public, max-age=300"); html(res, 200, privacyPage(where(req))); });
   app.get("/join", (req, res) => html(res, 200, shellPage({ title: "Join the network", script: "/js/join.js", nav: "join", ...where(req) })));
   app.get("/me", (req, res) => html(res, 200, shellPage({ title: "Your ministry", script: "/js/me.js", nav: "me", ...where(req) })));
-  app.get("/treasury", (req, res) => html(res, 200, shellPage({ title: "The treasury", script: "/js/treasury.js", nav: "", width: "mid", ...where(req) })));
-  app.get("/steward", (req, res) => html(res, 200, shellPage({ title: "Waiting to be read", script: "/js/steward.js", nav: "", width: "mid", ...where(req) })));
+  /* Review and Money are the team's two pages. /steward and /treasury were their first names: they answer with a permanent redirect so no link, bookmark or installed shortcut breaks. */
+  app.get("/money", (req, res) => html(res, 200, shellPage({ title: "Money", script: "/js/treasury.js", nav: "", width: "mid", ...where(req) })));
+  app.get("/review", (req, res) => html(res, 200, shellPage({ title: "Review", script: "/js/steward.js", nav: "", width: "mid", ...where(req) })));
+  app.get("/treasury", (req, res) => res.redirect(301, "/money"));
+  app.get("/steward", (req, res) => res.redirect(301, "/review"));
   /* the front, the board, the terms and the privacy page are the public pages; the signed-in pages and the API are kept out of search */
-  app.get("/robots.txt", (req, res) => res.type("text/plain").send(["User-agent: *", "Disallow: /me", "Disallow: /steward", "Disallow: /treasury", "Disallow: /join", "Disallow: /api", "Allow: /", "", `Sitemap: ${publicBase(req)}/sitemap.xml`, ""].join("\n")));
+  app.get("/robots.txt", (req, res) => res.type("text/plain").send(["User-agent: *", "Disallow: /me", "Disallow: /review", "Disallow: /money", "Disallow: /steward", "Disallow: /treasury", "Disallow: /join", "Disallow: /api", "Allow: /", "", `Sitemap: ${publicBase(req)}/sitemap.xml`, ""].join("\n")));
   /* only what the public may read: the front, the board, the two legal pages, and each open post that a person read. Never a draft, a waiting post, a closed one or a post of a ministry nobody has read. */
   app.get("/sitemap.xml", wrap(async (req, res) => {
     const b = publicBase(req), r = await boardQuery({}, { limit: 500 });

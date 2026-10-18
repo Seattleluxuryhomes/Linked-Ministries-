@@ -254,10 +254,10 @@ export function mount(app, { wrap, publicBase, env = process.env, now = () => Da
     const stewards = (await q("select lm.steward_emails() as v")).v || [];
     let emailed = false;
     if (stewards.length && emailConfigured()) {
-      const mail = reportEmail({ title: post.title, ministry: post.ministry, reason, note, reporter: email, url: `${publicBase(req)}/board/${pid}`, stewardUrl: `${publicBase(req)}/steward` });
+      const mail = reportEmail({ title: post.title, ministry: post.ministry, reason, note, reporter: email, url: `${publicBase(req)}/board/${pid}`, stewardUrl: `${publicBase(req)}/review` });
       emailed = !!(await sendEmail({ to: stewards.join(", "), subject: mail.subject, text: mail.text, ...(email ? { replyTo: email } : {}) })).sent;
     }
-    res.status(201).json({ ok: true, saved: true, emailed, id: rid, words: emailed ? "Thank you. Your report was sent to the stewards. The post stays up until a steward reads it." : "Thank you. Your report was saved, but the email to the stewards did not go out. A steward will see it on their page." });
+    res.status(201).json({ ok: true, saved: true, emailed, id: rid, words: emailed ? "Thank you. Your report was sent to the Linked Ministries team. The post stays up until a person there reads it." : "Thank you. Your report was saved, but the email to the Linked Ministries team did not go out. A person on the team will see it on their page." });
   }));
 
   /* ---- the treasury: gifts, grants, the board's vote, the door. Treasurers only; the database decides (lm.is_treasurer) ---- */
@@ -308,7 +308,7 @@ export function mount(app, { wrap, publicBase, env = process.env, now = () => Da
     if (str(b.purpose, 500).length < 10) throw bad("Say what the grant is for, in a sentence.", 422, "purpose_needed");
     await slow(req, "grant", 100);
     const r = await one(req, "select lm.grant_propose($1,$2,$3,$4,$5) as id", [kind, kind === "ministry" ? String(b.ministry_id).toLowerCase() : null, kind === "outside" ? str(b.recipient_name, 120) : null, cents, str(b.purpose, 500)]);
-    return { ok: true, id: r.id, words: "Proposed. A different treasurer approves it after the board votes." };
+    return { ok: true, id: r.id, words: "Proposed. A different person on the money team approves it after the board votes." };
   }, 201);
   post("/api/treasury/grants/:id/approve", async (req) => {
     const b = req.body || {}, on = str(b.voted_on, 10);

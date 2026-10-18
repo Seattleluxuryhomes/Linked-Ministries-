@@ -126,4 +126,4 @@ export function addDays(iso, n) { const d = new Date(iso + "T00:00:00Z"); d.setU
 
 /** go to the sign-in page, and come back to where we were */
 export function toSignIn(next) { location.assign("/join" + (next ? "?next=" + encodeURIComponent(next) : "")); }
-export const safeNext = (n) => (/^\/(me|board|steward)(\/[A-Za-z0-9-]*)?(#[a-z]*)?$/.test(String(n || "")) ? n : "/me");
+export const safeNext = (n) => (/^\/(me|board|review|money|steward)(\/[A-Za-z0-9-]*)?(#[a-z]*)?$/.test(String(n || "")) ? n : "/me");

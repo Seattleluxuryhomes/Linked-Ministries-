@@ -135,9 +135,10 @@ for (const kind of ["phone", "desk"]) {
   await sql("select lm.make_steward($1)", [STEW]);
   const st = await open(browser, s.base, kind);
   await signInByUi(st.page, STEW, smtp);
-  await st.page.waitForSelector("a:has-text('Open the page for stewards')");
-  ok(/You are a steward/.test(await textOf(st.page)) && !(await st.page.locator("input[name=name]").count()), `${kind}: a steward who has no ministry is not asked to make one; the page offers the steward's page`);
-  await st.page.goto("/steward"); await st.page.waitForSelector("[data-ministry]");
+  await st.page.waitForSelector("a:has-text('Open Review')");
+  ok(/You are on the Linked Ministries team/.test(await textOf(st.page)) && !(await st.page.locator("input[name=name]").count()), `${kind}: a steward who has no ministry is not asked to make one; the page offers the steward's page`);
+  await st.page.goto("/review"); await st.page.waitForSelector("[data-ministry]");
+  { const n = await st.page.locator("[data-waiting]").innerText(); ok(/^\d+ waiting for review$/.test(n) && (await st.page.locator("main h1").innerText()) === "Review" && !/steward|treasur/i.test((await st.page.locator("main h1, main h2, main h3, main button, main label, main .lead, main .help, main .msg, main .count").allInnerTexts()).join(" ")), `${kind}: the team's page is titled Review and counts in plain words ("${n}"); its headings, buttons, labels and notes say steward nowhere (a person's own name or email is theirs)`); }
   ok((await st.page.locator("[data-ministry]").count()) === 2 && /Journey/.test(await textOf(st.page)), `${kind}: the queue shows the waiting ministries`);
   await calm(st.page, `${kind}: the steward queue`); await big(st.page, `${kind}: the steward queue`);
   await snap(st.page, `steward-${kind === "phone" ? 390 : 1440}`);
@@ -176,10 +177,10 @@ for (const kind of ["phone", "desk"]) {
     await v.page.waitForSelector(R+" .out .msg");
     ok(/Choose what is wrong/.test(await v.page.locator(R+" .out").innerText()), `${kind}: a report with no reason is refused in words`);
     await v.page.selectOption(R + " select[name=reason]", "scam"); await typeIn(v.page, R+" textarea[name=note]", "This looks wrong to me.");
-    ok(!(await v.page.locator(R+"").innerText()).includes("sent to the stewards"), `${kind}: before sending, the screen does not say the stewards were told`);
+    ok(!(await v.page.locator(R+"").innerText()).includes("sent to the Linked Ministries team"), `${kind}: before sending, the screen does not say the team was told`);
     await v.page.click(R+" button:has-text('Send report')");
     await v.page.waitForSelector(R+" .msg.ok");
-    ok(/Your report was sent to the stewards/.test(await v.page.locator(R+" .msg.ok").innerText()) && /A post was reported/.test((smtp.mails.slice(mailsBeforeReport)[0] || {}).subject || ""), `${kind}: the screen says the stewards were told after the mail provider took the email`);
+    ok(/Your report was sent to the Linked Ministries team/.test(await v.page.locator(R+" .msg.ok").innerText()) && /A post was reported/.test((smtp.mails.slice(mailsBeforeReport)[0] || {}).subject || ""), `${kind}: the screen says the team was told after the mail provider took the email`);
     ok((await sql("select count(*)::int n from lm.reports r join lm.posts p on p.id = r.post_id where p.title = $1 and r.status = 'open'", [title]))[0].n >= 1 && (await sql("select status from lm.posts where title = $1", [title]))[0].status === "public", `${kind}: the report is saved, and the post is still public`);
     ok(/Stay safe: meet in a public place/.test(await v.page.locator(`article.post:has-text("${title}")`).innerText()), `${kind}: the post says to stay safe`); }
 

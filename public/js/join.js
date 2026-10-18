@@ -63,7 +63,7 @@ function signedIn(me) {
   if (me.steward && !wantsMinistry) {
     const slot = h("div", { class: "install-slot" });
     app.replaceChildren(h("h1", {}, WORDS.stewardWelcome), h("p", { class: "lead" }, WORDS.stewardWelcomeLead), slot,
-      h("p", { class: "row" }, h("a", { class: "btn", href: "/steward" }, WORDS.stewardOpen), h("button", { class: "btn ghost", type: "button", on: { click: () => { wantsMinistry = true; signedIn(me); } } }, WORDS.alsoMinistry)),
+      h("p", { class: "row" }, h("a", { class: "btn", href: "/review" }, WORDS.stewardOpen), h("button", { class: "btn ghost", type: "button", on: { click: () => { wantsMinistry = true; signedIn(me); } } }, WORDS.alsoMinistry)),
       h("p", { class: "quiet" }, `${WORDS.signedInAs} ${me.user.email}. `, h("button", { class: "link", type: "button", on: { click: signOut } }, WORDS.signOut)));
     installCard(slot);
     return;

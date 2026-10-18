@@ -28,9 +28,11 @@ const csp = hr.headers.get("content-security-policy") || "";
 ok(/default-src 'none'/.test(csp) && /script-src 'self'(;|$)/.test(csp) && !/unsafe-inline|unsafe-eval/.test(csp) && /frame-ancestors 'none'/.test(csp), "the content-security policy is enforced, with no inline script and no eval", csp);
 ok(hr.headers.get("x-content-type-options") === "nosniff" && hr.headers.get("referrer-policy") === "no-referrer" && /camera=\(\)/.test(hr.headers.get("permissions-policy") || ""), "the other security headers are on");
 const pages = {};
-for (const p of ["/", "/board", "/join", "/me", "/steward", "/robots.txt", "/sitemap.xml"]) { const r = await anon.get(p); pages[p] = r.text; ok(r.status === 200, `${p} answers 200`); }
+for (const p of ["/", "/board", "/join", "/me", "/review", "/robots.txt", "/sitemap.xml"]) { const r = await anon.get(p); pages[p] = r.text; ok(r.status === 200, `${p} answers 200`); }
+{ const old = await anon.get("/steward"); ok(old.status === 301 && old.headers.get("location") === "/review", "/steward, its first name, is a permanent redirect to /review", [old.status, old.headers.get("location")]);
+  ok(/<title>Review · /.test(pages["/review"]) && /<h1>Review<\/h1>/.test(pages["/review"]) && /Disallow: \/review/.test(pages["/robots.txt"]) && /Disallow: \/money/.test(pages["/robots.txt"]), "/review is titled Review and kept out of search, as is /money"); }
 ok((await anon.get("/nope")).status === 404 && (await anon.get("/board/not-a-real-id")).status === 404 && (await anon.get("/board/00000000-0000-4000-8000-000000000000")).status === 404, "an unknown page and an unknown post answer 404, with a page");
-for (const p of ["/", "/board", "/join", "/me", "/steward"]) { const bad = checkPage(pages[p], { money: p === "/" }); ok(bad.length === 0, `${p}: no script inline, no style attribute, no banned thing`, bad); }
+for (const p of ["/", "/board", "/join", "/me", "/review"]) { const bad = checkPage(pages[p], { money: p === "/" }); ok(bad.length === 0, `${p}: no script inline, no style attribute, no banned thing`, bad); }
 ok(/Disallow: \/me/.test(pages["/robots.txt"]) && /\/board<\/loc>/.test(pages["/sitemap.xml"]), "robots keeps the private pages out, the sitemap lists the board");
 ok((await anon.get("/join")).headers.get("x-robots-tag") === "noindex, nofollow" && /no-store/.test((await anon.get("/me")).headers.get("cache-control")), "the private pages are noindex and not cached");
 ok(/not yet filed/.test(pages["/"]) && /Washington nonprofit corporation/.test(pages["/"]) && /911/.test(pages["/"]) && /988/.test(pages["/"]), "the front says the nonprofit line and the emergency line");
@@ -297,7 +299,7 @@ ok((await dana.post(`/api/team/${dme.user.id}/remove`)).status === 409, "the one
   ok(!/https?:\/\/(?!127\.0\.0\.1)/.test(pages["/"].replace(/https:\/\/www\.disciplesauthority\.org/g, "").replace(/http:\/\/www\.w3\.org\/2000\/svg/g, "")), "the front page names no other host but Disciples' Authority");
 }
 
-/* ---- a report: it is saved, then the stewards are emailed, and the screen says which of the two happened ---- */
+/* ---- a report: it is saved, then the team is emailed, and the screen says which of the two happened ---- */
 {
   const gid = give.json.id; let made = 0;
   const post = (b, c = anon, id = gid) => c.post(`/api/posts/${id}/report`, b);
@@ -308,14 +310,14 @@ ok((await dana.post(`/api/team/${dme.user.id}/remove`)).status === 409, "the one
   const r1 = await post({ reason: "scam", note: "It looks wrong to me.", email: "Reporter@Example.org" }); made++;
   await sleep(120);
   const mail = smtp.mails.slice(before)[0];
-  ok(r1.status === 201 && r1.json.saved === true && r1.json.emailed === true && /sent to the stewards/.test(r1.json.words) && /stays up until a steward/.test(r1.json.words), "a report is saved and the stewards are emailed, and the screen says both in words", r1.json);
-  ok(mail && mail.to.includes("sam@linkedm.example") && mail.replyTo === "reporter@example.org" && /A post was reported on Linked Ministries: Surplus canned goods/.test(mail.subject) && /Nothing has been hidden/.test(mail.text) && /Why you got this/.test(mail.text) && /It looks wrong to me\./.test(mail.text) && /\/steward/.test(mail.text), "the steward's email names the post, the reason and the words, lets them reply to the reporter, and says nothing has been hidden", mail && mail.subject);
+  ok(r1.status === 201 && r1.json.saved === true && r1.json.emailed === true && /sent to the Linked Ministries team/.test(r1.json.words) && /stays up until a person there/.test(r1.json.words), "a report is saved and the team is emailed, and the screen says both in words", r1.json);
+  ok(mail && mail.to.includes("sam@linkedm.example") && mail.replyTo === "reporter@example.org" && /A post was reported on Linked Ministries: Surplus canned goods/.test(mail.subject) && /Nothing has been hidden/.test(mail.text) && /Why you got this/.test(mail.text) && /It looks wrong to me\./.test(mail.text) && /\/review/.test(mail.text), "the team's email names the post, the reason and the words, lets them reply to the reporter, and says nothing has been hidden", mail && mail.subject);
   ok((await anon.get("/api/board/" + gid)).status === 200 && (await sql("select status from lm.posts where id = $1", [gid]))[0].status === "public", "the post is still on the board: a report hides nothing");
   ok((await sql("select count(*)::int n from lm.reports where status = 'open'"))[0].n === 1 && (await sql("select actor_label from lm.events where kind = 'report.created'"))[0].actor_label === "A visitor", "one open report is a row, and its event has a name on it");
   /* no fake state: the provider refuses, and the screen does not say the stewards were emailed */
   smtp.refuse(true); const sentBefore = smtp.mails.length;
   const r2 = await post({ reason: "unsafe" }); made++; smtp.refuse(false);
-  ok(r2.status === 201 && r2.json.saved === true && r2.json.emailed === false && /saved, but the email to the stewards did not go out/.test(r2.json.words) && !/sent to the stewards/.test(r2.json.words) && smtp.mails.length === sentBefore && (await sql("select count(*)::int n from lm.reports"))[0].n === 2, "when the mail provider refuses, the report is still saved and the screen says exactly that: saved, and the email did not go out", r2.json);
+  ok(r2.status === 201 && r2.json.saved === true && r2.json.emailed === false && /saved, but the email to the Linked Ministries team did not go out/.test(r2.json.words) && !/sent to the Linked Ministries team/.test(r2.json.words) && smtp.mails.length === sentBefore && (await sql("select count(*)::int n from lm.reports"))[0].n === 2, "when the mail provider refuses, the report is still saved and the screen says exactly that: saved, and the email did not go out", r2.json);
   /* a steward acts: keep, then close */
   const open = (await sam.get("/api/steward/queue")).json;
   ok(open.reports.length === 2 && open.reports.every((r) => r.post_title === "Surplus canned goods") && open.reports.some((r) => r.note === "It looks wrong to me." && r.email === "reporter@example.org"), "the steward's queue holds both reports, with what the reporter wrote", open.reports);

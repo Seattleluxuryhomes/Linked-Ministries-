@@ -17,6 +17,8 @@ export const READ = [
   [/tax[- ]?deductib|deductib|tax[- ]exempt|tax receipt|\btax(es)?\b/i, "a word about taxes or deductions"],
   [/compliance (score|gauge|audit)|tax audit/i, "a compliance score"],
   [/linkedin/i, "LinkedIn"],
+  /* founder, 2026-10-18: a person reads plain words, never the team's working names (the database flags keep them) */
+  [/\b(stewards?|treasur(?:y|ers?))\b/i, "the old working names for the team (say: the Linked Ministries team, Review, the money team, Money)"],
   [/\bpricing\b|\bpackages?\b|\bstarter\b|\benterprise\b|\bsubscribe\b|\bper month\b|\bper year\b|\bbuy now\b|\bcheckout\b/i, "a price or a package"],
   [/builder\s?buy\s?box|\bloxo\b|\bbidvoice\b|cross universal/i, "a name that stays behind the front"],
   [/\b(donate|donation|tithe|tithing|paypal|venmo|zelle|cash app)\b/i, "a way to give money"],

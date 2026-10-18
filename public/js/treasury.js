@@ -1,4 +1,4 @@
-/* treasury.js — /treasury: what a treasurer does. Write a gift down, propose a grant, approve it as a different treasurer after the board's
+/* treasury.js — /money (it was /treasury): what a person on the money team does. Write a gift down, propose a grant, approve it as a different treasurer after the board's
    vote, mark it paid, correct a gift, set the giving door, take the ledger as a spreadsheet. The page mirrors the database's decisions;
    the database refuses anyone who is not a treasurer, a proposer who approves their own grant, and a grant larger than the gifts. */
 import { h, get, post, msg, field, text, area, select, busy, values, toSignIn } from "/js/common.js";
@@ -10,7 +10,7 @@ let flash = null, openForm = null;     // one message from the last thing done; 
 
 async function load() {
   const me = await get("/api/me");
-  if (!me.ok || !me.data.signed_in) return toSignIn("/treasury");
+  if (!me.ok || !me.data.signed_in) return toSignIn("/money");
   if (!me.data.treasurer) return app.replaceChildren(h("h1", {}, WORDS.treasuryTitle), msg(WORDS.treasuryOnly));
   const v = await get("/api/treasury");
   if (!v.ok) return app.replaceChildren(h("h1", {}, WORDS.treasuryTitle), msg(v.data.words || WORDS.tryAgain));
@@ -169,8 +169,8 @@ function settingsForm(v) {
 function treasurersCard(v) {
   const email = text("email", "", { type: "email", max: 254, required: true, mode: "email" });
   const out = h("div", { class: "out" });
-  const form = h("form", { novalidate: true }, field(WORDS.treasurerAdd, email, WORDS.treasurerAddHelp), out, h("p", { class: "row" }, h("button", { class: "btn small", type: "submit" }, "Make a treasurer")));
-  form.addEventListener("submit", async (ev) => { ev.preventDefault(); out.replaceChildren(); await busy(form.querySelector("button"), async () => { const r = await post("/api/treasury/treasurers", { email: email.value, on: true }); if (!r.ok) return out.replaceChildren(msg(r.data.words || WORDS.tryAgain)); say("Done. They are a treasurer now.", true); load(); }); });
+  const form = h("form", { novalidate: true }, field(WORDS.treasurerAdd, email, WORDS.treasurerAddHelp), out, h("p", { class: "row" }, h("button", { class: "btn small", type: "submit" }, WORDS.moneyTeamAddButton)));
+  form.addEventListener("submit", async (ev) => { ev.preventDefault(); out.replaceChildren(); await busy(form.querySelector("button"), async () => { const r = await post("/api/treasury/treasurers", { email: email.value, on: true }); if (!r.ok) return out.replaceChildren(msg(r.data.words || WORDS.tryAgain)); say("Done. They are on the money team now.", true); load(); }); });
   return h("div", { class: "card" }, v.treasurers.map((t) => h("div", { class: "person" }, h("div", { class: "grow" }, h("strong", {}, t.name), ` · ${t.email}`),
     v.treasurers.length > 1 && t.user_id !== v.me.user_id ? h("button", { class: "btn small ghost", type: "button", on: { click: async (ev) => { await busy(ev.currentTarget, async () => { const r = await post("/api/treasury/treasurers", { email: t.email, on: false }); say(r.ok ? "Done." : (r.data.words || WORDS.tryAgain), r.ok); load(); }); } } }, "Take off") : null)), h("hr"), form);
 }

@@ -1,7 +1,7 @@
 /* Linked Ministries: the service worker. It makes the site installable and says the truth when the phone is offline.
    Copied in shape from Cross Universal's lexos/pwa/sw.js (D-290), with the same rule: the worker keeps nothing that matters.
    It keeps ONLY the shell: the stylesheet, the six faces, the mark and the offline page. It never touches /api/, a signed-in
-   page (/me, /steward, /treasury, /join), a picture of a ministry, a form or any request that is not a plain GET, and it never
+   page (/me, /review, /money, /join, and the first names /steward and /treasury), a picture of a ministry, a form or any request that is not a plain GET, and it never
    stores a page. A page that cannot load is answered by one plain page that says the phone is offline and that nothing was sent. */
 const CACHE = "lm-shell-v1";
 const SHELL = [
@@ -16,7 +16,7 @@ const SHELL = [
   "/fonts/plus-jakarta-sans-latin-700-normal.woff2",
 ];
 /* whatever begins like this is never read from, or written to, the device */
-const NEVER = ["/api", "/me", "/steward", "/treasury", "/join", "/photos"];
+const NEVER = ["/api", "/me", "/review", "/money", "/steward", "/treasury", "/join", "/photos"];
 const never = (path) => NEVER.some((p) => path === p || path.startsWith(p + "/"));
 
 self.addEventListener("install", (e) => {

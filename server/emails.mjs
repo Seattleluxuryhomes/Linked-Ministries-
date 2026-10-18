@@ -1,5 +1,5 @@
 /* emails.mjs — every email this site sends, as plain text, in one place. Each one says who sent it and why, in the first lines, and
-   none is marketing: a sign-in code, an answer to a post, an invitation to a team, and a note to the stewards about a report. The
+   none is marketing: a sign-in code, an answer to a post, an invitation to a team, and a note to the Linked Ministries team about a report. The
    tests read every sentence at grade 8 or under (tests/plainwords-test.mjs) and check that none sells anything. */
 import { CRISIS, PRODUCT, STAY_SAFE, REPORT_REASONS, money, methodLabel, receiptCode, dateWords } from "../public/js/pure.js";
 import { receiptStatusLine, FLAGS } from "./words.mjs";
@@ -47,23 +47,23 @@ export function inviteEmail({ inviter, ministry, joinUrl }) {
 export function reportEmail({ title, ministry, reason, note, reporter, url, stewardUrl }) {
   return {
     subject: `A post was reported on ${PRODUCT.name}: ${title}`,
-    text: [`Why you got this: you are a steward at ${PRODUCT.name}, and a person pressed Report on a post.`, "",
+    text: [`Why you got this: you are on the ${PRODUCT.name} team, and a person pressed Report on a post.`, "",
       `Post: "${title}" from ${ministry}`, `Link: ${url}`, `What is wrong: ${REPORT_REASONS[reason] || reason}`,
       note ? `What they wrote: ${note}` : "They wrote nothing more.",
       reporter ? `They gave this address, so you can write back: ${reporter}` : "They gave no address.", "",
-      "Nothing has been hidden. The post stays on the board until a steward closes it or keeps it.",
+      "Nothing has been hidden. The post stays on the board until a person on the team closes it or keeps it.",
       `Read the report and decide here: ${stewardUrl}`, ""].join("\n"),
   };
 }
 
-/* the receipt for a gift: one message, because a treasurer wrote the gift down and the donor gave an email address. It says what a receipt
+/* the receipt for a gift: one message, because a person on the money team wrote the gift down and the donor gave an email address. It says what a receipt
    is. Before the IRS letter it says nothing about deductions, and it says what is true about the application, no more. */
 export function receiptEmail({ receiptNo, donor, amountCents, receivedOn, method, notice, base = "https://linkedm.org", flags = FLAGS }) {
   const code = receiptCode(receiptNo);
   return {
     subject: `Receipt ${code} from ${PRODUCT.name}`,
     text: [donor && donor !== "Anonymous" ? `Hello ${donor},` : "Hello,", "",
-      `Why you got this: you gave a gift to ${PRODUCT.name}, and a treasurer wrote it down. This is the receipt. ${WHO}`,
+      `Why you got this: you gave a gift to ${PRODUCT.name}, and a person on the money team wrote it down. This is the receipt. ${WHO}`,
       `We sent this one message because of that gift, and for no other reason. ${NO_ADS}`, "",
       `Receipt number: ${code}`, `Day it came in: ${dateWords(receivedOn)}`, `Amount: ${money(amountCents)}`, `How it came in: ${methodLabel(method)}`, "",
       receiptStatusLine(flags), "",

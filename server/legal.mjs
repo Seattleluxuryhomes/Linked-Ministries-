@@ -12,22 +12,22 @@ export const TERMS = {
   sections: [
     ["What Linked Ministries is", [
       "Linked Ministries is a free board. A ministry posts what it needs, or what it can give. Another ministry answers.",
-      "Linked Ministries is forming as a Washington nonprofit corporation. A small group of people, called stewards, runs it.",
+      "Linked Ministries is forming as a Washington nonprofit corporation. A small group of people, the Linked Ministries team, runs it.",
     ]],
     ["Who can use it", [
       "This site is for ministries and for adults. You must be 18 or older to join, to post, or to answer. No one under 18 may post.",
       "When you join, you say that you are 18 or older. You also say that you may speak for your ministry.",
     ]],
     ["What we do and what we do not do", [
-      "A steward reads each new ministry page and each new post before it goes on the board. That is all a steward does.",
+      "A person on the Linked Ministries team reads each new ministry page and each new post before it goes on the board. That is all the team does.",
       "We do not check or vouch for any ministry or person on the board. We cannot know that what is posted is true.",
       "The board moves no money between ministries. No ministry pays another through this site. Linked Ministries may take gifts. Its board may use them to fund an ask. Each grant is written down and made public. We do not promise that any ask will be met, or that any give will be taken.",
       "What two ministries agree on is between them. Linked Ministries is not part of it.",
       "We do not give legal, medical or counseling advice.",
     ]],
     ["Gifts and grants", [
-      "Linked Ministries may take gifts, and its board may use them to fund a grant. A treasurer writes each gift down and gives it a receipt number. A gift record is never changed or deleted. A mistake is fixed by a new row.",
-      "Two different treasurers handle each grant, and the board's vote is written down. Every approved grant is shown on the giving page. The page shows no donor.",
+      "Linked Ministries may take gifts, and its board may use them to fund a grant. A person on the money team writes each gift down and gives it a receipt number. A gift record is never changed or deleted. A mistake is fixed by a new row.",
+      "Two different people on the money team handle each grant, and the board's vote is written down. Every approved grant is shown on the giving page. The page shows no donor.",
       "Gifts online open after the state registration is filed. Until then, this site takes no gift.",
       "A ministry may link to its own way of taking gifts. That link is the ministry's own. Linked Ministries does not collect or see those gifts.",
     ]],
@@ -42,13 +42,13 @@ export const TERMS = {
       "Stay safe: meet in a public place, bring someone with you, and never send money to someone you have not met.",
       "If someone is in danger, call 911. If someone is thinking of hurting themselves, call or text 988.",
     ]],
-    ["What stewards can do", [
-      "A steward can send a page or a post back, close a post, or end an account. A steward may do this when these rules are broken, or to keep people safe.",
+    ["What the team can do", [
+      "A person on the Linked Ministries team can send a page or a post back, close a post, or end an account. They may do this when these rules are broken, or to keep people safe.",
       "We will say why when we can.",
     ]],
     ["Reports", [
-      "Anyone can press Report on a post. The report goes to the stewards by email.",
-      "Nothing is hidden when a report comes in. A steward reads it, and then closes the post or keeps it.",
+      "Anyone can press Report on a post. The report goes to the Linked Ministries team by email.",
+      "Nothing is hidden when a report comes in. A person on the team reads it, and then closes the post or keeps it.",
     ]],
     ["Your words, and the work of others", [
       "Your words stay yours. When you post, you let Linked Ministries show them on this site. You also let us send them by email to the ministries that answer.",
@@ -99,13 +99,13 @@ export const PRIVACY = {
       "Anyone can see a public post. They see its title, its words, and its city and dates. They also see your ministry's name and city.",
       "Your ministry's contact email is never on the board. We use it to send you answers by email, and for nothing else.",
       "When you answer a post, the ministry that posted gets one email. It has your ministry's name, your name, your words, your email, and your phone if you add one.",
-      "Stewards can see ministry pages, posts that wait to be read, and reports. They need this to do their work.",
-      "Treasurers can see who gave a gift. The public sees only totals and the list of grants. A donor's name or email is never on a public page.",
+      "The Linked Ministries team can see ministry pages, posts that wait to be read, and reports. They need this to do their work.",
+      "The money team can see who gave a gift. The public sees only totals and the list of grants. A donor's name or email is never on a public page.",
       "A ministry's own page is public once a person has read it. It shows only what the ministry chose to put there.",
       "Another ministry cannot see your drafts, your team, or answers it was not part of.",
     ]],
     ["Email we send", [
-      "We send sign-in codes, answers, invitations to join a team, and notes to stewards. We send no news and no ads.",
+      "We send sign-in codes, answers, invitations to join a team, and notes to the Linked Ministries team. We send no news and no ads.",
     ]],
     ["What we do not do", [
       "We do not track you. We do not sell or rent your data. We show no ads. We do not share your data with advertisers.",
@@ -135,7 +135,7 @@ export const PRIVACY = {
         "Answers you sent lose their words, phone and email in our copy. We cannot take back an email that was already sent.",
         "The record of what you did stays, with your name taken off. It says: A person who left.",
         "The record of a gift stays, because honest books need it. It is never shown to the public.",
-        "The last steward cannot delete an account. Another steward must be named first."],
+        "The last person on the Linked Ministries team cannot delete an account. Another person must be added to the team first."],
     ]],
     ["Children", [
       "This site is not for anyone under 18. We do not mean to collect data from anyone under 18. If we find that we have, we will delete it.",

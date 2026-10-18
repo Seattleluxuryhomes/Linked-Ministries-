@@ -1,14 +1,14 @@
-/* steward.js — /steward: what is waiting for a person at Linked Ministries to read. Approve it, or send it back with a note the
-   poster reads. The page mirrors the database's decision; the database refuses anyone who is not a steward. */
+/* steward.js — /review (it was /steward): what is waiting for a person at Linked Ministries to read. Approve it, or send it back with a note the
+   poster reads. The page mirrors the database's decision; the database refuses anyone who is not on the team (the steward flag). */
 import { h, get, post, msg, field, text, area, busy, toSignIn } from "/js/common.js";
-import { WORDS, KIND, REPORT_REASONS, categoryLabel, dateWords } from "/js/pure.js";
+import { waitingCount, WORDS, KIND, REPORT_REASONS, categoryLabel, dateWords } from "/js/pure.js";
 
 const app = document.getElementById("app");
 let flash = null;
 
 async function load() {
   const me = await get("/api/me");
-  if (!me.ok || !me.data.signed_in) return toSignIn("/steward");
+  if (!me.ok || !me.data.signed_in) return toSignIn("/review");
   if (!me.data.steward) return app.replaceChildren(h("h1", {}, WORDS.stewardTitle), msg(WORDS.stewardOnly));
   const q = await get("/api/steward/queue");
   if (!q.ok) return app.replaceChildren(h("h1", {}, WORDS.stewardTitle), msg(q.data.words || WORDS.tryAgain));
@@ -17,13 +17,15 @@ async function load() {
 
 function render(q) {
   const parts = [h("h1", {}, WORDS.stewardTitle), h("p", { class: "lead" }, WORDS.stewardLead)];
+  const waiting = q.ministries.length + q.posts.length + (q.pages || []).length + (q.reports || []).length;
+  if (waiting) parts.push(h("p", { class: "count", "data-waiting": waiting }, waitingCount(waiting)));
   if (flash) { parts.push(msg(flash.words, flash.ok ? "ok" : undefined)); flash = null; }
   if (!q.ministries.length && !q.posts.length && !(q.pages || []).length && !(q.reports || []).length) parts.push(h("div", { class: "empty card compact" }, h("h2", {}, WORDS.stewardEmptyTitle), h("p", {}, WORDS.stewardEmpty)));
   if ((q.reports || []).length) parts.push(h("h2", {}, "Reports"), ...q.reports.map(reportCard));
   if (q.ministries.length) parts.push(h("h2", {}, "Ministries"), ...q.ministries.map(ministryCard));
   if ((q.pages || []).length) parts.push(h("h2", {}, WORDS.stewardPages), ...q.pages.map(pageCard));
   if (q.posts.length) parts.push(h("h2", {}, "Posts"), ...q.posts.map(postCard));
-  parts.push(h("h2", {}, "Stewards"), stewardsCard(q.stewards));
+  parts.push(h("h2", {}, WORDS.teamTitle), stewardsCard(q.stewards));
   parts.push(h("p", {}, h("a", { href: "/me" }, "Back to my ministry")));
   app.replaceChildren(...parts);
 }
@@ -118,13 +120,13 @@ function postCard(p) {
 function stewardsCard(list) {
   const email = text("email", "", { type: "email", max: 254, required: true, mode: "email" });
   const out = h("div", { class: "out" });
-  const form = h("form", { novalidate: true }, field(WORDS.stewardAdd, email, WORDS.stewardAddHelp), out, h("p", { class: "row" }, h("button", { class: "btn small", type: "submit" }, "Make a steward")));
+  const form = h("form", { novalidate: true }, field(WORDS.stewardAdd, email, WORDS.stewardAddHelp), out, h("p", { class: "row" }, h("button", { class: "btn small", type: "submit" }, WORDS.teamAddButton)));
   form.addEventListener("submit", async (ev) => {
     ev.preventDefault(); out.replaceChildren();
     await busy(form.querySelector("button"), async () => {
       const r = await post("/api/steward/stewards", { email: email.value, on: true });
       if (!r.ok) return out.replaceChildren(msg(r.data.words || WORDS.tryAgain));
-      flash = { words: "Done. They are a steward now.", ok: true }; load();
+      flash = { words: WORDS.teamAdded, ok: true }; load();
     });
   });
   return h("div", { class: "card" }, list.map((s) => h("div", { class: "person" }, h("div", { class: "grow" }, s.name && s.name !== s.email ? [h("strong", {}, s.name), ` · ${s.email}`] : h("strong", {}, s.email)))), h("hr"), form);

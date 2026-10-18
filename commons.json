@@ -133,7 +133,7 @@
       "origin_path": "behavioral-health-app/server/headers.mjs",
       "origin_sha256": "c79f7055ae97ebabb0a679717d188451d557f1f3dae2c0aec331f2385972923c",
       "local_path": "server/headers.mjs",
-      "local_sha256": "b40a7fc94029f9c56efde4ad2f524a32a03e5f46490adfeef1998568a26bd807",
+      "local_sha256": "e1e9995bd9d83097417dc468bfaf504c339f034bd6d9799054ca01a90b9abdb3",
       "note": "The no-index and no-store paths are this site's. The policy is the original's: script-src 'self', no inline script, no nonce to forget; one line added, worker-src 'self', for the service worker (this site's own file, no blob)."
     },
     {
@@ -177,7 +177,7 @@
       "origin_path": "behavioral-health-app/server/api.mjs",
       "origin_sha256": "8ee33e9349c194104e91d85d9ce378f4c820e10d25fc8485156f98c03a40a4e5",
       "local_path": "server/api.mjs",
-      "local_sha256": "25d271d45bd088a3fd85e9682f809daa42e30168898da8003dbed1920901bc13",
+      "local_sha256": "0c2005c1cecf043dd6fc4bbe0903ee6a8ec37bb79911a4c0c41ff7d546b1c910",
       "note": "Same pattern (asUser, functions decide, early friendly checks). The routes are this product's: ministries, team, posts, answers, stewards."
     },
     {
@@ -188,7 +188,7 @@
       "origin_path": "behavioral-health-app/server/index.mjs",
       "origin_sha256": "b1375df160f0be6f55b551c26472bdeb63eef9c9af918fff8ba44584fd168e21",
       "local_path": "server/index.mjs",
-      "local_sha256": "6b521b808a28b91b70cd39a801e21ffabfb8c5dc01d1b39e2c995730c7d0cd05",
+      "local_sha256": "e467c6369848389bf6471d03606594ed2b40dbf7c858030c5e896081ac6932ef",
       "note": "Same boot order and health answer (two words). Public pages are built on the server."
     },
     {
@@ -199,7 +199,7 @@
       "origin_path": "behavioral-health-app/server/words.mjs",
       "origin_sha256": "7d66d59b2ffd109e7ba740ea0f66090185974bb339207889072108b8262c41e8",
       "local_path": "server/words.mjs",
-      "local_sha256": "55df6b9f20a28fc0f5e3e4ece78ccf04c84609820630a7d7b8d5d8ca35c82be7",
+      "local_sha256": "7d06bd87ba3f5e4dba39641347ab22ee40be4ef0c92799348fba975ea1a38d3d",
       "note": "Same refusal mapping (a code and a hint); the codes are this product's. The founder's one editable line lives here."
     },
     {
@@ -210,7 +210,7 @@
       "origin_path": "behavioral-health-app/public/js/common.js",
       "origin_sha256": "2fdb3638d46193dd3d4184ed2dd793e5595b006bed5c73821c076fdfe8c75358",
       "local_path": "public/js/common.js",
-      "local_sha256": "e12aa69307da03acac3ee8fd061c7e3f3a61e7d17bdecbb4c16f44eb9760c0ec",
+      "local_sha256": "11d64863d0d53bfc141285cba644e2415fd3496ca6d3b4dce5cf744104cdf360",
       "note": "Same h() and api() helpers; the forms are this product's."
     },
     {
@@ -309,7 +309,7 @@
       "origin_path": "behavioral-health-app/tests/light-test.mjs",
       "origin_sha256": "e3e7289a423a030c9427e2617334f909a8f0f8104ccd5466a3be72e8aa063881",
       "local_path": "tests/light-test.mjs",
-      "local_sha256": "8ed7bbd29fd8befc58cc3df244b0ade863f4eb72f1d0fb7980c61b5c1cd372b3",
+      "local_sha256": "f0343cace34eac72ace588cb20899f35e8f6d674af2d993e59b69763b6af3c1b",
       "note": "Same method (stylesheet tokens, painted pages, a dark panel is caught); adds a check for red and for contrast."
     },
     {
@@ -331,7 +331,7 @@
       "origin_path": "behavioral-health-app/tests/api-test.mjs",
       "origin_sha256": "b9aed98a7b54da362b31cbf559aa6e2637b2a6d38db924b6335cfdd21d646f7c",
       "local_path": "tests/api-test.mjs",
-      "local_sha256": "cd5b3d37fbdfeca3652cf3b908acfce202bf80f5356de7b54bf090ae4aa1f3fb",
+      "local_sha256": "711b5dc2accd82f30a2747c7410c2ef1e2f700a649bcdcc61ed3bba4a33ad5c4",
       "note": "Same method; adds the stand-in mail server."
     },
     {
@@ -342,7 +342,7 @@
       "origin_path": "behavioral-health-app/tests/browser-test.mjs",
       "origin_sha256": "ea133f994d92eafd8f78efa5e805a95ae402d27a7c1bf5ed0d47e60233f156e0",
       "local_path": "tests/browser-test.mjs",
-      "local_sha256": "234cfedf1f2002dd38aebd75640013a7a5954d0b85efd18678ed2148a1d7f8d7",
+      "local_sha256": "0171b036c2ad2fa1482aea234f1d1f6e6219204fd784feb9e34b2610e16da5f0",
       "note": "Same method; this product's journey."
     },
     {
@@ -353,7 +353,7 @@
       "origin_path": "behavioral-health-app/tests/unit-test.mjs",
       "origin_sha256": "6bead93056daa8752e1c7eaca4e74352772b4d62cc6832e2916b8d739b6ab620",
       "local_path": "tests/unit-test.mjs",
-      "local_sha256": "726ebc245371a22ae06eee0bac70e6cf3d7dd23a0530fdb60140969fad2377ff",
+      "local_sha256": "265409bff3b6975e820b2cc819a29656c735da49e6c9d9c03148c373fba605b0",
       "note": "The licence check, the commons check, the no-key scan and the migration checks are the original's."
     },
     {
@@ -375,7 +375,7 @@
       "origin_path": "lexos/pwa/sw.js",
       "origin_sha256": "4bdf43f568b98f221b051815b055c5254b34b90cf8d3cff3ed7b79779d920bd6",
       "local_path": "public/sw.js",
-      "local_sha256": "0d1d7f161a96553fa3d3a1fcb517619c50a4fc6199c03835ae80987bc90b0c10",
+      "local_sha256": "1027e0aa20d638d05524789547f93f3b04c4df9b86103437eb770543d56fcb95",
       "note": "Same shape and the same rule (a write is never touched, /api is never touched, a page is always the network and offline is answered by one plain page). Changes: the shell here is the stylesheet, six faces, the mark and the offline page; the signed-in paths, /photos and every other path are named as never kept; the stylesheet and the mark go network-first so a release shows at once; the build stamp, the app chunks and the runners' push alerts are removed."
     },
     {
@@ -430,7 +430,7 @@
       "origin_path": "behavioral-health-app/DEPLOY.md",
       "origin_sha256": "8c32d1bf183e7f3db4d657d7cdb5c98ad654564ea99e09d2ab9e784883d95ad9",
       "local_path": "DEPLOY.md",
-      "local_sha256": "12620c94606d9ee917ad7dce8f257ca8620b49e6b1d8ad168cb1d38da2e19fef",
+      "local_sha256": "a8938e8359958acc70c2efc22846c0cfd5be6a66387981dd7b037c7c4085cd32",
       "note": "Same form; this product's steps and variables."
     },
     {
@@ -441,7 +441,7 @@
       "origin_path": "behavioral-health-app/CLAUDE.md",
       "origin_sha256": "3c403645fae7028168c5ee3e1201d85863a7ebbf30225d2007cef282ce16842e",
       "local_path": "CLAUDE.md",
-      "local_sha256": "2762a66bc368c60136b736fc422aa41fb71207b31432795d908247fa1aab3c27",
+      "local_sha256": "a8f572fdaeec1d2fb91bc8bc1e0539b1ff710a938d298616ed14c5125aeab742",
       "note": "Same form; this product's hard rules."
     },
     {

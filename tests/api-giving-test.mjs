@@ -30,7 +30,8 @@ ok(/When Linked Ministries files a Form 990, the link is here\./.test(g0.text), 
 const gv0 = await anon.get("/give");
 ok(gv0.status === 200 && /Not taking gifts online yet/.test(gv0.text) && !/<form/.test(gv0.text), "/give with the door closed says so and has no form");
 ok(/Giving/.test((await anon.get("/")).text) && /href="\/giving"/.test((await anon.get("/")).text) && (await anon.get("/sitemap.xml")).text.includes("/giving</loc>") && /Disallow: \/treasury/.test((await anon.get("/robots.txt")).text), "the front links /giving, the sitemap lists it, robots keeps /treasury out");
-ok((await anon.get("/treasury")).headers.get("x-robots-tag") === "noindex, nofollow" && (await anon.get("/treasury")).status === 200, "/treasury is a noindex shell");
+ok((await anon.get("/money")).headers.get("x-robots-tag") === "noindex, nofollow" && (await anon.get("/money")).status === 200 && /<title>Money · /.test((await anon.get("/money")).text), "/money is a noindex shell titled Money");
+{ const old = await anon.get("/treasury"); ok(old.status === 301 && old.headers.get("location") === "/money", "and /treasury, its first name, is a permanent redirect to it", [old.status, old.headers.get("location")]); }
 ok((await anon.get("/api/giving")).json.money_cents === 0 || Number((await anon.get("/api/giving")).json.money_cents) === 0, "the public JSON is the same record");
 
 /* ---- who may use the treasury ---- */
@@ -92,7 +93,7 @@ const mid = alexPage.ministryId;
 const tv2 = (await tess.get("/api/treasury")).json;
 ok(tv2.ministries.some((m) => m.id === mid) && tv2.ministries.length === 4, "a grant may go to any ministry a steward has read");
 const prop = await tess.post("/api/treasury/grants", { recipient_kind: "ministry", ministry_id: mid, amount: "300", purpose: "Help with a van for the Saturday meals" });
-ok(prop.status === 201 && /different treasurer/.test(prop.json.words), "a treasurer proposes a grant", prop.json);
+ok(prop.status === 201 && /different person on the money team/.test(prop.json.words), "a treasurer proposes a grant", prop.json);
 ok((await tess.post("/api/treasury/grants", { recipient_kind: "outside", amount: "50", purpose: "Winter coats for the people we serve" })).status === 422 && (await tess.post("/api/treasury/grants", { recipient_kind: "ministry", ministry_id: mid, amount: "50", purpose: "short" })).status === 422 && (await tess.post("/api/treasury/grants", { recipient_kind: "loan", amount: "50", purpose: "A purpose in words here" })).status === 422, "a grant with no name, no reason, or no real kind of recipient is refused in words");
 const vote = (c, id, o = {}) => c.post(`/api/treasury/grants/${id}/approve`, { voted_on: today, yes: "Ann Board\nBob Board", abstain: "Cy Abstain", no: "", doc_ref: "Minutes of the board, item 4", ...o });
 const own = await vote(tess, prop.json.id);

@@ -39,8 +39,8 @@ for (const kind of ["phone", "desk"]) {
 
   /* ---- treasurer one: two gifts and a grant ---- */
   const A = await open(browser, s.base, kind); await A.ctx.addCookies([asCookie(tessC)]);
-  await A.page.goto("/treasury"); await A.page.waitForSelector("[data-summary]");
-  ok(/Gifts received/i.test(await A.page.locator("[data-summary]").innerText()), `${kind}: the treasurer opens the treasury`);
+  await A.page.goto("/money"); await A.page.waitForSelector("[data-summary]");
+  ok(/Gifts received/i.test(await A.page.locator("[data-summary]").innerText()) && (await A.page.locator("main h1").innerText()) === "Money" && !/steward|treasur/i.test((await A.page.locator("main h1, main h2, main h3, main button, main label, main .lead, main .help, main .msg").allInnerTexts()).join(" ")), `${kind}: a person on the money team opens Money; its headings, buttons, labels and notes say treasurer and treasury nowhere (a person's own name is theirs)`);
   await A.page.fill("input[name=donor_name]", donor); await A.page.fill("input[name=donor_email]", `jordan.${tag}@donor.example`); await A.page.fill("input[name=amount]", "1500.00");
   await A.page.selectOption("select[name=method]", "check"); await A.page.fill("input[name=note]", "Check 1042");
   await calm(A.page, `${kind}: the treasury with a gift filled in`); await big(A.page, `${kind}: the treasury`);
@@ -62,15 +62,15 @@ for (const kind of ["phone", "desk"]) {
   const amountInputs = A.page.locator("form:has(select[name=recipient_kind]) input[name=amount]"); await amountInputs.fill("400.00");
   await A.page.fill("textarea[name=purpose]", purpose);
   await A.page.click("button:has-text('Propose this grant')");
-  await A.page.waitForSelector("text=Proposed. A different treasurer approves it after the board votes.");
+  await A.page.waitForSelector("text=Proposed. A different person on the money team approves it after the board votes.");
   const row = A.page.locator(`[data-grant]:has-text("${purpose}")`);
-  ok(/Proposed\. Waiting for a different treasurer/.test(await row.innerText()) && /you proposed this grant, so a different treasurer must approve it/i.test(await row.innerText()) && (await row.locator("button[data-act=approve]").count()) === 0, `${kind}: the proposer sees that a different treasurer must approve, and has no Approve button`);
+  ok(/Proposed\. Waiting for a different person on the money team/.test(await row.innerText()) && /you proposed this grant, so a different person on the money team must approve it/i.test(await row.innerText()) && (await row.locator("button[data-act=approve]").count()) === 0, `${kind}: the proposer sees that a different treasurer must approve, and has no Approve button`);
   await calm(A.page, `${kind}: the treasury after the grant`);
   await snap(A.page, `treasury-${px}`);
 
   /* ---- treasurer two approves, with the vote by name, then marks it paid ---- */
   const B = await open(browser, s.base, kind); await B.ctx.addCookies([asCookie(stanC)]);
-  await B.page.goto("/treasury"); await B.page.waitForSelector(`[data-grant]:has-text("${purpose}")`);
+  await B.page.goto("/money"); await B.page.waitForSelector(`[data-grant]:has-text("${purpose}")`);
   const brow = B.page.locator(`[data-grant]:has-text("${purpose}")`);
   await brow.locator("button[data-act=approve]").click();
   await B.page.waitForSelector("textarea[name=yes]");
@@ -103,7 +103,7 @@ for (const kind of ["phone", "desk"]) {
   ok(!(await (await V.ctx.newPage().then(async (p) => { await p.goto("/m/alpha-table-ministry"); return p.locator("main").innerText().finally(() => p.close()); })).includes("Give to Alpha")), `${kind}: and the ministry's own page has no Give button`);
 
   /* ---- the treasurer opens the door, with the registration ---- */
-  await A.page.goto("/treasury"); await A.page.waitForSelector("input[name=registration_number]");
+  await A.page.goto("/money"); await A.page.waitForSelector("input[name=registration_number]");
   await A.page.check("#door-open");
   await A.page.click("button:has-text('Save')");
   await A.page.waitForSelector("text=/registration number and its date/", { timeout: 8000 }).catch(async () => { console.log("DEBUG", (await A.page.locator("main").innerText()).slice(-1500)); throw new Error("no door message"); });

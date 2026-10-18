@@ -87,7 +87,7 @@ for (const kind of ["phone", "desk"]) {
 
   /* ---- the treasury ---- */
   const A = await open(browser, s.base, kind); await A.ctx.addCookies([asCookie(tess, s.base)]);
-  await A.page.goto("/treasury"); await A.page.waitForSelector("[data-eden-letters]");
+  await A.page.goto("/money"); await A.page.waitForSelector("[data-eden-letters]");
   await A.page.fill("[data-eden-letters] input[name=eden_who]", "Jordan Donor");
   await A.page.click("[data-eden-letters] [data-act=eden-open]"); await A.page.waitForSelector("[data-eden-letters] textarea[name=notes]");
   await A.page.fill("[data-eden-letters] textarea[name=notes]", "Jordan gave a gift for our Saturday meals.");

@@ -105,18 +105,18 @@ If step 1 shows a Railway error page instead, open the service, click **Deployme
 wrong in words, on a line that starts `Linked Ministries will not start:`, before it stops. Fix that line in Step 6 and click
 **Deploy** again.
 
-## Step 8. Make the first steward (one line of SQL, one blank)
+## Step 8. Make the first person on the Linked Ministries team (one line of SQL, one blank)
 
-A steward is a person at Linked Ministries who reads every new ministry and every new post before it is public. Nothing goes on
-the board until a steward approves it. The first steward is made in the database, because nobody can make themselves one.
+A person on the Linked Ministries team (the database calls the flag `steward`) reads every new ministry and every new post before it is public. Nothing goes on
+the board until one of them approves it. The first person is added in the database, because nobody can add themselves.
 
 | # | You do | The screen shows |
 |---|---|---|
 | 1 | In the project, click the **Postgres** card, then **Data**, then **Query** | An empty box for SQL. |
 | 2 | Paste the line below. Replace `EMAIL` with your own email address, in the same place, keeping the two quote marks | The line with your address between the quote marks. |
-| 3 | Click **Run** | A one-row result with a long id. That is your steward id. |
-| 4 | Open <https://linkedm.org/join> and sign in with that same email (the code comes by email) | A page that says "You are a steward" with a button "Open the page for stewards". |
-| 5 | Click **Open the page for stewards** | "Waiting to be read". It is empty until a ministry joins. |
+| 3 | Click **Run** | A one-row result with a long id. That is your team id. |
+| 4 | Open <https://linkedm.org/join> and sign in with that same email (the code comes by email) | A page that says "You are on the Linked Ministries team" with a button "Open Review". |
+| 5 | Click **Open Review** | "Review" (at <https://linkedm.org/review>). It says "All read" until a ministry joins. |
 
 ```
 select lm.make_steward('EMAIL');
@@ -124,21 +124,21 @@ select lm.make_steward('EMAIL');
 
 The same line with the space marked (1 space): `select␣lm.make_steward('EMAIL');`
 
-To make a second steward later, a steward signs in, opens the page for stewards and types the other person's email (that
-person must have signed in once). The last steward cannot be removed.
+To add a second person later, someone on the team signs in, opens Review and types the other person's email under "The team" (that
+person must have signed in once). The last person on the team cannot be removed.
 
-## Step 8b. Make the first treasurer (one line of SQL, one blank)
+## Step 8b. Make the first person on the money team (one line of SQL, one blank)
 
-A treasurer is a steward who writes down gifts and grants and approves the grants another treasurer proposed. Nothing is taken online
+A person on the money team (the database calls the flag `treasurer`) is on the Linked Ministries team too. They write down gifts and grants and approve the grants another person on the money team proposed. Nothing is taken online
 until the giving door is opened, and the door opens only when the Washington registration number and its date are filled in on the
-treasury page. Make the first treasurer the same way as the first steward (the person becomes a steward too).
+Money page. Make the first person on the money team the same way as the first person on the team (they join the team too).
 
 | # | You do | The screen shows |
 |---|---|---|
 | 1 | In the project, click the **Postgres** card, then **Data**, then **Query** | An empty box for SQL. |
-| 2 | Paste the line below. Replace `EMAIL` with the treasurer's own email address, keeping the two quote marks | The line with the address between the quote marks. |
+| 2 | Paste the line below. Replace `EMAIL` with that person's own email address, keeping the two quote marks | The line with the address between the quote marks. |
 | 3 | Click **Run** | A one-row result with a long id. |
-| 4 | That person signs in at <https://linkedm.org/join>, then opens <https://linkedm.org/treasury> | "The treasury", with the totals and the forms. |
+| 4 | That person signs in at <https://linkedm.org/join>, then opens <https://linkedm.org/money> | "Money", with the totals and the forms. |
 
 ```
 select lm.make_treasurer('EMAIL');
@@ -146,8 +146,8 @@ select lm.make_treasurer('EMAIL');
 
 The same line with the space marked (1 space): `select␣lm.make_treasurer('EMAIL');`
 
-A treasurer makes the next one on the treasury page. The last treasurer cannot be removed. A grant always needs two different
-treasurers, so make at least two before the first grant.
+Someone on the money team adds the next one on the Money page, under "The money team". The last person on the money team cannot be removed. A grant always needs two different
+people on the money team, so add at least two before the first grant.
 
 ## Step 8c. Turn on Eden, the writing helper (optional; a key you add yourself)
 

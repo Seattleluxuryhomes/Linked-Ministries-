@@ -1,6 +1,6 @@
 /* pages.mjs — the pages a person reads, built on the server. The public pages (the front, the board, one post, the terms and the
    privacy page) are whole HTML with the posts already in them, so they read without a script and a search engine sees them. The
-   signed-in pages (join, me, steward) are a shell and a script. Every word a person typed goes in through e(), which escapes it:
+   signed-in pages (join, me, review, money) are a shell and a script. Every word a person typed goes in through e(), which escapes it:
    text is never markup. No inline script, no style attribute, nothing from anyone else's server (every face is in /fonts, every
    picture is drawn here as inline SVG). */
 import { verse } from "./scripture.mjs";
@@ -127,10 +127,10 @@ export function frontPage({ latest, base = "", notice = "", giving = { open: fal
   const people = (board || []).length ? `<section class="band alt" id="directors"><div class="wrap wide"><h2>Our board of directors</h2><p class="lead">The board votes on every grant. The vote is written down, by name.</p><ul class="people-list">${board.map((m) => `<li class="card"><strong>${e(m.name)}</strong>${m.role ? `<span class="quiet">${e(m.role)}</span>` : ""}</li>`).join("")}</ul></div></section>` : "";
   const faq = [
     ["Is it free?", ["Yes. Joining, posting and answering are free. Nothing is sold here."]],
-    ["Who reads my post?", ["A steward at Linked Ministries reads it. A steward is a real person. Nothing goes up until a steward has read it."]],
+    ["Who reads my post?", ["A person on the Linked Ministries team reads it. They are real people. Nothing goes up until one of them has read it."]],
     ["Does money change hands?", ["On the board, no. The board moves no money between ministries.", "Linked Ministries may take gifts. Its board may use them to fund an ask. Every grant is shown on the giving page."]],
-    ["Can my ministry get a page?", ["Yes. After a steward reads your ministry, you fill in one form. You get a page at linkedm.org with your own address. A steward reads the page before it goes up."]],
-    ["How do gifts work?", ["A treasurer writes each gift down and gives it a numbered receipt. Two treasurers handle each grant, and the board votes by name.", "Gifts online open after the state registration is filed. Until then, no gift is taken here."]],
+    ["Can my ministry get a page?", ["Yes. After a person on the Linked Ministries team reads your ministry, you fill in one form. You get a page at linkedm.org with your own address. A person on the team reads the page before it goes up."]],
+    ["How do gifts work?", ["A person on the money team writes each gift down and gives it a numbered receipt. Two people on the money team handle each grant, and the board votes by name.", "Gifts online open after the state registration is filed. Until then, no gift is taken here."]],
     ["Is my gift deductible?", deductibleAnswer(flags)],
   ];
   const body = `<section class="hero"><div class="wrap wide hero-grid">
@@ -163,7 +163,7 @@ ${verse("prov_19_17")}
 ${verse("acts_2_44_45")}
 <ol class="three steps">
 <li class="card lift"><span class="num" aria-hidden="true">1</span><p class="label">Ask or give</p><p>Post what you need, like food, a van, or teachers. Or post what you can give, like chairs, beds, or time.</p></li>
-<li class="card lift"><span class="num" aria-hidden="true">2</span><p class="label">A person reads it</p><p>A steward at Linked Ministries reads each new ministry and each new post. Then it goes on the board.</p></li>
+<li class="card lift"><span class="num" aria-hidden="true">2</span><p class="label">A person reads it</p><p>A person at Linked Ministries reads each new ministry and each new post. Then it goes on the board.</p></li>
 <li class="card lift"><span class="num" aria-hidden="true">3</span><p class="label">Another ministry answers</p><p>One button sends one email to the ministry that posted. You work out the rest together.</p></li>
 </ol>
 <p class="note">${e(NO_MONEY)}</p>
@@ -349,7 +349,7 @@ export function givingPage({ giving, base = "", notice = "", flags = FLAGS }) {
   const g = giving, closed = !g.door_open, reg = g.registration_number && g.registration_date;
   const doorCard = closed
     ? `<div class="card door closed"><p class="label">Gifts online</p><h2>Not yet.</h2><p>Linked Ministries is not taking gifts online yet.</p><p>${reg ? `Its registration is on file, but the door is not open.` : "Washington wants a charity to register before it asks for gifts. Linked Ministries has not finished that registration. The door opens when it has."}</p>${reg ? "" : `<p class="quiet">There is no Give button until then.</p>`}</div>`
-    : `<div class="card door open"><p class="label">Gifts online</p><h2>The door is open.</h2><p>A gift is written down by a treasurer and gets a numbered receipt. Every grant is voted on by the board and shown on this page.</p><p><a class="btn" href="/give">Give</a></p></div>`;
+    : `<div class="card door open"><p class="label">Gifts online</p><h2>The door is open.</h2><p>A gift is written down by a person on the money team and gets a numbered receipt. Every grant is voted on by the board and shown on this page.</p><p><a class="btn" href="/give">Give</a></p></div>`;
   const regCard = reg ? `<p class="quiet">Washington charitable solicitation registration ${e(g.registration_number)}, dated ${e(dateWords(g.registration_date))}.</p>` : "";
   const grants = g.grants.length ? g.grants.map((x) => `<article class="card grant"><div class="row between"><h3>${x.page_slug ? `<a href="/m/${e(x.page_slug)}">${e(x.recipient_name)}</a>` : e(x.recipient_name)}</h3><p class="amt">${e(money(x.amount_cents))}</p></div>
 <p>${e(x.purpose)}</p>
@@ -380,7 +380,7 @@ ${verse("cor2_9_7")}
 <div class="grants">${grants}</div></section>
 <section aria-labelledby="g-safe"><div class="card"><h2 id="g-safe">How this is kept safe</h2><ul class="plain">
 <li>A gift is written down once, with the next receipt number. It is never changed. A mistake is fixed by a new row.</li>
-<li>One treasurer proposes a grant. A different treasurer approves it, after the board votes, by name.</li>
+<li>One person on the money team proposes a grant. A different person on the team approves it, after the board votes, by name.</li>
 <li>A grant is never more than the gifts that came in.</li>
 <li>The board moves no money between ministries. Linked Ministries may fund an ask from its gifts when its board says yes.</li></ul>
 ${notice ? `<p>Questions? Write to <a href="mailto:${e(notice)}">${e(notice)}</a>.</p>` : ""}</div></section>

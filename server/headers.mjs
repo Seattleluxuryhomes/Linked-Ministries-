@@ -27,7 +27,7 @@ export function cspMode(env = process.env) {
   return ["off", "report-only", "enforce"].includes(m) ? m : "enforce";
 }
 
-export const NOINDEX = ["/me", "/steward", "/treasury", "/join", "/api"];
+export const NOINDEX = ["/me", "/review", "/money", "/steward", "/treasury", "/join", "/api"];
 
 export function securityHeaders(env = process.env) {
   const mode = cspMode(env);
@@ -45,7 +45,7 @@ export function securityHeaders(env = process.env) {
     if (https) res.setHeader("Strict-Transport-Security", "max-age=31536000");
     if (NOINDEX.some((p) => req.path === p || req.path.startsWith(p + "/"))) res.setHeader("X-Robots-Tag", "noindex, nofollow");
     /* what a signed-in person's page and data say is never cached by a shared cache or kept by the back button */
-    if (req.path.startsWith("/api") || req.path.startsWith("/me") || req.path.startsWith("/steward") || req.path.startsWith("/treasury") || req.path.startsWith("/join")) res.setHeader("Cache-Control", "no-store");
+    if (req.path.startsWith("/api") || req.path.startsWith("/me") || req.path.startsWith("/review") || req.path.startsWith("/money") || req.path.startsWith("/steward") || req.path.startsWith("/treasury") || req.path.startsWith("/join")) res.setHeader("Cache-Control", "no-store");
     next();
   };
 }

@@ -90,7 +90,7 @@ const W = loadWorker();
   const shell = W.log.adds;
   ok(shell.length >= 9 && shell.includes("/offline.html") && shell.includes("/css/lm.css") && shell.includes("/img/icon.svg") && shell.filter((u) => u.startsWith("/fonts/")).length === 6, "at install it keeps the offline page, the stylesheet, the mark and the six faces", shell);
   ok(shell.every((u) => fs.existsSync(path.join(ROOT, "public", u))), "and every one of them is a real file in public/");
-  ok(!shell.some((u) => /^\/(api|me|steward|treasury|join|photos|board|giving|m)(\/|$)/.test(u) || /\.js$/.test(u)), "none of them is an API answer, a page, a picture or a script");
+  ok(!shell.some((u) => /^\/(api|me|review|money|steward|treasury|join|photos|board|giving|m)(\/|$)/.test(u) || /\.js$/.test(u)), "none of them is an API answer, a page, a picture or a script");
   ok(W.log.skipped === true, "a new worker takes over at once");
   let w2; await W.listeners.activate({ waitUntil: (p) => { w2 = p; } }); await w2;
   ok(W.log.deleted.join() === "old-cache" && W.log.claimed === true, "when it takes over it lets go of every cache that is not its own, and claims the open pages"); }
@@ -107,7 +107,7 @@ for (const p of ["/photos/11111111-1111-4111-8111-111111111111", "/js/me.js", "/
 }
 { const r = await W.run("GET", "/api/board", "cors", "https://elsewhere.example"); ok(!r.handled, "it never touches another site's address");
   const f = await W.run("GET", "/css/lm.css", "no-cors", "https://elsewhere.example"); ok(!f.handled, "not even a file of the same name on another site"); }
-for (const p of ["/me", "/steward", "/treasury", "/join", "/me/anything", "/join?next=%2Fme"]) {
+for (const p of ["/me", "/review", "/money", "/steward", "/treasury", "/join", "/me/anything", "/join?next=%2Fme"]) {
   W.log.puts.length = 0; W.state.offline = false;
   const online = await W.run("GET", p, "navigate");
   ok(online.handled && online.value.fromNetwork && W.log.puts.length === 0, `a signed-in page (${p}) is always the network's, and nothing of it is kept`);
@@ -129,11 +129,11 @@ for (const p of ["/", "/board", "/board/11111111-1111-4111-8111-111111111111", "
   W.log.fetched.length = 0; W.log.puts.length = 0; const font = await W.run("GET", "/fonts/fraunces-latin-600-normal.woff2", "cors");
   ok(font.handled && font.value.fromCache === "/fonts/fraunces-latin-600-normal.woff2" && W.log.fetched.length === 0, "a face comes from the device first, since a face never changes under its name");
   W.log.puts.length = 0;
-  for (const p of ["/api/board", "/me", "/photos/x", "/js/me.js", "/board", "/steward", "/treasury", "/join"]) { await W.run("GET", p, "navigate"); await W.run("GET", p, "cors"); }
+  for (const p of ["/api/board", "/me", "/photos/x", "/js/me.js", "/board", "/review", "/money", "/steward", "/treasury", "/join"]) { await W.run("GET", p, "navigate"); await W.run("GET", p, "cors"); }
   ok(W.log.puts.length === 0, "after every kind of request, the worker has written nothing to the device that is not a shell file", W.log.puts); }
 
 /* it can fail: a worker that keeps an /api answer, or a signed-in page, is caught by the same checks */
-{ const bad = read("public/sw.js").replace('const NEVER = ["/api", "/me", "/steward", "/treasury", "/join", "/photos"];', 'const NEVER = ["/steward"];').replace('if (!SHELL.includes(url.pathname)) return;', 'if (false) return;');
+{ const bad = read("public/sw.js").replace('const NEVER = ["/api", "/me", "/review", "/money", "/steward", "/treasury", "/join", "/photos"];', 'const NEVER = ["/steward"];').replace('if (!SHELL.includes(url.pathname)) return;', 'if (false) return;');
   ok(bad !== read("public/sw.js"), "(the broken worker is really different)");
   const B = loadWorker(bad); const api = await B.run("GET", "/api/board", "cors");
   ok(api.handled, "a worker with the never-list cut out answers /api: the checks above would fail it (they can fail)");

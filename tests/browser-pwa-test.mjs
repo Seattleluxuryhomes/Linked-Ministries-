@@ -38,7 +38,7 @@ const DAY = 86400000;
 
 /* ---- every page carries the head ---- */
 { const post = Object.values(world.ids)[0];
-  for (const p of ["/", "/board", "/board/" + post, "/giving", "/give", "/terms", "/privacy", "/join", "/me", "/steward", "/treasury", "/m/" + pg.slug, "/nothing-here"]) {
+  for (const p of ["/", "/board", "/board/" + post, "/giving", "/give", "/terms", "/privacy", "/join", "/me", "/review", "/money", "/steward", "/treasury", "/m/" + pg.slug, "/nothing-here"]) {
     const r = await fetch(s.base + p), t = await r.text(), head = t.slice(0, t.indexOf("</head>"));
     ok(/<link rel="manifest" href="\/manifest\.webmanifest">/.test(head) && /name="theme-color" content="#fbf8f3"/.test(head) && /apple-mobile-web-app-capable/.test(head) && /apple-touch-icon/.test(head) && t.includes('<script type="module" src="/js/pwa.js">'), `${p} (${r.status}): manifest link, theme colour, Apple tags and the registration script`); } }
 
@@ -56,7 +56,7 @@ ok(await v.page.evaluate(() => !!navigator.serviceWorker.controller), "the worke
 const kept = await v.page.evaluate(async () => { const out = {}; for (const k of await caches.keys()) out[k] = (await (await caches.open(k)).keys()).map((r) => new URL(r.url).pathname); return out; });
 const keptAll = Object.values(kept).flat();
 ok(Object.keys(kept).join() === "lm-shell-v1" && keptAll.includes("/offline.html") && keptAll.includes("/css/lm.css") && keptAll.filter((p) => p.startsWith("/fonts/")).length === 6, "the device holds one cache with the offline page, the stylesheet and the faces", kept);
-ok(!keptAll.some((p) => /^\/(api|me|steward|treasury|join|photos|board|giving|m)(\/|$)/.test(p) || p === "/" || /\.js$/.test(p)), "and not one page, script, picture or /api answer", keptAll);
+ok(!keptAll.some((p) => /^\/(api|me|review|money|steward|treasury|join|photos|board|giving|m)(\/|$)/.test(p) || p === "/" || /\.js$/.test(p)), "and not one page, script, picture or /api answer", keptAll);
 
 /* ---- an /api request is never answered from the device ---- */
 const board = async () => v.page.evaluate(async () => { const r = await fetch("/api/board"); const j = await r.json(); return { total: j.total, fromWorker: performance.getEntriesByName(r.url).slice(-1)[0] && performance.getEntriesByName(r.url).slice(-1)[0].workerStart > 0 }; });

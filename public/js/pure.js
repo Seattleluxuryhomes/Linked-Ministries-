@@ -58,8 +58,8 @@ export const MINISTRY_STATUS = {
   public: "A person at Linked Ministries read your ministry's page. It is part of the network.",
   sent_back: "A person at Linked Ministries sent your page back with a note. Change it and it goes back to be read.",
 };
-export const CLOSE_REASON = { met: "Met", no_longer_needed: "No longer needed", removed: "Taken down by a steward" };
-/* what a person can say is wrong with a post (the Report button); a steward reads it, and nothing is hidden until a steward acts */
+export const CLOSE_REASON = { met: "Met", no_longer_needed: "No longer needed", removed: "Taken down by the Linked Ministries team" };
+/* what a person can say is wrong with a post (the Report button); a person on the team reads it, and nothing is hidden until a person there acts */
 export const REPORT_REASONS = {
   scam: "It looks like a scam",
   money: "It asks for money",
@@ -100,7 +100,10 @@ export function parseCents(v) {
 export const GIFT_METHODS = [["card", "Card"], ["check", "Check"], ["cash", "Cash"], ["transfer", "Bank transfer"], ["in_kind", "In kind (goods or a service)"]];
 export const methodLabel = (id) => (GIFT_METHODS.find((m) => m[0] === id) || [id, String(id || "")])[1];
 export const receiptCode = (n) => "LM-" + String(n == null ? 0 : n).padStart(6, "0");
-export const GRANT_STATUS = { proposed: "Proposed. Waiting for a different treasurer to approve it.", approved: "Approved by the board. Not yet paid.", paid: "Paid.", declined: "Declined." };
+export const GRANT_STATUS = { proposed: "Proposed. Waiting for a different person on the money team to approve it.", approved: "Approved by the board. Not yet paid.", paid: "Paid.", declined: "Declined." };
+
+/** what a person on the team reads at the top of Review: how many things wait for them */
+export const waitingCount = (n) => `${n} waiting for review`;
 
 /* every sentence the pages say by themselves; the tests read all of them */
 export const WORDS = {
@@ -115,9 +118,9 @@ export const WORDS = {
   differentEmail: "Use a different email",
   signedInAs: "You are signed in as",
   signOut: "Sign out",
-  stewardWelcome: "You are a steward",
+  stewardWelcome: "You are on the Linked Ministries team",
   stewardWelcomeLead: "You read what is new before it goes on the network. You do not need a ministry to do that.",
-  stewardOpen: "Open the page for stewards",
+  stewardOpen: "Open Review",
   alsoMinistry: "I also run a ministry",
   profileTitle: "Tell us about your ministry",
   profileLead: "A person at Linked Ministries reads this page before your ministry is on the network. This takes a few minutes.",
@@ -168,16 +171,20 @@ export const WORDS = {
   teamInviteSend: "Add this person",
   teamInviteSaved: "Added. They will see it when they sign in with that email.",
   teamLeave: "Leave this ministry",
-  stewardTitle: "Waiting to be read",
+  stewardTitle: "Review",
   stewardLead: "Nothing goes on the network until a person reads it. Approve it, or send it back with a note the poster reads.",
   stewardEmpty: "Nothing is waiting. Thank you.",
-  stewardOnly: "This page is for stewards at Linked Ministries.",
+  stewardOnly: "This page is for the Linked Ministries team.",
   approve: "Approve",
   sendBack: "Send back",
   sendBackNote: "A note for them",
   sendBackNoteHelp: "Say what to change, in plain words.",
-  stewardAdd: "Make someone a steward",
+  stewardAdd: "Add someone to the team",
   stewardAddHelp: "They must have signed in once.",
+  teamTitle: "The team",
+  teamAddButton: "Add to the team",
+  teamAdded: "Done. They are on the team now.",
+  moneyTeamAddButton: "Add to the money team",
   filterKind: "Ask or give",
   filterCategory: "What it is about",
   filterState: "State",
@@ -217,7 +224,7 @@ export const WORDS = {
   emptyFiltered: "No posts match",
   report: "Report this post",
   reportTitle: "Report this post",
-  reportLead: "A steward will read your report. The post stays up until a steward acts.",
+  reportLead: "A person at Linked Ministries will read your report. The post stays up until a person there acts.",
   reportWhy: "What is wrong?",
   reportChoose: "Choose one",
   reportNote: "Tell us more (if you can)",
@@ -237,7 +244,7 @@ export const WORDS = {
   accountWarnTeam: "You will leave your ministry's team. Your sign-in, your name and your email are erased.",
   accountWarnSent: "Answers you sent lose their words in our copy. Emails that already went out cannot be taken back. This cannot be undone.",
   accountDone: "Your account is deleted. Thank you for the time you gave.",
-  removedNote: "A steward closed this post",
+  removedNote: "A person at Linked Ministries closed this post",
   stewardEmptyTitle: "All read",
   reportDecideNote: "A note for the record",
   reportDecideHelp: "Say why, in plain words. If you close the post, its poster reads this note.",
@@ -283,10 +290,10 @@ export const WORDS = {
   pageAddressLocked: "This address is final.",
   pageNeedMinistryRead: "A person at Linked Ministries must read your ministry first. Then your page can go public.",
   pageNameNote: "Your ministry's name and city show on the board. If you change either one, a person reads your ministry again, and your page and posts come off the site until then.",
-  treasuryTitle: "The treasury",
-  treasuryLead: "Every gift is written down once and never changed. A mistake is fixed by a new row that points at the old one. A grant needs two different treasurers and the board's vote, by name.",
-  treasuryOnly: "This page is for treasurers at Linked Ministries.",
-  treasuryOpen: "Open the treasury",
+  treasuryTitle: "Money",
+  treasuryLead: "Every gift is written down once and never changed. A mistake is fixed by a new row that points at the old one. A grant needs two different people on the money team and the board's vote, by name.",
+  treasuryOnly: "This page is for the money team at Linked Ministries.",
+  treasuryOpen: "Open Money",
   sumGifts: "Gifts received",
   sumGranted: "Granted by the board",
   sumPaid: "Of that, paid",
@@ -309,7 +316,7 @@ export const WORDS = {
   giftReceiptNoMail: "No receipt email was sent: this site is not set up to send email.",
   giftReceiptFailed: "The receipt email did not go out. The gift is recorded. You can send the receipt again from the ledger.",
   grantTitle: "Propose a grant",
-  grantLead: "One treasurer proposes a grant. A different treasurer approves it after the board votes.",
+  grantLead: "One person on the money team proposes a grant. A different person on the team approves it after the board votes.",
   grantTo: "Who gets it",
   grantOutside: "An organization outside the network",
   grantOutsideName: "Name of the organization",
@@ -320,7 +327,7 @@ export const WORDS = {
   grantApprove: "Approve (the board voted yes)",
   grantDecline: "Decline",
   grantPaid: "Mark paid",
-  grantNeedOther: "You proposed this grant, so a different treasurer must approve it.",
+  grantNeedOther: "You proposed this grant, so a different person on the money team must approve it.",
   voteDate: "Day of the vote",
   voteYes: "Who voted yes",
   voteYesHelp: "One name on each line.",
@@ -343,9 +350,9 @@ export const WORDS = {
   settings990: "Link to the Form 990 (https, once it is filed)",
   settingsOpen: "The door is open",
   settingsSave: "Save",
-  treasurersTitle: "Treasurers",
-  treasurerAdd: "Make a steward a treasurer",
-  treasurerAddHelp: "They must be a steward who has signed in.",
+  treasurersTitle: "The money team",
+  treasurerAdd: "Add someone to the money team",
+  treasurerAddHelp: "They must be on the Linked Ministries team and have signed in.",
   exportGifts: "Download all gifts (CSV)",
   exportGrants: "Download all grants (CSV)",
   edenTitleTreasury: "Eden: a letter or a thank-you",

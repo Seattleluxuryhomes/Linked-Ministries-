@@ -166,7 +166,7 @@ ok(!/<script(?![^>]*src)/.test(built.me) && /<script type="module" src="\/js\/me
   ok(/<h2>Who we are<\/h2>/.test(f) && t(f).includes(`It was started by ${FOUNDER}.`) && FOUNDER === "Ben Morton" && /forming as a nonprofit in Washington/.test(f) && /The network\.<\/strong>/.test(f) && /Disciples(&#39;|') Authority\.<\/strong>/.test(f) && /Housing\.<\/strong>/.test(f) && /planned, and it is not open yet/.test(f), "Who we are: a Washington nonprofit forming, started by Ben Morton, with its three works: the network, Disciples' Authority, and housing that is planned");
   ok(!/\b(born|raised|years of experience|decades|pastor|minister of|ordained|served as|graduated|degree)\b/i.test(t(f)), "and claims no biography about the founder");
   ok((f.match(/<div class="faq">[\s\S]*?<\/div>\n?<\/div><\/section>/) || [""])[0].split("<h3>").length - 1 === 6 && ["Is it free?", "Who reads my post?", "Does money change hands?", "Can my ministry get a page?", "How do gifts work?", "Is my gift deductible?"].every((q) => f.includes(`<h3>${q}</h3>`)), "Questions: the six real ones, in order");
-  ok(/A steward is a real person\. Nothing goes up until a steward has read it/.test(f) && /The board moves no money between ministries/.test(f) && /Every grant is shown on the giving page/.test(f) && /Gifts online open after the state registration is filed/.test(f), "and each answer says what is true");
+  ok(/They are real people\. Nothing goes up until one of them has read it/.test(f) && /The board moves no money between ministries/.test(f) && /Every grant is shown on the giving page/.test(f) && /Gifts online open after the state registration is filed/.test(f), "and each answer says what is true");
   ok(deductibleAnswer(FLAGS)[0] === "Not yet. Linked Ministries has not applied for 501(c)(3) status yet." && /do not count a gift as deductible/.test(deductibleAnswer(FLAGS)[1]) && deductibleAnswer(FLAGS).at(-1) === "We cannot give tax advice. Ask your own tax adviser.", "'Is my gift deductible?' answers 'Not yet' today, says not to count it, and gives no tax advice");
   ok(/has applied for 501\(c\)\(3\) status\. The IRS has not answered/.test(deductibleAnswer({ FORMED: true, APPLIED_501C3: true, IRS_LETTER_DATE: "" })[0]) && !deductibleAnswer({ FORMED: true, APPLIED_501C3: true, IRS_LETTER_DATE: "" }).join(" ").includes(IRS_PHRASE) && deductibleAnswer({ FORMED: true, APPLIED_501C3: true, IRS_LETTER_DATE: "2027-03-02" }).includes(IRS_PHRASE), "with the application filed it says the IRS has not answered; the IRS's sentence appears only when the letter is dated");
   ok(!/tax-deductible|write-off/i.test(f + frontPage({ latest: [], flags: { FORMED: true, APPLIED_501C3: true, IRS_LETTER_DATE: "" } })), "the front never says 'tax-deductible' or 'write-off'");
@@ -227,7 +227,7 @@ ok(!/<script(?![^>]*src)/.test(built.me) && /<script type="module" src="\/js\/me
   ok(noticeEmail({ LEXOS_NOTICE_EMAIL: "Notices <n@linkedm.org>", LEXOS_MAIL_FROM: "b@linkedm.org" }) === "n@linkedm.org" && noticeEmail({ LEXOS_MAIL_FROM: "Linked Ministries <board@linkedm.org>" }) === "board@linkedm.org" && noticeEmail({ LEXOS_NOTICE_EMAIL: "a,b@c.example", LEXOS_MAIL_FROM: "x" }) === "" && noticeEmail({}) === "", "the notice address is LEXOS_NOTICE_EMAIL, else the sender address, else none; a list or junk is never used");
   /* the emails: who sent it and why, no marketing, one-line subjects */
   const mails = { signIn: signInEmail("123456"), answer: answerEmail({ toContact: "Alex", fromMinistry: "Bravo House", place: "Spokane, WA", kind: "ask", title: "Tables", words: "We can bring eleven.", fromName: "Blake", fromEmail: "blake@bravo.example", phone: "509-555-0142", website: "https://bravo.example.org" }),
-    invite: inviteEmail({ inviter: "Alex", ministry: "Alpha Table", joinUrl: "https://linkedm.org/join" }), report: reportEmail({ title: "Tables", ministry: "Alpha", reason: "scam", note: "It looks wrong.", reporter: "r@x.example", url: "https://linkedm.org/board/1", stewardUrl: "https://linkedm.org/steward" }) };
+    invite: inviteEmail({ inviter: "Alex", ministry: "Alpha Table", joinUrl: "https://linkedm.org/join" }), report: reportEmail({ title: "Tables", ministry: "Alpha", reason: "scam", note: "It looks wrong.", reporter: "r@x.example", url: "https://linkedm.org/board/1", stewardUrl: "https://linkedm.org/review" }) };
   for (const [name, m] of Object.entries(mails)) {
     ok(/Why you got this:/.test(m.text) && !/[\r\n]/.test(m.subject), `the ${name} email says why it was sent, and its subject is one line`);
     ok(!/\b(sale|discount|offer ends|limited time|unsubscribe|newsletter|promo|buy|upgrade|\$)\b/i.test(m.text.replace(/We send no news and no ads\./g, "").replace(/offer help/g, "")) && !/https?:\/\/(?!linkedm\.org|bravo\.example)/.test(m.text), `the ${name} email sells nothing and links nowhere strange`);
@@ -235,7 +235,7 @@ ok(!/<script(?![^>]*src)/.test(built.me) && /<script type="module" src="\/js\/me
   }
   ok(/free board where ministries ask for help and offer help/.test(mails.signIn.text) && /We send no news and no ads/.test(mails.signIn.text) && /works for 10 minutes/.test(mails.signIn.text) && /^123456 is your Linked Ministries sign-in code$/.test(mails.signIn.subject), "the sign-in email says who sent it (Linked Ministries, linkedm.org), why, and that no news or ads follow");
   ok(mails.answer.text.includes(STAY_SAFE) && /does not check or vouch/.test(mails.answer.text) && /911/.test(mails.answer.text) && /We sent you their words for them/.test(mails.answer.text), "the answer email carries the stay-safe line, the no-vouching line and 911 and 988, and says Linked Ministries sent it for them");
-  ok(/Nothing has been hidden/.test(mails.report.text) && /steward at Linked Ministries/.test(mails.report.text), "the report email tells a steward that nothing has been hidden");
+  ok(/Nothing has been hidden/.test(mails.report.text) && /you are on the Linked Ministries team/.test(mails.report.text) && !/steward/i.test(mails.report.text), "the report email tells the team that nothing has been hidden, in plain words");
   ok(Object.keys(REPORT_REASONS).join() === "scam,money,unsafe,copy,private,other", "the Report form has six reasons, one of them copying");
 }
 
@@ -340,4 +340,18 @@ ok(mig.every((m) => !/\bdrop (table|schema|column)\b[^;]*;/i.test(read("migratio
 for (const p of everything.filter((x) => x !== path.join("tests", "unit-test.mjs"))) { const t = read(p); ok(!/(sk-ant-|AKIA[0-9A-Z]{16}|-----BEGIN (RSA |EC )?PRIVATE KEY|smtps?:\/\/[^\s:@<]+:(?!abcdabcdabcdabcd|<|\$\{|pw@|secretpass|p@|\.\.\.)[^\s@<]{6,}@)/.test(t), `${p}: no key, no private key, no real mail password`); }
 
 await unitPool.end();
+/* ---- founder, 2026-10-18: a person never reads "steward", "treasurer" or "treasury" ----
+   Every quoted string in the server and in the scripts is read; one that holds an old name fails unless it is a path, a database call or a bare
+   identifier (the flags, the event kinds and the API paths keep their names). The pages, emails and refusals are read again in whole by
+   tests/banned.mjs. The team's pages are /review and /money; the first names redirect. */
+{ const files = [...walk("server"), ...walk("public/js")].filter((p) => /\.m?js$/.test(p));
+  const bad = [];
+  for (const f of files) {
+    const src = read(f).replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|\s)\/\/.*$/gm, "$1");
+    for (const m of src.matchAll(/"((?:[^"\\\n]|\\.)*)"|`((?:[^`\\]|\\.)*)`/g)) { const t = (m[1] != null ? m[1] : m[2].replace(/\$\{[^}]*\}/g, "")); if (/steward|treasur/i.test(t) && !/^Disallow: \/|^[\/]|^select |^[a-z_.]+$|\blm\.[a-z_]+\(|\/api\/|\/review|\/money/.test(t) && !/^[a-z_]+ [a-z_]+ [a-z_]+/.test(t.replace(/[^a-z_ ]/g, ""))) bad.push(f + ': ' + t.slice(0, 70)); }
+  }
+  ok(bad.length === 0, "no sentence in the server or the scripts holds steward, treasurer or treasury", bad.slice(0, 5));
+  const r1 = READ.filter(([re]) => re.test("A steward and a treasurer in the treasury"));
+  ok(r1.length >= 1, "and the banned list can catch the old names (it can fail)"); }
+
 process.exit(T.done());

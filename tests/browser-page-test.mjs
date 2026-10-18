@@ -78,7 +78,7 @@ for (const kind of ["phone", "desk"]) {
 
   /* ---- a steward reads the ministry, then the page, in the browser ---- */
   const S = await open(browser, s.base, kind); await S.ctx.addCookies([asCookie(stew)]);
-  await S.page.goto("/steward"); await S.page.waitForSelector(`[data-page]`);
+  await S.page.goto("/review"); await S.page.waitForSelector(`[data-page]`);
   const pageCard = S.page.locator("[data-page]").first();
   ok(/A new page/.test(await pageCard.innerText()) && /Read the ministry first/.test(await pageCard.innerText()) && /A hot meal every Saturday/.test(await pageCard.innerText()), `${kind}: the steward sees the new page, every word of it, and is told to read the ministry first`);
   ok((await pageCard.locator("img.thumb").count()) === 1 && await pageCard.locator("img.thumb").evaluate((im) => im.complete && im.naturalWidth > 0), `${kind}: and the picture`);

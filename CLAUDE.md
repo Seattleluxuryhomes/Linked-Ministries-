@@ -15,9 +15,9 @@ Founder, 2026-10-18: "So if a ministry wants something or needs something we nee
 1. **Permissions live in the database and the API, never in the screen.** The public reads public posts only, and only the columns
    `migrations/0004_grants.sql` names; a ministry never reads another's drafts, people or answers. A page that hides a field is not a
    permission. Row-level security and the functions in `migrations/` decide; each route is a thin door.
-2. **A person approves.** A new ministry and every new post wait for a steward (a Linked Ministries staff person; the `steward` flag
-   on the person row, set only by SQL or by another steward). The poster sees "Waiting for a person at Linked Ministries to read
-   it" and never "published" until it is. What a steward approved is frozen: its words cannot be changed.
+2. **A person approves.** A new ministry and every new post wait for a person on the Linked Ministries team (a staff person; the `steward` flag
+   on the person row, set only by SQL or by another person on the team). The team's page is Review (`/review`; `/steward` redirects to it). The poster sees "Waiting for a person at Linked Ministries to read
+   it" and never "published" until it is. What the team approved is frozen: its words cannot be changed.
 3. **No fake states.** Nothing says sent, saved or received unless it happened. An answer says "Sent to <ministry>" only after the
    mail provider accepted the email, and is a row only after that. With no mail set up, or a provider that refuses, the screen says
    so and nothing is saved.
@@ -51,14 +51,13 @@ Founder, 2026-10-18: "So if a ministry wants something or needs something we nee
 13. **Legal exposure, audited 2026-10-18.** `/terms` and `/privacy` are drafts a lawyer has not read and say so at the top (`server/legal.mjs`).
     Nothing anywhere claims 501(c)(3) status or says a gift is deductible (the footer's line and the /giving status line, both built in
     `server/words.mjs` from what is true that day, are the only places that name the application); nothing is set beside another company's name; every post carries the stay-safe line and a Report link; a report
-    saves, emails the stewards, and hides nothing until a steward acts; a person can download and delete their own data; every email says who
+    saves, emails the Linked Ministries team, and hides nothing until a person on the team acts; a person can download and delete their own data; every email says who
     sent it and why and sells nothing. `tests/banned.mjs` and `tests/unit-test.mjs` hold each of these.
 14. **Money is a record, and a person approves it.** Gifts, board votes and receipts are only ever added to; a mistake is a new row that
-    points at the old one. A grant needs two different named treasurers and the board's vote by name (a CHECK on the table, not a screen).
-    No event holds a donor's name, an email, a note or a board member. The public reads sums of the rows, never a donor. A treasurer is a
-    steward with one more flag. `tests/db-giving-test.mjs` holds each of these.
+    points at the old one. A grant needs two different named people on the money team and the board's vote by name (a CHECK on the table, not a screen).
+    No event holds a donor's name, an email, a note or a board member. The public reads sums of the rows, never a donor. The money team (the `treasurer` flag, page Money at `/money`; `/treasury` redirects to it) is the Linked Ministries team with one more flag. `tests/db-giving-test.mjs` holds each of these.
 15. **Eden is a writing helper and nothing more.** Founder, 2026-10-18: the orange orb on the signed-in pages only (/me, the page form,
-    /treasury). Its prompt and its key live in the server; a client sends a job name and fields, never a prompt. Danger-to-life words
+    /money). Its prompt and its key live in the server; a client sends a job name and fields, never a prompt. Danger-to-life words
     stop the call and show 911 and 988. Nothing Eden writes is saved or sent until the person presses the form's own Save or Send, and
     every draft says "Eden wrote this; read it before you use it." Scripture is only ever an exact verse from `server/scripture.mjs` by
     its key. No legal, tax or medical advice. One event per call, with token counts and never a word. `tests/eden-test.mjs` holds each.
@@ -93,6 +92,14 @@ ships.
 - The server listens on `process.env.PORT || 8080` and says `Linked Ministries listening on :<port>`.
 - Deploy: `DEPLOY.md`. Railway reads `railway.json`.
 - End substantial work with an honest ship assessment.
+
+## Words a person reads (founder ruling, 2026-10-18)
+
+A person never reads "steward" or "treasurer" or "treasury". The team's review page is **Review** (`/review`), the money page is **Money**
+(`/money`); a steward as a person is "the Linked Ministries team" or "a person at Linked Ministries", a treasurer is "a person on the money
+team". Counts read "3 waiting for review". `/steward` and `/treasury` stay as permanent redirects. Code identifiers, the database flags
+(`steward`, `treasurer`), `lm.make_steward`, `lm.make_treasurer`, the API paths under `/api/steward` and `/api/treasury`, event kinds and
+migrations keep their names. The public giving and receipt sentences keep their meaning exactly. `tests/banned.mjs` fails if the old words reach a page.
 
 ## Founder communication rules
 

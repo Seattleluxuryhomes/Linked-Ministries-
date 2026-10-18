@@ -65,7 +65,7 @@ const ours = (text) => text.split("\n").filter((l) => l.trim() && !/^(Hello |You
 let mailSentences = 0;
 for (const [name, m] of Object.entries({ signIn: signInEmail("123456"), invite: inviteEmail({ inviter: "Alex", ministry: "Alpha Table", joinUrl: "https://linkedm.org/join" }),
   answer: answerEmail({ toContact: "Alex", fromMinistry: "Bravo House", place: "Spokane, WA", kind: "give", title: "Tables", words: "We need ten.", fromName: "Blake", fromEmail: "blake@bravo.example", phone: "", website: null }),
-  report: reportEmail({ title: "Tables", ministry: "Alpha", reason: "scam", note: "", reporter: "", url: "https://linkedm.org/board/1", stewardUrl: "https://linkedm.org/steward" }) })) {
+  report: reportEmail({ title: "Tables", ministry: "Alpha", reason: "scam", note: "", reporter: "", url: "https://linkedm.org/board/1", stewardUrl: "https://linkedm.org/review" }) })) {
   for (const l of ours(m.text)) { mailSentences++; check(`the ${name} email`, l.replace(/https?:\S+/g, "").replace(/\(linkedm\.org\)/g, "")); }
 }
 ok(mailSentences >= 15, `${mailSentences} lines of the four emails were read`);

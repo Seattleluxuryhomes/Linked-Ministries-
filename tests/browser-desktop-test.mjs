@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* tests/browser-desktop-test.mjs: the site on a computer, 1440 by 900, in a real Chromium: every public page and every signed-in page
-   (the poster's page and forms, the join form, the steward's queue, the treasury). Nothing scrolls sideways; no line of reading
+   (the poster's page and forms, the join form, Review, Money). Nothing scrolls sideways; no line of reading
    copy runs past about 80 characters; content sits in a centred column that is never wider than 1120 pixels; the top of the page puts
    the ways around beside the name and the Join button at the right edge of the column; Scripture is a quiet quotation with its own
    gold line, not a browser's indented block; the first thing on a page starts a steady distance below the top line; and a phone at 390
@@ -31,8 +31,8 @@ const PAGES = [
   ["me-postform", "/me", alex, "[data-group=public]", async (p) => { await p.click("button:has-text('Post an ask')"); await p.waitForSelector("form select[name=category]"); }],
   ["me-pageform", "/me", alex, "[data-act=page-edit], [data-act=page-start]", async (p) => { await p.click("[data-act=page-edit], [data-act=page-start]"); await p.waitForSelector("[data-page-form]"); }],
   ["join-signedin", "/join", newcomer, "input[name=name]"],
-  ["steward", "/steward", world.sam, "[data-ministry]"],
-  ["treasury", "/treasury", world.sam, "[data-summary]"],
+  ["review", "/review", world.sam, "[data-ministry]"],
+  ["money", "/money", world.sam, "[data-summary]"],
 ];
 
 /** the most characters on one rendered line, for reading copy: paragraphs, list items and quotations in the page's main part
@@ -80,10 +80,10 @@ for (const [name, url, who, wait, act] of PAGES) {
 
 /* the signed-in columns are a little wider than a phone's, so rows and forms do not squeeze */
 { const v = await open(browser, s.base, "desk"); await v.ctx.addCookies([cookie(world.sam)]);
-  await v.page.goto("/treasury"); await v.page.waitForSelector("[data-summary]");
+  await v.page.goto("/money"); await v.page.waitForSelector("[data-summary]");
   const cards = await v.page.evaluate(() => [...document.querySelectorAll("[data-summary] > *")].map((c) => { const r = c.getBoundingClientRect(); return { y: Math.round(r.top), h: Math.round(r.height) }; }));
-  ok(cards.length === 4 && new Set(cards.map((c) => c.y)).size === 1, "the treasury's four totals sit on one row", cards);
-  const wrapW = (await box(v.page, "main .wrap")).w; ok(wrapW === 880, "the steward's and the treasurer's pages use an 880-pixel column", wrapW);
+  ok(cards.length === 4 && new Set(cards.map((c) => c.y)).size === 1, "the four totals on Money sit on one row", cards);
+  const wrapW = (await box(v.page, "main .wrap")).w; ok(wrapW === 880, "Review and Money use an 880-pixel column", wrapW);
   await v.close(); }
 { const v = await open(browser, s.base, "desk"); await v.ctx.addCookies([cookie(alex)]);
   await v.page.goto("/me"); await v.page.waitForSelector("[data-act=page-edit], [data-act=page-start]"); ok((await box(v.page, "main .wrap")).w === 720, "the poster's page uses a 720-pixel column"); await v.page.click("[data-act=page-edit], [data-act=page-start]"); await v.page.waitForSelector("[data-page-form]");
@@ -91,7 +91,7 @@ for (const [name, url, who, wait, act] of PAGES) {
   ok(places.length >= 1 && places.every((w) => w >= 200), "in the page form, the 'place' box of a meeting is wide enough to read an address", places); await v.close(); }
 
 /* the phone is as it was: the nav is a row of its own under the name, the Join button is at its right, nothing scrolls sideways, every button is 44 pixels tall */
-for (const [name, url, who, wait] of PAGES.filter((p) => ["front", "board", "ministry", "giving", "terms", "join", "me", "steward", "treasury"].includes(p[0]))) {
+for (const [name, url, who, wait] of PAGES.filter((p) => ["front", "board", "ministry", "giving", "terms", "join", "me", "review", "money"].includes(p[0]))) {
   const v = await open(browser, s.base, "phone"); if (who) await v.ctx.addCookies([cookie(who)]);
   await v.page.goto(url); if (wait) await v.page.waitForSelector(wait);
   await v.page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 600) { scrollTo({ top: y, behavior: "instant" }); await new Promise((r) => setTimeout(r, 40)); } scrollTo({ top: 0, behavior: "instant" }); await document.fonts.ready; });
