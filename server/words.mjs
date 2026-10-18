@@ -5,8 +5,9 @@
 /* ---- THE ONE PLACE THE FOUNDER EDITS ----------------------------------------------------------------------------------------
    The line at the bottom of every page about the nonprofit corporation. When the application for 501(c)(3) recognition is
    filed, change FILING_STATUS here and nowhere else. Say only what is true on the day: no word about taxes or gifts. */
+export const FORMED = false; /* true on the day the Washington Secretary of State confirms the articles */
 export const FILING_STATUS = "not yet filed";
-export const NONPROFIT_LINE = `Linked Ministries is a Washington nonprofit corporation; its application for 501(c)(3) recognition is ${FILING_STATUS}.`;
+export const NONPROFIT_LINE = `Linked Ministries is ${FORMED ? "a Washington nonprofit corporation" : "forming as a Washington nonprofit corporation"}; its application for 501(c)(3) recognition is ${FILING_STATUS}.`;
 
 /* the database raises a short code (the message) and, for most, a hint in words; [status, words] when there is no hint */
 const REFUSALS = {

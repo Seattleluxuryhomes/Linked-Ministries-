@@ -199,7 +199,7 @@
       "origin_path": "behavioral-health-app/server/words.mjs",
       "origin_sha256": "7d66d59b2ffd109e7ba740ea0f66090185974bb339207889072108b8262c41e8",
       "local_path": "server/words.mjs",
-      "local_sha256": "149a7f84eb180141d76b043fd129575e8dbb1eb4481fc235785dc22cf4794ccf",
+      "local_sha256": "11a09f4014db28a2785e746e3435649ab09ab4a3f5580e8032792621bd4163aa",
       "note": "Same refusal mapping (a code and a hint); the codes are this product's. The founder's one editable line lives here."
     },
     {
@@ -353,7 +353,7 @@
       "origin_path": "behavioral-health-app/tests/unit-test.mjs",
       "origin_sha256": "6bead93056daa8752e1c7eaca4e74352772b4d62cc6832e2916b8d739b6ab620",
       "local_path": "tests/unit-test.mjs",
-      "local_sha256": "ede1c1e29865ce3ca3bc6212eb0c86f799bb0dd9fec2952f4f1d54be86eea8e8",
+      "local_sha256": "df4f171dae47e9d9b1c55210dc958cf6a3470f512205a68573934646baf523b5",
       "note": "The licence check, the commons check, the no-key scan and the migration checks are the original's."
     },
     {

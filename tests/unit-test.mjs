@@ -10,7 +10,7 @@ import { counter, ROOT } from "./helpers.mjs";
 import { checkPage, visibleText, READ, SOURCE } from "./banned.mjs";
 import { CATEGORIES, CATEGORY_IDS, KIND, KINDS, STATES, STATE_CODES, WORDS, dateWords, categoryLabel, NO_MONEY, CRISIS, POST_STATUS, MINISTRY_STATUS } from "../public/js/pure.js";
 import { checkConfig } from "../server/config.mjs";
-import { refusal, NONPROFIT_LINE, FILING_STATUS } from "../server/words.mjs";
+import { refusal, NONPROFIT_LINE, FILING_STATUS, FORMED } from "../server/words.mjs";
 import { cleanFilters } from "../server/board.mjs";
 import { dayLimits } from "../server/api.mjs";
 import { frontPage, boardPage, postPage, missingPostPage, shellPage, notFoundPage, e, postCard } from "../server/pages.mjs";
@@ -36,7 +36,7 @@ ok(!/published/i.test(JSON.stringify([POST_STATUS, MINISTRY_STATUS, WORDS])) && 
 ok(/^On the board/.test(POST_STATUS.public) && !/^On the board/.test(POST_STATUS.waiting) && !/^On the board/.test(POST_STATUS.draft), "'On the board' belongs to a public post alone");
 
 /* ---- the one line the founder edits ---- */
-ok(NONPROFIT_LINE === `Linked Ministries is a Washington nonprofit corporation; its application for 501(c)(3) recognition is ${FILING_STATUS}.` && FILING_STATUS === "not yet filed", "the nonprofit line is built from one value, FILING_STATUS, in server/words.mjs");
+ok(NONPROFIT_LINE === `Linked Ministries is ${FORMED ? "a Washington nonprofit corporation" : "forming as a Washington nonprofit corporation"}; its application for 501(c)(3) recognition is ${FILING_STATUS}.` && FILING_STATUS === "not yet filed" && FORMED === false, "the nonprofit line is built from one value, FILING_STATUS, in server/words.mjs");
 { const places = walk(".").filter((p) => /\.(mjs|js|html|css|json)$/.test(p) && !/^(tests|docs)\//.test(p) && !/package-lock/.test(p) && /application for 501\(c\)\(3\) recognition/.test(read(p)));
   ok(places.join() === path.join("server", "words.mjs"), "the sentence is written in one file only", places); }
 
