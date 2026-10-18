@@ -26,6 +26,7 @@ export function checkConfig(env = process.env) {
     if (!/^https:\/\/[^\s/]+\/?$/.test(pub)) fail.push("LEXOS_PUBLIC_URL must be this site's own address starting https:// (for example https://linkedm.org).");
     const csp = str(env.LEXOS_CSP || "enforce").toLowerCase();
     if (csp !== "enforce") fail.push(`LEXOS_CSP is "${csp}". Production enforces the content-security policy; leave it unset or set it to enforce.`);
+    if (str(env.ZEFFY_GIVE_URL) && !/^https:\/\/([^\s/]+\.)?zeffy\.com(\/\S*)?$/i.test(str(env.ZEFFY_GIVE_URL))) fail.push("ZEFFY_GIVE_URL must be the Zeffy donation form's own address, starting https:// and on zeffy.com. Leave it empty until there is one.");
     if (str(env.KPI_READ_TOKEN) && str(env.KPI_READ_TOKEN).length < 16) fail.push("KPI_READ_TOKEN is shorter than 16 characters; it opens the operator's health detail.");
   }
   const t = dbTls(env, dbUrl(env));

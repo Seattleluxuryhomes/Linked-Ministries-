@@ -15,6 +15,7 @@ import { boardQuery, boardPost } from "./board.mjs";
 import { publicPage, publicPageList, photo, myPage, givingPublic, givingDoor } from "./site.mjs";
 import { frontPage, boardPage, postPage, missingPostPage, shellPage, notFoundPage, termsPage, privacyPage, ministryPage, givingPage, givePage } from "./pages.mjs";
 import { noticeEmail } from "../lib/email.mjs";
+import { zeffyGiveUrl } from "../public/js/pure.js";
 import { PRODUCT, CATEGORIES, STATES } from "../public/js/pure.js";
 
 const PUBLIC = path.join(ROOT, "public");
@@ -118,7 +119,7 @@ export function buildApp({ env = process.env } = {}) {
 
   /* ---- the pages ----------------------------------------------------------------------------------------------------------- */
   const html = (res, status, body) => res.status(status).type("html").send(body);
-  const where = (req) => ({ base: String(env.LEXOS_PUBLIC_URL || "").replace(/\/+$/, ""), notice: noticeEmail(env) });
+  const where = (req) => ({ base: String(env.LEXOS_PUBLIC_URL || "").replace(/\/+$/, ""), notice: noticeEmail(env), zeffy: zeffyGiveUrl(env.ZEFFY_GIVE_URL) });
   app.get("/", wrap(async (req, res) => { const r = await boardQuery({}, { limit: 6 }); res.set("cache-control", "no-cache"); html(res, 200, frontPage({ latest: r.posts, giving: { open: await givingDoor() }, ...where(req) })); }));
   app.get("/board", wrap(async (req, res) => { const r = await boardQuery(req.query); res.set("cache-control", "no-cache"); html(res, 200, boardPage({ result: r, ...where(req) })); }));
   app.get("/board/:id", wrap(async (req, res) => { const p = await boardPost(req.params.id); res.set("cache-control", "no-cache"); p ? html(res, 200, postPage({ post: p, ...where(req) })) : html(res, 404, missingPostPage(where(req))); }));

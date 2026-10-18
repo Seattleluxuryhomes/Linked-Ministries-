@@ -149,7 +149,21 @@ The same line with the space marked (1 space): `select␣lm.make_treasurer('EMAI
 Someone on the money team adds the next one on the Money page, under "The money team". The last person on the money team cannot be removed. A grant always needs two different
 people on the money team, so add at least two before the first grant.
 
-## Step 8c. Turn on Eden, the writing helper (optional; a key you add yourself)
+## Step 8c. Gifts online through Zeffy (after Linked Ministries has its EIN and bank account)
+
+Zeffy takes each gift and emails the donor's receipt. This site links to the Zeffy form only while the giving door is open, and sends no
+receipt of its own for a Zeffy gift. A person on the money team writes each Zeffy gift down on the Money page, choosing **Online through
+Zeffy**, so the sums on the giving page add up.
+
+| # | You do | The screen shows |
+|---|---|---|
+| 1 | On zeffy.com, sign up with Linked Ministries' exact legal name, its EIN and its bank account | Your Zeffy dashboard. |
+| 2 | In Zeffy, make a donation form, then copy its link (it starts `https://www.zeffy.com/`) | The form's own page. |
+| 3 | In Railway, click the `Linked-Ministries-` card, then **Variables**, then **New Variable**. Name: `ZEFFY_GIVE_URL` (no spaces). Value: the link | The variable in the list. Railway redeploys by itself. |
+| 4 | Open `linkedm.org/give` | With the door closed it still says gifts are not open yet. With the door open it shows **Give through Zeffy**. |
+| 5 | Give $1 yourself through the form | A receipt email from Zeffy. Then record that gift on the Money page as **Online through Zeffy**: the screen says no receipt was sent from here, because Zeffy already sent it. |
+
+## Step 8d. Turn on Eden, the writing helper (optional; a key you add yourself)
 
 Eden writes a first draft of an ask or a give, of a ministry's page words, of a grant request letter or of a thank-you, from what the
 person types. It is off until you add a key. Without one, the page says "Eden is not set up on this server yet" and offers nothing.
