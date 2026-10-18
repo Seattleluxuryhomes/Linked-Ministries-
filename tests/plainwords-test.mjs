@@ -35,13 +35,13 @@ ok(verdict(CRISIS, { ceiling: 6 }).ok, "the emergency line reads at grade 6 or u
 const LEGAL = NONPROFIT_LINE;
 ok(verdict(LEGAL, { ceiling: 14 }).ok && !plain(LEGAL) && LEGAL.split(/\s+/).length <= 25, `the nonprofit line is the one named exception (grade ${verdict(LEGAL).grade.toFixed(1)}, ${LEGAL.split(/\s+/).length} words): the founder's sentence, with a legal name in it`);
 
-/* every public page's own words (the posts in them are other people's, so they are left out here) */
+/* every public page's own words (the posts in them are other people's, and Scripture is the Bible's, so both are left out here) */
 const pages = { front: frontPage({ latest: [] }), board: boardPage({ result: { posts: [], total: 0, page: 1, pages: 1, filters: { kind: "", category: "", state: "", city: "", q: "" } } }),
   missing: missingPostPage(), notFound: notFoundPage(), terms: termsPage({ notice: "notices@linkedm.example" }), privacy: privacyPage({ notice: "notices@linkedm.example" }), termsNoAddress: termsPage({}),
   card: postCard({ id: "11111111-1111-4111-8111-111111111111", kind: "ask", category: "furniture", title: "x", body: "x", city: "Seattle", state: "WA", open_until: "2026-11-17", posted_at: "2026-10-18T10:00:00Z", ministry: "x", ministry_city: "Seattle", ministry_state: "WA" }), join: shellPage({ title: "Join the network", script: "/js/join.js" }), me: shellPage({ title: "Your ministry", script: "/js/me.js" }), steward: shellPage({ title: "Waiting to be read", script: "/js/steward.js" }) };
 let sentences = 0;
 for (const [name, html] of Object.entries(pages)) {
-  const blocks = html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<svg[\s\S]*?<\/svg>|<select[\s\S]*?<\/select>/gi, " ").replace(/<\/(p|h1|h2|h3|li|label|div|a|button|span)>/gi, "\n").split("\n").map((b) => visibleText(b)).filter((b) => b.split(/\s+/).length >= 4);
+  const blocks = html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<svg[\s\S]*?<\/svg>|<select[\s\S]*?<\/select>|<blockquote class="scripture[\s\S]*?<\/blockquote>/gi, " ").replace(/<\/(p|h1|h2|h3|li|label|div|a|button|span)>/gi, "\n").split("\n").map((b) => visibleText(b)).filter((b) => b.split(/\s+/).length >= 4);
   for (const b of blocks) { if (b === LEGAL) continue; sentences++; check(`page ${name}`, b); }
 }
 ok(sentences >= 120, `${sentences} blocks of words on the public pages were read`);

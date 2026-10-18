@@ -3,6 +3,7 @@
    signed-in pages (join, me, steward) are a shell and a script. Every word a person typed goes in through e(), which escapes it:
    text is never markup. No inline script, no style attribute, nothing from anyone else's server (every face is in /fonts, every
    picture is drawn here as inline SVG). */
+import { verse } from "./scripture.mjs";
 import { PRODUCT, CATEGORIES, KIND, KINDS, STATES, categoryLabel, dateWords, CRISIS, NO_MONEY, STAY_SAFE, WORDS } from "../public/js/pure.js";
 import { NONPROFIT_LINE } from "./words.mjs";
 import { TERMS, PRIVACY, DRAFT_LINE, LAST_CHANGED } from "./legal.mjs";
@@ -69,6 +70,7 @@ ${body}
 <footer class="foot"><div class="wrap wide">
 <div class="foot-grid">
 <div class="foot-words">
+${verse("jas_1_27","small")}
 <p class="line">${e(NONPROFIT_LINE)}</p>
 <p>${e(CRISIS)}</p>
 </div>
@@ -116,6 +118,7 @@ export function frontPage({ latest, base = "", notice = "" }) {
 <p class="eyebrow rise">A free network</p>
 <h1 class="rise">Ministries helping ministries.</h1>
 <p class="lead rise">Linked Ministries is a place where a ministry says what it needs, or what it can give. Another ministry answers. A person at Linked Ministries reads every post before it goes up.</p>
+${verse("gal_6_2","rise")}
 <p class="cta rise"><a class="btn" href="/board">See the board</a> <a class="btn ghost" href="/join">Join the network</a></p>
 <ul class="chips rise" aria-label="What to know">
 <li>${ICO_FREE}<span>Free to use</span></li>
@@ -127,6 +130,7 @@ export function frontPage({ latest, base = "", notice = "" }) {
 </div></section>
 <section class="band"><div class="wrap wide">
 <h2>How it works</h2>
+${verse("acts_2_44_45")}
 <ol class="three steps">
 <li class="card lift"><span class="num" aria-hidden="true">1</span><p class="label">Ask or give</p><p>Post what you need, like food, a van, or teachers. Or post what you can give, like chairs, beds, or time.</p></li>
 <li class="card lift"><span class="num" aria-hidden="true">2</span><p class="label">A person reads it</p><p>A steward at Linked Ministries reads each new ministry and each new post. Then it goes on the board.</p></li>
@@ -136,14 +140,16 @@ export function frontPage({ latest, base = "", notice = "" }) {
 </div></section>
 <section class="band alt"><div class="wrap wide">
 <h2>What we run</h2>
+${verse("ps_68_5_6")}
 <div class="three">
 <div class="card lift"><p class="label">Now</p><h3>${e(PRODUCT.da.name)}</h3><p>A free, 24-week program of discipleship and recovery.</p><p><a href="${e(PRODUCT.da.url)}" rel="noopener">${e(PRODUCT.da.url.replace("https://", ""))}</a></p></div>
 <div class="card lift"><p class="label">Now</p><h3>Help getting online</h3><p>We help a ministry get a simple website, an email address and a way to take gifts. It is free. A ministry gives what it can. Ask on the board.</p></div>
-<div class="card lift"><p class="label">Planned</p><h3>Sober-living housing</h3><p>We plan to open housing for people in recovery. It is not open yet, and nothing is taking applications.</p></div>
+<div class="card lift"><p class="label">Planned</p><h3>Sober-living housing</h3><p>We plan to open housing for people in recovery. It is not open yet, and nothing is taking applications.</p>${verse("isa_58_7","tight")}</div>
 </div>
 </div></section>
 <section class="band"><div class="wrap wide">
 <h2>Giving</h2>
+${verse("cor2_9_7")}
 <div class="three">
 <div class="card"><p class="label">How it works</p><h3>Gifts come in. Grants go out.</h3><p>People give to Linked Ministries. The board picks where the money goes. It can go to a ministry's ask. It can go to housing for people in recovery. It can go to the free program. The board votes. The vote is written down.</p></div>
 <div class="card"><p class="label">What you can see</p><h3>Every grant, published.</h3><p>Who got it, how much, what for, and the day the board said yes. Every gift gets a numbered receipt. No one person can move money alone.</p></div>
@@ -152,6 +158,7 @@ export function frontPage({ latest, base = "", notice = "" }) {
 </div></section>
 <section class="band"><div class="wrap wide">
 <div class="row between head"><h2>Latest on the board</h2><a href="/board">See the whole board</a></div>
+${verse("matt_25_40")}
 <div class="posts">
 ${cards}
 </div>
