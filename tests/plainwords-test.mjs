@@ -64,5 +64,5 @@ for (const [name, m] of Object.entries({ signIn: signInEmail("123456"), invite: 
 ok(mailSentences >= 15, `${mailSentences} lines of the four emails were read`);
 
 /* the email a ministry gets, as written in api.mjs (the lines that are plain text) */
-for (const s of ["answered your ask on the Linked Ministries board.", "This message came from the Linked Ministries board. Linked Ministries moves no money and does not take part in what you agree on.", "If someone is in danger, call 911. If someone is thinking of hurting themselves, call or text 988."]) check("the answer email", s);
+for (const s of ["answered your ask on the Linked Ministries board.", "This message came from the Linked Ministries board. The board moves no money, and Linked Ministries does not take part in what you agree on.", "If someone is in danger, call 911. If someone is thinking of hurting themselves, call or text 988."]) check("the answer email", s);
 process.exit(T.done());

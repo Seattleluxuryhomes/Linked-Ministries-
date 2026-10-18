@@ -120,7 +120,7 @@ export function frontPage({ latest, base = "", notice = "" }) {
 <ul class="chips rise" aria-label="What to know">
 <li>${ICO_FREE}<span>Free to use</span></li>
 <li>${ICO_PERSON}<span>Read by a person</span></li>
-<li>${ICO_NOMONEY}<span>No money moves</span></li>
+<li>${ICO_NOMONEY}<span>No money on the board</span></li>
 </ul>
 </div>
 <div class="hero-art rise" aria-hidden="true">${ART}</div>

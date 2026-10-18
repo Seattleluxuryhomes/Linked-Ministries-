@@ -331,7 +331,7 @@
       "origin_path": "behavioral-health-app/tests/api-test.mjs",
       "origin_sha256": "b9aed98a7b54da362b31cbf559aa6e2637b2a6d38db924b6335cfdd21d646f7c",
       "local_path": "tests/api-test.mjs",
-      "local_sha256": "d00d2cecbd884dc36657d90f3ffb2f2f3f7465b832bdc5d4c5d83272b201fd2d",
+      "local_sha256": "187fe92c0f35309863774200ba6291eaaf2750c1e8e2ded0b9736933d9ed4dfd",
       "note": "Same method; adds the stand-in mail server."
     },
     {
@@ -353,7 +353,7 @@
       "origin_path": "behavioral-health-app/tests/unit-test.mjs",
       "origin_sha256": "6bead93056daa8752e1c7eaca4e74352772b4d62cc6832e2916b8d739b6ab620",
       "local_path": "tests/unit-test.mjs",
-      "local_sha256": "8fbc9a0e87ce30621dc27a317c80a00dda76e25366a4eb2f57745b05a17af7f4",
+      "local_sha256": "7576f1387ba93f2b1a1ed67e37c3308b775a686d3d00ef0adb5e8ce36806d16d",
       "note": "The licence check, the commons check, the no-key scan and the migration checks are the original's."
     },
     {

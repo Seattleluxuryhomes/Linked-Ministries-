@@ -9,7 +9,7 @@ export const PRODUCT = {
   da: { name: "Disciples' Authority", url: "https://www.disciplesauthority.org" },
 };
 
-/* the founder's list. There is no money category: the network moves no money. */
+/* the founder's list. There is no money category: the board moves no money. */
 export const CATEGORIES = [
   ["housing", "Housing"], ["food", "Food"], ["clothing", "Clothing"], ["transportation", "Transportation"], ["volunteers", "Volunteers"],
   ["equipment", "Equipment"], ["furniture", "Furniture"], ["teaching_training", "Teaching and training"], ["prayer", "Prayer"], ["other", "Other"],
@@ -44,7 +44,7 @@ export function dateWords(v) {
 
 export const CRISIS = "If someone is in danger, call 911. If someone is thinking of hurting themselves, call or text 988.";
 export const STAY_SAFE = "Stay safe: meet in a public place, bring someone with you, and never send money.";
-export const NO_MONEY = "Linked Ministries moves no money. Ministries ask for and give things, time, space and skills.";
+export const NO_MONEY = "The board moves no money. Ministries ask for and give things, time, space and skills. A gift to Linked Ministries is a different door, not the board.";
 
 /* what a poster reads about a post, and what a lead reads about the ministry. "On the board" only when it is. */
 export const POST_STATUS = {
@@ -112,7 +112,7 @@ export const WORDS = {
   fieldCategory: "What is it about?",
   fieldTitle: "A short title",
   fieldBody: "Your words",
-  fieldBodyHelp: "Say what you need or what you can give, how much, and where. Please do not ask for money. This network moves no money.",
+  fieldBodyHelp: "Say what you need or what you can give, how much, and where. Please do not ask for money. The board moves no money.",
   fieldUntil: "Open until",
   fieldUntilHelp: "A day within the next 90 days.",
   fieldPostCity: "City",

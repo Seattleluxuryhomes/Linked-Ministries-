@@ -174,7 +174,7 @@ ok(ans.status === 201 && ans.json.ok === true && ans.json.sent_to === "Alpha Tab
 const em = smtp.mails.slice(mailsBefore);
 ok(em.length === 1, "exactly one email was sent", em.length);
 ok(em[0].to.join() === "answers@alpha.example" && em[0].replyTo === "blake@bravo.example" && /Bravo House Ministry/.test(em[0].subject + em[0].text) && /Ten folding tables/.test(em[0].subject) && em[0].text.includes("We have eleven tables and a truck. We can bring them Friday.") && /509-555-0142/.test(em[0].text) && /blake@bravo\.example/.test(em[0].text), "to the posting ministry's contact, replying to the answerer, naming the answerer's ministry, with the words, the phone and the reply address", { to: em[0].to, rt: em[0].replyTo, subject: em[0].subject });
-ok(/Hello Alex Lead/.test(em[0].text) && /911/.test(em[0].text) && /moves no money/.test(em[0].text), "it greets the contact by name and says the network moves no money");
+ok(/Hello Alex Lead/.test(em[0].text) && /911/.test(em[0].text) && /board moves no money/.test(em[0].text), "it greets the contact by name and says the board moves no money");
 const rows = await sql("select post_id, from_ministry_id, words, phone, reply_email, mail_id from lm.answers");
 ok(rows.length === 1 && rows[0].post_id === pid && rows[0].reply_email === "blake@bravo.example" && rows[0].mail_id, "the answer is one row, with the mail provider's id", rows[0]);
 const ansEv = await sql("select kind, actor_label, payload from lm.events where kind = 'answers.insert'");

@@ -5,7 +5,7 @@ import { CRISIS, PRODUCT, STAY_SAFE, REPORT_REASONS } from "../public/js/pure.js
 
 const WHO = `${PRODUCT.name} (${PRODUCT.domain}) is a free board where ministries ask for help and offer help.`;
 const NO_ADS = "We send no news and no ads.";
-export const NO_VOUCH = `${PRODUCT.name} does not check or vouch for any ministry or person. It moves no money and does not take part in what you agree on.`;
+export const NO_VOUCH = `${PRODUCT.name} does not check or vouch for any ministry or person. The board moves no money, and Linked Ministries does not take part in what you agree on.`;
 
 export function signInEmail(code) {
   return {

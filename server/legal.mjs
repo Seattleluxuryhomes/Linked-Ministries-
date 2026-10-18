@@ -21,7 +21,7 @@ export const TERMS = {
     ["What we do and what we do not do", [
       "A steward reads each new ministry page and each new post before it goes on the board. That is all a steward does.",
       "We do not check or vouch for any ministry or person on the board. We cannot know that what is posted is true.",
-      "We move no money. We do not promise that any ask will be met, or that any give will be taken.",
+      "The board moves no money: no ministry pays another through this site. Linked Ministries may receive gifts, but never through the board. We do not promise that any ask will be met, or that any give will be taken.",
       "What two ministries agree on is between them. Linked Ministries is not part of it.",
       "We do not give legal, medical or counseling advice.",
     ]],
