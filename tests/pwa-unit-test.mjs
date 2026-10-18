@@ -66,7 +66,9 @@ ok(WORDS.installTitle === "Put Linked Ministries on your phone" && /one tap to t
 ok(!IW.some(([k, v]) => k !== "installAdded" && /\bAdded\b/.test(v.replace("This card says Added when your phone has done it.", ""))) , "no other sentence on the card says Added");
 ok(!IW.some(([, v]) => /miss|come back|don't forget|do not forget|streak|last chance|hurry|only \d|free trial/i.test(v)), "no sentence nags, hurries or tries to win a person back");
 const inst = read("public/js/install.js");
-ok(/lm_install_until/.test(inst) && /DAYS = 30/.test(inst) && /try \{ return Number\(localStorage/.test(inst) && /try \{ localStorage\.setItem/.test(inst) && /display-mode: standalone/.test(inst) && /beforeinstallprompt/.test(inst) && /appinstalled/.test(inst), "the card remembers for 30 days, wraps its storage in try/catch, checks the app window, and listens for both browser events");
+ok(!/localStorage|sessionStorage|indexedDB|document\.cookie|lm_install_until|DAYS|\bstore\b/.test(inst), "the card keeps nothing in the browser: no storage, no cookie, no remembered day (founder, 2026-10-18: it asks until the site is installed)");
+ok(/display-mode: standalone/.test(inst) && /navigator\.standalone/.test(inst) && /standalone\(\)\) return/.test(inst), "the card checks the app window (display-mode standalone and navigator.standalone) and does not mount there");
+ok(/beforeinstallprompt/.test(inst) && /appinstalled/.test(inst), "and it listens for both browser events");
 ok(!/<script|innerHTML|eval\(|style\.|setAttribute\("style"/.test(inst), "the card's script builds nothing from strings and sets no style");
 
 /* ---- the worker, in a sandbox ---- */

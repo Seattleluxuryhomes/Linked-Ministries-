@@ -353,7 +353,7 @@
       "origin_path": "behavioral-health-app/tests/unit-test.mjs",
       "origin_sha256": "6bead93056daa8752e1c7eaca4e74352772b4d62cc6832e2916b8d739b6ab620",
       "local_path": "tests/unit-test.mjs",
-      "local_sha256": "4f67c39d6c07898a8627351ac9dcd09098410a057f7a32a83f7f039949ce43bd",
+      "local_sha256": "2012b0a957f9907641a709ff3aa6e0e66a3a3e84b6f191adbaf8ee0db287a8ad",
       "note": "The licence check, the commons check, the no-key scan and the migration checks are the original's."
     },
     {
@@ -441,7 +441,7 @@
       "origin_path": "behavioral-health-app/CLAUDE.md",
       "origin_sha256": "3c403645fae7028168c5ee3e1201d85863a7ebbf30225d2007cef282ce16842e",
       "local_path": "CLAUDE.md",
-      "local_sha256": "89715760e0cee76d180d490719495abbd162e04fc227dcb1a264b26ec098a1e7",
+      "local_sha256": "5a8b2a5d65f1f76aad1630caf0142cb4653c2dfc3619d72230078bc4616fc05f",
       "note": "Same form; this product's hard rules."
     },
     {

@@ -84,8 +84,13 @@ copied (commons.json: `pwa-worker`, `pwa-offline`, `pwa-make`, `pwa-register`). 
 page) and never `/api`, a signed-in page, a picture, a form or a non-GET; `public/offline.html` says plainly that the phone is offline and nothing
 was sent. The policy gains one line, `worker-src 'self'`. `public/js/pwa.js` registers the worker; `public/js/install.js` is the one calm card
 on `/me` and the signed-in `/join` that asks a person to add the site to a phone (Android: the browser's own event, and "Added" only after
-`appinstalled`; iPhone: the two real steps). It never shows on a computer, in the app window or on a public page, and after "Not now" or an install it
-stays away 30 days (the one `localStorage` key, `lm_install_until`, the single named exception in `tests/unit-test.mjs`). Tests:
+`appinstalled`; iPhone: the two real steps). It never shows on a computer or on a public page. Founder, 2026-10-18: "It should ask until it's done so that it's on the phone." So it shows on **every**
+signed-in page view on a phone until the site is actually installed (open as an app: display-mode standalone, or `navigator.standalone`), with no
+memory at all: "Not now" closes it for the rest of that page view only (in memory) and it is back on the next page; after `appinstalled` it says
+"Added." for that view and the next visit from the installed app is standalone, so it never shows again. On Android it shows only once the browser
+has said the site can be installed (`beforeinstallprompt` held); an iPhone sees the two steps every signed-in visit. No script in `public/js` uses
+`localStorage`, `sessionStorage` or a cookie, with no named exception (`tests/unit-test.mjs`). The card's words stay calm: showing again is the
+founder's call, and the words never guilt. Tests:
 `tests/pwa-unit-test.mjs`, `tests/browser-pwa-test.mjs`, `tests/browser-desktop-test.mjs`.
 
 ## Copy, never rebuild

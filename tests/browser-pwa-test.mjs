@@ -4,8 +4,11 @@
    second read sees a change the first did not); nothing but the shell is kept; with the network cut, a page and a signed-in page
    both show the plain offline page, styled in the site's own light look, and an /api call fails instead of answering from a cache.
    The install card: a synthetic beforeinstallprompt shows it, the button calls prompt(), and "Added" appears only after a
-   synthetic appinstalled; "Not now" and an install keep it away for 30 days; it never shows on a computer, in the app window, or on
-   the public pages; an iPhone sees the two real steps with the Share icon; it works with no localStorage.
+   synthetic appinstalled. Founder, 2026-10-18: "It should ask until it's done so that it's on the phone." So the card is on every
+   signed-in page view on a phone until the site is open as an app: "Not now" hides it for that page view only and it is back on the next
+   page load; after appinstalled it says Added for that view; in a standalone emulation (display-mode and navigator.standalone) it never
+   mounts; a person turning the phone's own prompt down gets the card back on the next page. It keeps nothing in the browser. It never
+   shows on a computer or on the public pages; an iPhone sees the two real steps with the Share icon every visit.
    LEXOS_DB_NAME=linkedm_t_<mine> node tests/browser-pwa-test.mjs */
 import fs from "node:fs";
 import path from "node:path";
@@ -24,7 +27,6 @@ const pg = await seedAlexPage({ world });
 const browser = await launch(); const snap = shots(SHOTS);
 const alex = world.c["alex@alpha.example"];
 const cookie = (c) => ({ name: "lm_session", value: c.jar().split("=").slice(1).join("="), url: s.base });
-const DAY = 86400000;
 
 /* ---- the manifest and its icons, over the wire ---- */
 { const r = await fetch(s.base + "/manifest.webmanifest"); const m = await r.json();
@@ -86,7 +88,8 @@ const fire = (page, name = "beforeinstallprompt", outcome = "accepted") => page.
 }, [name, outcome]);
 const card = (page) => page.locator("section.install:not([hidden])");
 const CARD_WORDS = { title: "Put Linked Ministries on your phone", why: "It opens like an app, with one tap to the board." };
-const stored = (page) => page.evaluate(() => { try { return Number(localStorage.getItem("lm_install_until")) || 0; } catch (e) { return -1; } });
+const browserKept = (page) => page.evaluate(() => { let n = 0; try { n = localStorage.length + sessionStorage.length; } catch (e) { n = -1; } return { n, cookie: document.cookie }; });
+const nextPage = async (page, { event = true } = {}) => { await page.reload(); await page.waitForSelector("[data-group=public]"); if (event) await fire(page); };
 
 { /* Chrome on Android: the card waits for the browser's event */
   const A = await phone();
@@ -106,37 +109,45 @@ const stored = (page) => page.evaluate(() => { try { return Number(localStorage.
   ok((await A.page.evaluate(() => window.__prompts)) === 1, "Android: pressing the button calls prompt() once");
   const waiting = await card(A.page).innerText();
   ok(!/Added\./.test(waiting) && /Your phone is asking you now/.test(waiting) && (await card(A.page).locator("[data-state=added]").count()) === 0, "Android: after the person says yes, the card still does not say Added (the install has not happened yet)", waiting);
-  ok((await stored(A.page)) === 0, "Android: and it has not yet been put to rest for 30 days");
   await fire(A.page, "appinstalled");
   await A.page.waitForSelector("[data-state=added]");
   const added = await card(A.page).innerText();
   ok(/Added\. Open Linked Ministries from your home screen\./.test(added), "Android: only when the appinstalled event fires does the card say 'Added. Open Linked Ministries from your home screen.'", added);
-  const until30 = await stored(A.page);
-  ok(until30 > Date.now() + 29 * DAY && until30 < Date.now() + 31 * DAY, "Android: and the card is put to rest for 30 days", (until30 - Date.now()) / DAY);
-  await A.page.reload(); await A.page.waitForSelector("[data-group=public]"); await fire(A.page);
-  await sleep(300);
-  ok((await card(A.page).count()) === 0, "Android: after the install, a new visit (even with the event again) shows no card");
+  const k = await browserKept(A.page);
+  ok(k.n === 0 && k.cookie.split("; ").every((c) => c.startsWith("lm_session=")), "Android: and nothing is kept in the browser (no storage; the test's own session cookie is the only cookie)", k);
+  /* The next visit from the installed app is standalone: that is what keeps the card away, not a remembered day (see the standalone case below). */
   ok(A.errors.length === 0, "Android: zero page errors", A.errors.slice(0, 3));
   await A.ctx.close(); }
 
-{ /* "Not now" keeps it away for 30 days */
+{ /* "Not now" closes the card for this page view only; the next page asks again */
   const A = await phone();
   await A.page.goto("/me"); await A.page.waitForSelector("[data-group=public]"); await fire(A.page); await card(A.page).waitFor();
   await card(A.page).locator("button:has-text('Not now')").click();
   ok((await card(A.page).count()) === 0, "Not now: the card goes away at once");
-  const u = await stored(A.page); ok(u > Date.now() + 29 * DAY && u < Date.now() + 31 * DAY, "Not now: and stays away for 30 days", (u - Date.now()) / DAY);
-  await A.page.reload(); await A.page.waitForSelector("[data-group=public]"); await fire(A.page); await sleep(300);
-  ok((await card(A.page).count()) === 0, "Not now: a new visit shows no card");
-  await A.page.evaluate(() => localStorage.setItem("lm_install_until", String(Date.now() - 1000)));
-  await A.page.reload(); await A.page.waitForSelector("[data-group=public]"); await fire(A.page); await card(A.page).waitFor({ timeout: 3000 });
-  ok((await card(A.page).count()) === 1, "Not now: once the 30 days are over, it may show again (never sooner)");
+  await sleep(300);
+  ok((await card(A.page).count()) === 0, "Not now: and stays away for the rest of this page view");
+  const k = await browserKept(A.page); ok(k.n === 0 && k.cookie.split("; ").every((c) => c.startsWith("lm_session=")), "Not now: and nothing is remembered in the browser", k);
+  await nextPage(A.page); await card(A.page).waitFor({ timeout: 3000 });
+  ok((await card(A.page).count()) === 1 && (await card(A.page).locator("button:has-text('Add to my phone')").count()) === 1, "Not now: on the next page load the card is back");
+  await card(A.page).locator("button:has-text('Not now')").click();
+  await nextPage(A.page); await card(A.page).waitFor({ timeout: 3000 });
+  ok((await card(A.page).count()) === 1, "Not now: and again on the page after that (it asks until the site is installed)");
   await A.ctx.close(); }
 
-{ /* the browser's own prompt, turned down: no "Added", and it rests */
+{ /* after appinstalled the card says Added for that view */
+  const A = await phone();
+  await A.page.goto("/me"); await A.page.waitForSelector("[data-group=public]"); await fire(A.page); await card(A.page).waitFor();
+  await fire(A.page, "appinstalled"); await A.page.waitForSelector("[data-state=added]");
+  ok(/^Added\./.test((await card(A.page).innerText()).trim().split("\n").pop()) && (await card(A.page).locator("button").count()) === 0, "appinstalled: the card says Added, with no button left on it");
+  await A.ctx.close(); }
+
+{ /* the browser's own prompt, turned down: no "Added", and the card is back on the next page */
   const A = await phone();
   await A.page.goto("/me"); await A.page.waitForSelector("[data-group=public]"); await fire(A.page, "beforeinstallprompt", "dismissed"); await card(A.page).waitFor();
   await card(A.page).locator("button:has-text('Add to my phone')").click(); await sleep(400);
-  ok((await card(A.page).count()) === 0 && !/Added/.test(await A.page.locator("main").innerText()) && (await stored(A.page)) > Date.now() + 29 * DAY, "dismissed: if the person turns the phone's own question down, the card goes, nothing says Added, and it rests 30 days");
+  ok((await card(A.page).count()) === 0 && !/Added/.test(await A.page.locator("main").innerText()), "dismissed: if the person turns the phone's own question down, the card goes for this view and nothing says Added");
+  await nextPage(A.page); await card(A.page).waitFor({ timeout: 3000 });
+  ok((await card(A.page).count()) === 1 && !/Added/.test(await card(A.page).innerText()), "dismissed: and the card is back on the next page");
   await A.ctx.close(); }
 
 { /* an iPhone: no prompt exists, so the two real steps */
@@ -149,8 +160,9 @@ const stored = (page) => page.evaluate(() => { try { return Number(localStorage.
   await snap(I.page, "install-iphone-390");
   ok(await noSideways(I.page), "iPhone: nothing scrolls sideways");
   await card(I.page).locator("button:has-text('Not now')").click();
-  await I.page.reload(); await I.page.waitForSelector("[data-group=public]"); await sleep(300);
-  ok((await card(I.page).count()) === 0, "iPhone: after Not now, a new visit shows no card");
+  ok((await card(I.page).count()) === 0, "iPhone: Not now closes the card for this view");
+  await nextPage(I.page, { event: false }); await card(I.page).waitFor({ timeout: 3000 });
+  ok((await card(I.page).count()) === 1 && /Tap the Share button\./.test(await card(I.page).innerText()), "iPhone: and the two steps are back on the next page, until the site is opened from the home screen");
   ok(I.errors.length === 0, "iPhone: zero page errors", I.errors.slice(0, 3));
   await I.ctx.close(); }
 
@@ -161,15 +173,25 @@ const stored = (page) => page.evaluate(() => { try { return Number(localStorage.
   await D.close();
   const S = await phone({ script: "Object.defineProperty(navigator, 'standalone', { get: () => true })" });
   await S.page.goto("/me"); await S.page.waitForSelector("[data-group=public]"); await fire(S.page); await sleep(300);
-  ok((await S.page.locator("section.install").count()) === 0, "already open as an app (standalone): no card");
+  ok((await S.page.locator("section.install").count()) === 0, "already open as an app (navigator.standalone): no card");
   await S.ctx.close();
+  const M = await phone({ script: "const mm = window.matchMedia.bind(window); window.matchMedia = (q) => /display-mode:\\s*standalone/.test(q) ? { matches: true, media: q, addEventListener() {}, removeEventListener() {} } : mm(q);" });
+  await M.page.goto("/me"); await M.page.waitForSelector("[data-group=public]"); await fire(M.page); await sleep(300);
+  ok((await M.page.locator("section.install").count()) === 0, "already open as an app (display-mode: standalone): no card, on this page or the next");
+  await nextPage(M.page); await sleep(300);
+  ok((await M.page.locator("section.install").count()) === 0, "standalone: and on the next page, still no card");
+  await M.ctx.close();
+  const MI = await phone({ ua: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1", script: "Object.defineProperty(navigator, 'standalone', { get: () => true })" });
+  await MI.page.goto("/me"); await MI.page.waitForSelector("[data-group=public]"); await sleep(300);
+  ok((await MI.page.locator("section.install").count()) === 0, "an iPhone opened from the home screen (navigator.standalone): no card");
+  await MI.ctx.close();
   const P = await phone({ who: null });
   for (const p of ["/", "/board", "/giving"]) { await P.page.goto(p); await fire(P.page); await sleep(200); ok((await P.page.locator("section.install").count()) === 0, `the public page ${p}: never a card`); }
   await P.ctx.close();
-  const N = await phone({ script: "Object.defineProperty(window, 'localStorage', { get() { throw new Error('no storage'); } })" });
+  const N = await phone({ script: "Object.defineProperty(window, 'localStorage', { get() { throw new Error('touched'); } }); Object.defineProperty(window, 'sessionStorage', { get() { throw new Error('touched'); } })" });
   await N.page.goto("/me"); await N.page.waitForSelector("[data-group=public]"); await fire(N.page); await card(N.page).waitFor({ timeout: 3000 });
   await card(N.page).locator("button:has-text('Not now')").click();
-  ok((await N.page.locator("section.install").count()) === 0 && N.errors.length === 0, "with no localStorage at all: the card still works, and nothing throws", N.errors.slice(0, 2));
+  ok((await N.page.locator("section.install").count()) === 0 && N.errors.length === 0, "with storage that throws if touched: the card never touches it, works, and nothing throws", N.errors.slice(0, 2));
   await N.ctx.close(); }
 
 { /* /join, once signed in with no ministry yet */

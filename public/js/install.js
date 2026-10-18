@@ -3,16 +3,16 @@
      Chrome on Android: the browser's own beforeinstallprompt event is held; the card's button calls prompt(). The card says
        "Added" only when the browser's appinstalled event fires, never before.
      iPhone and iPad: there is no prompt to call, so the card shows the two real steps, with the Share icon drawn.
-   It does not show when the site is already open as an app, and after "Not now" (or an install) it stays away for 30 days.
-   The remembered day is in localStorage, and the page works the same when localStorage is not there. No tracking, no nagging. */
+   Founder, 2026-10-18: "It should ask until it's done so that it's on the phone." So the card is on every signed-in page view on a
+   phone until the site is actually installed, that is, open as an app (display-mode standalone, or navigator.standalone on an
+   iPhone). There is no memory at all: nothing is kept in the browser. "Not now" closes the card for the rest of that page view only
+   (a variable in memory), and it is back on the next page. After appinstalled the card says "Added" for that view, and the next visit
+   from the installed app is standalone, so it never shows again. On Android the card shows only once the browser has said the site can
+   be installed (beforeinstallprompt held). Never on a computer and never on a public page. The words stay calm: showing again is the
+   founder's call, and the words never guilt (tests/pwa-unit-test.mjs reads them). */
 import { h } from "/js/common.js";
 import { WORDS } from "/js/pure.js";
 
-const KEY = "lm_install_until", DAYS = 30;
-const store = {
-  get() { try { return Number(localStorage.getItem(KEY)) || 0; } catch (e) { return 0; } },
-  quiet() { try { localStorage.setItem(KEY, String(Date.now() + DAYS * 86400000)); } catch (e) { /* no storage: the card may show again, that is all */ } },
-};
 const standalone = () => { try { return matchMedia("(display-mode: standalone)").matches || navigator.standalone === true; } catch (e) { return false; } };
 const ua = () => navigator.userAgent || "";
 const onIos = () => /iPhone|iPad|iPod/.test(ua()) || (/Macintosh/.test(ua()) && navigator.maxTouchPoints > 1);
@@ -33,11 +33,11 @@ let mounted = null;                                  // { slot, card } of the ca
 const ios = onIos(), android = onAndroid();
 if (android && !ios) {
   window.addEventListener("beforeinstallprompt", (ev) => { ev.preventDefault(); st.held = ev; draw(); });
-  window.addEventListener("appinstalled", () => { store.quiet(); st.held = null; st.waiting = false; st.added = true; draw(); });
+  window.addEventListener("appinstalled", () => { st.held = null; st.waiting = false; st.added = true; draw(); });
 }
 
 function away() { if (mounted) mounted.card.remove(); mounted = null; st.hidden = true; }
-function later() { store.quiet(); away(); }
+function later() { away(); }                      // for the rest of this page view only; the next page asks again
 const notNow = () => h("button", { class: "link", type: "button", "data-act": "install-later", on: { click: later } }, WORDS.installNotNow);
 
 async function ask() {
@@ -68,10 +68,10 @@ function draw() {
   card.hidden = false;
 }
 
-/** put the card into `slot` when it should show. Not on a computer, not when the site is already open as an app, and not for
-    30 days after "Not now" or an install. Safe to call again when the page draws itself again. */
+/** put the card into `slot` when it should show: on a phone, until the site is open as an app. Not on a computer. "Not now" hides it
+    for the rest of this page view only. Safe to call again when the page draws itself again. */
 export function installCard(slot) {
-  if (!slot || !(ios || android) || standalone() || Date.now() < store.get()) return;
+  if (!slot || !(ios || android) || standalone()) return;
   if (st.hidden && !st.added) return;
   mounted = { slot, card: h("section", { class: "card install", "aria-labelledby": "install-title", hidden: true }) };
   slot.replaceChildren(mounted.card);
