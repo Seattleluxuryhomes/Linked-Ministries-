@@ -74,6 +74,13 @@ const gD = await tess.post("/api/treasury/gifts", { donor_name: "=HYPERLINK(\"ht
 ok(gD.status === 201, "a donor's name that looks like a formula is still just a name");
 const gE = await tess.post("/api/treasury/gifts", { donor_name: "Pat Pews", amount: "800", method: "in_kind", received_on: today, note: "Twenty used pews" });
 ok(gE.status === 201, "a gift in kind is recorded");
+/* a gift made online through Zeffy: Zeffy emailed the receipt, so this site sends none; it is still written down, with the next number */
+{ const before2 = smtp.mails.length;
+  const gZ = await tess.post("/api/treasury/gifts", { donor_name: "Zoe Zeffy", donor_email: "zoe@donor.example", amount: "50", method: "zeffy", received_on: today });
+  ok(gZ.status === 201 && gZ.json.receipt.emailed === false && gZ.json.receipt.reason === "zeffy_sent_it" && /Zeffy already sent the receipt/.test(gZ.json.words), "a Zeffy gift is written down and the screen says Zeffy already sent the receipt", gZ.json);
+  await sleep(100);
+  ok(smtp.mails.length === before2 && !smtp.mails.some((m) => m.to.includes("zoe@donor.example")), "and no second receipt goes to the donor");
+  { const rz = await tess.post(`/api/treasury/gifts/${gZ.json.gift.id}/receipt`, {}); ok(rz.status === 422 && /Zeffy already sent the receipt/.test(rz.json.words || ""), "sending it again from the ledger also sends nothing, and says why", rz.json); } }
 /* the same, with no mail set up at all */
 { const s2 = await startServer({ url: db.url, env: { LEXOS_SMTP_URL: "" } }); const t2 = client(s2.base); await signIn(t2, s2, "tess@linkedm.test");
   const r = await t2.post("/api/treasury/gifts", { donor_name: "No Mail Donor", donor_email: "nomail@donor.example", amount: "7", method: "cash", received_on: today });
@@ -84,7 +91,7 @@ const cr = await tess.post(`/api/treasury/gifts/${gA.json.gift.id}/correct`, { c
 ok(cr.status === 201 && /unchanged/.test(cr.json.words) && /^LM-0000\d\d$/.test(cr.json.code), "a correction is a new row with its own receipt number", cr.json);
 ok((await tess.post(`/api/treasury/gifts/${gA.json.gift.id}/correct`, { change: "-5000", note: "Too much" })).status === 422 && (await tess.post(`/api/treasury/gifts/${gA.json.gift.id}/correct`, { change: "-1", note: "" })).status === 422, "a correction below zero, or with no note, is refused");
 const tv = (await tess.get("/api/treasury")).json;
-ok(tv.gifts.find((g) => g.receipt_no === 1).amount_cents === 102550 && tv.totals.money_count === 5 && Number(tv.totals.money_cents) === 100000 + 4000 + 1200 + 300 + 700 && tv.totals.in_kind_cents === 80000, "the treasury reads the first record unchanged, and totals that are sums of the rows", tv.totals);
+ok(tv.gifts.find((g) => g.receipt_no === 1).amount_cents === 102550 && tv.totals.money_count === 6 && Number(tv.totals.money_cents) === 100000 + 4000 + 1200 + 300 + 700 + 5000 && tv.totals.in_kind_cents === 80000, "the treasury reads the first record unchanged, and totals that are sums of the rows", tv.totals);
 
 /* ---- a grant: two treasurers, the board's vote, only money that came in ---- */
 const world = await seedWorld({ base: s.base, smtp, sql: (q) => pool.query(q) });
@@ -113,7 +120,7 @@ ok((await tess.post(`/api/treasury/grants/${huge.json.id}/decline`, { note: "Mor
 const g1 = await anon.get("/giving");
 { const bad2 = checkPage(g1.text, { money: true }); ok(bad2.length === 0, "/giving with a grant on it carries nothing banned", bad2); }
 const gt = visibleText(g1.text);
-ok(/Gifts received \$1,062\.00 5 gifts\./.test(gt), "the total and the count are the sums of the rows: $1,062.00 from 5 gifts (the first gift was corrected down to $1,000.00, and a gift in kind is counted apart)", gt.match(/Gifts received.{0,40}/));
+ok(/Gifts received \$1,112\.00 6 gifts\./.test(gt), "the total and the count are the sums of the rows: $1,112.00 from 6 gifts (the first gift was corrected down to $1,000.00, a gift in kind is counted apart, and the $50 Zeffy gift counts like any other)", gt.match(/Gifts received.{0,40}/));
 ok(/Alpha Table Ministry/.test(g1.text) && /\$300\.00/.test(g1.text) && /Help with a van for the Saturday meals/.test(g1.text) && /2 yes, 1 abstained/.test(gt) && /Approved by the board\. Not yet paid\./.test(gt), "the grant is there: the ministry, the amount, what for, the vote counts, and that it is not paid yet");
 ok(/href="\/m\/alpha-table-ministry">Alpha Table Ministry<\/a>/.test(g1.text), "and the ministry's name links to its page");
 ok(!/Jordan|Riley|Pat Pews|Zed|HYPERLINK|donor\.example|Ann Board|Bob Board|Cy Abstain|Tess|Stan/.test(g1.text), "no donor, no email, no board member and no treasurer is named on the page");
@@ -138,6 +145,14 @@ ok(/href="\/give"/.test(g2.text) && !/not taking gifts online yet/i.test(g2.text
 { const bad3 = checkPage(g2.text, { money: true }); ok(bad3.length === 0, "and is still clean", bad3); }
 const gv1 = await anon.get("/give");
 ok(gv1.status === 200 && /not connected yet/.test(gv1.text) && !/<form|<input/.test(gv1.text) && /Nothing can be sent or saved on this page/.test(gv1.text), "the Give button goes to a page that says the payment service is not connected, with no form");
+/* the door open with a Zeffy form set: the Give page sends a person to Zeffy and says what happens there */
+{ const sz = await startServer({ url: db.url, env: { ZEFFY_GIVE_URL: "https://www.zeffy.com/en-US/donation-form/linked-ministries" } });
+  const gz = await client(sz.base).get("/give");
+  ok(gz.status === 200 && /href="https:\/\/www\.zeffy\.com\/en-US\/donation-form\/linked-ministries"/.test(gz.text) && /Give through Zeffy/.test(gz.text) && /Zeffy takes the gift and emails your receipt/.test(gz.text) && /set it to \$0/.test(gz.text) && !/<form|<input/.test(gz.text), "with a Zeffy form set, the Give page links to it, says Zeffy sends the receipt and that the tip can be $0", gz.status);
+  { const bz = checkPage(gz.text, { money: true }); ok(bz.length === 0, "and is clean", bz); }
+  await sz.stop?.(); }
+{ const sb = await startServer({ url: db.url, env: { ZEFFY_GIVE_URL: "https://evil-zeffy.com.example/x" } });
+  ok(!/Give through Zeffy/.test((await client(sb.base).get("/give")).text), "an address that is not zeffy.com itself is never linked"); await sb.stop?.(); }
 const mp2 = await anon.get("/m/alpha-table-ministry");
 ok(/Give to Alpha Table Ministry/.test(mp2.text) && /href="https:\/\/pay\.alpha\.example\/give"/.test(mp2.text) && /This link is Alpha Table Ministry's own/.test(mp2.text), "the ministry's page now shows its own Give button, labelled as theirs");
 ok(/Gifts online are open/.test((await anon.get("/")).text), "the front says the gifts are open");

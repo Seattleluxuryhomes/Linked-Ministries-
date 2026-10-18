@@ -144,7 +144,7 @@
       "origin_path": "behavioral-health-app/server/config.mjs",
       "origin_sha256": "6125bfe9ca65e6f7454e809d3580746494fc4659e729e830c379b01a24111331",
       "local_path": "server/config.mjs",
-      "local_sha256": "fb4aeac0f7f6a01207edeecf15167a34b3044952b81e3c38dd812421f9b0d821",
+      "local_sha256": "f8141476d1c521acb23eaf48c490723110a26b9eb0f0100764f05028a36387b5",
       "note": "The health-records guard, the demo mode and the text-message channel are removed; mail is required in production."
     },
     {
@@ -177,7 +177,7 @@
       "origin_path": "behavioral-health-app/server/api.mjs",
       "origin_sha256": "8ee33e9349c194104e91d85d9ce378f4c820e10d25fc8485156f98c03a40a4e5",
       "local_path": "server/api.mjs",
-      "local_sha256": "7bbc5ec3b13434b626d4f8e222463436dd9e58e968a2c30dcb50572bea63b6d7",
+      "local_sha256": "2da57803776ede30980221020b1a35b6593f2d6f66e8deeed46b55f1e864a192",
       "note": "Same pattern (asUser, functions decide, early friendly checks). The routes are this product's: ministries, team, posts, answers, stewards."
     },
     {
@@ -188,7 +188,7 @@
       "origin_path": "behavioral-health-app/server/index.mjs",
       "origin_sha256": "b1375df160f0be6f55b551c26472bdeb63eef9c9af918fff8ba44584fd168e21",
       "local_path": "server/index.mjs",
-      "local_sha256": "e467c6369848389bf6471d03606594ed2b40dbf7c858030c5e896081ac6932ef",
+      "local_sha256": "6c805b2f13097b49237ae8b45b9725eff0a5b83ad33d4a5a9dbe2a27aeefb2bc",
       "note": "Same boot order and health answer (two words). Public pages are built on the server."
     },
     {
@@ -320,7 +320,7 @@
       "origin_path": "behavioral-health-app/tests/db-test.mjs",
       "origin_sha256": "e3ed64b0c1321e3ae22fbf7d18c5eb918907b5f1d46a55359eef58061c35b71a",
       "local_path": "tests/db-test.mjs",
-      "local_sha256": "9da40b5a58563502f09bbf3713939259cc671447c22a1bc1bd2871da3eb5f11f",
+      "local_sha256": "344cc126ab0681731f14b8905ba1df1c0331ab2ce4cf384f0dc579071525fdc1",
       "note": "Same method; this product's rules."
     },
     {
@@ -430,7 +430,7 @@
       "origin_path": "behavioral-health-app/DEPLOY.md",
       "origin_sha256": "8c32d1bf183e7f3db4d657d7cdb5c98ad654564ea99e09d2ab9e784883d95ad9",
       "local_path": "DEPLOY.md",
-      "local_sha256": "a8938e8359958acc70c2efc22846c0cfd5be6a66387981dd7b037c7c4085cd32",
+      "local_sha256": "e5abb8161d4f7c38b188ace08ecf8af7aa9dd81c3b270e6848261ab78221f1db",
       "note": "Same form; this product's steps and variables."
     },
     {
@@ -441,7 +441,7 @@
       "origin_path": "behavioral-health-app/CLAUDE.md",
       "origin_sha256": "3c403645fae7028168c5ee3e1201d85863a7ebbf30225d2007cef282ce16842e",
       "local_path": "CLAUDE.md",
-      "local_sha256": "5a8b2a5d65f1f76aad1630caf0142cb4653c2dfc3619d72230078bc4616fc05f",
+      "local_sha256": "321c88abc0a93774e642b999b1b027b685b2c9005937e67fd8e1a149b2ae21ba",
       "note": "Same form; this product's hard rules."
     },
     {
@@ -452,7 +452,7 @@
       "origin_path": "behavioral-health-app/.env.example",
       "origin_sha256": "4d8e45e2586e944d75608b0fadcbe93dca13931c1825a8fd58ff81faeae6dd60",
       "local_path": ".env.example",
-      "local_sha256": "2abf4996107b28489054533d9634aa383b313b1a9c9c169d9a99a16d4698b0fb",
+      "local_sha256": "6fdf9b7c02b8e3553076ba55f17c504d681bfe9b660d67b3c873fdd9dcc364a3",
       "note": "This product's variables."
     },
     {

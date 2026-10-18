@@ -265,6 +265,7 @@ export function mount(app, { wrap, publicBase, env = process.env, now = () => Da
   get("/api/treasury", view);
   /* a gift: written down first (the receipt number is the database's), then the receipt email, and its record only if the mail provider took it */
   const sendReceipt = async (req, gift) => {
+    if (gift.method === "zeffy") return { emailed: false, reason: "zeffy_sent_it", words: "No receipt email was sent from here, because Zeffy already sent the receipt for this gift." };
     if (!gift.donor_email) return { emailed: false, reason: "no_email", words: "No receipt email was sent, because no email address was given." };
     if (!emailConfigured()) return { emailed: false, reason: "mail_not_set_up", words: "No receipt email was sent: this site is not set up to send email." };
     const mail = receiptEmail({ receiptNo: gift.receipt_no, donor: gift.donor_name, amountCents: gift.amount_cents, receivedOn: gift.received_on, method: gift.method, notice: noticeEmail(env), base: publicBase(req) });

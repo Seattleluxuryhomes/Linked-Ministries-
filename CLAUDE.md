@@ -31,7 +31,12 @@ Founder, 2026-10-18: "So if a ministry wants something or needs something we nee
    2026-10-18 (D: "We are a safe and transparent place to donate money"): Linked Ministries itself takes gifts and makes grants, through a
    ledger built with the door closed (`migrations/0008_giving_ledger.sql`; the founder ruled this over the old "no payments" line, so the
    rule now reads: no processor and no card number is ever in this repository, and the Give button goes to a page that says no
-   processor is connected). No CDN, no analytics, no Tailwind CDN, no unpkg, no font host: every face is in `public/fonts`. No inline
+   processor is connected). Founder, 2026-10-18 (asked "Zeffy online, ledger for the public?", answered yes): gifts online go through
+   **Zeffy**, which takes the gift and emails the donor's receipt. The only change: with the door open and `ZEFFY_GIVE_URL` set (an https
+   address on zeffy.com, checked at boot), the Give page links to that Zeffy form and says Zeffy sends the receipt and that Zeffy's tip can
+   be $0. Still no card number, no processor code and no processor key in this repository. A person on the money team writes each Zeffy gift
+   into the ledger with the method `zeffy` (migration 0011) so the public sums add up; such a gift gets **no** receipt email from this site,
+   so no donor gets two receipts with two numbers (`tests/api-giving-test.mjs`). No CDN, no analytics, no Tailwind CDN, no unpkg, no font host: every face is in `public/fonts`. No inline
    script and no style attribute (the policy allows neither). The two banned phrases about deducting a gift (`tests/banned.mjs` names them) appear nowhere; only once
    `IRS_LETTER_DATE` is set does one sentence, the IRS's own, say a gift may be deducted. No prices or packages: the old page's are in
    `docs/OLD-PAGE.md`; whether a paid tier ever returns is the founder's decision and a lawyer's question first.

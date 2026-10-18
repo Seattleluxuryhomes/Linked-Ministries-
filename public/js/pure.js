@@ -97,7 +97,9 @@ export function parseCents(v) {
 }
 
 /* how a gift came in, and what a receipt number looks like */
-export const GIFT_METHODS = [["card", "Card"], ["check", "Check"], ["cash", "Cash"], ["transfer", "Bank transfer"], ["in_kind", "In kind (goods or a service)"]];
+export const GIFT_METHODS = [["zeffy", "Online through Zeffy (Zeffy sent the receipt)"], ["card", "Card"], ["check", "Check"], ["cash", "Cash"], ["transfer", "Bank transfer"], ["in_kind", "In kind (goods or a service)"]];
+/* the Give button's Zeffy form: an https address on zeffy.com, or nothing (founder, 2026-10-18: gifts online go through Zeffy) */
+export const zeffyGiveUrl = (v) => { try { const u = new URL(String(v || "").trim()); return u.protocol === "https:" && /(^|\.)zeffy\.com$/i.test(u.hostname) ? u.href : ""; } catch (e) { return ""; } };
 export const methodLabel = (id) => (GIFT_METHODS.find((m) => m[0] === id) || [id, String(id || "")])[1];
 export const receiptCode = (n) => "LM-" + String(n == null ? 0 : n).padStart(6, "0");
 export const GRANT_STATUS = { proposed: "Proposed. Waiting for a different person on the money team to approve it.", approved: "Approved by the board. Not yet paid.", paid: "Paid.", declined: "Declined." };
