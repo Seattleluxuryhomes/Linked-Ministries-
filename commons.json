@@ -199,7 +199,7 @@
       "origin_path": "behavioral-health-app/server/words.mjs",
       "origin_sha256": "7d66d59b2ffd109e7ba740ea0f66090185974bb339207889072108b8262c41e8",
       "local_path": "server/words.mjs",
-      "local_sha256": "ee300b54883e8dec6aa11a33b09323f4e354251fe3a8b2e8fa1c82fc0af4a363",
+      "local_sha256": "161fca21057f669e26da47800779a185b0a69bee27436f85140b1a70b4fbe3b7",
       "note": "Same refusal mapping (a code and a hint); the codes are this product's. The founder's one editable line lives here."
     },
     {
