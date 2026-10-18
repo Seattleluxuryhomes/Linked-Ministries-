@@ -80,8 +80,9 @@ export function frontPage({ latest }) {
 </div></section>
 <section class="band alt"><div class="wrap wide">
 <h2>What we run</h2>
-<div class="two">
+<div class="three">
 <div class="card"><p class="label">Now</p><h3>${e(PRODUCT.da.name)}</h3><p>A free, 24-week program of discipleship and recovery.</p><p><a href="${e(PRODUCT.da.url)}" rel="noopener">${e(PRODUCT.da.url.replace("https://", ""))}</a></p></div>
+<div class="card"><p class="label">Now</p><h3>Help getting online</h3><p>We help a ministry get a simple website, an email address and a way to take gifts. It is free. A ministry gives what it can. Ask on the board.</p></div>
 <div class="card"><p class="label">Planned</p><h3>Sober-living housing</h3><p>We plan to open housing for people in recovery. It is not open yet, and nothing is taking applications.</p></div>
 </div>
 </div></section>
