@@ -1,0 +1,146 @@
+/* lm.css — one light look for every page: a pale ground, white cards, dark words, and one gold (#D97706) for lines, the mark and
+   small labels. There is no dark theme and no dark panel anywhere. tests/light-test.mjs reads this file and every page's
+   computed colours and fails on a dark surface. Dark fill appears only on a button.
+   Every face is self-hosted from /fonts (Fraunces for titles, Plus Jakarta Sans for words); nothing is loaded from anyone else.
+   Gold #D97706 on white is 3.2 to 1, which is enough for a line, a border or a mark but not for small words, so a small label
+   is set in --gold-ink, a deeper shade of the same gold (6.5 to 1 on white), with the pure gold beside it as a line. */
+@font-face{font-family:"Plus Jakarta Sans";font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/plus-jakarta-sans-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Plus Jakarta Sans";font-style:normal;font-weight:500;font-display:swap;src:url(/fonts/plus-jakarta-sans-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:"Plus Jakarta Sans";font-style:normal;font-weight:600;font-display:swap;src:url(/fonts/plus-jakarta-sans-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Plus Jakarta Sans";font-style:normal;font-weight:700;font-display:swap;src:url(/fonts/plus-jakarta-sans-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"Fraunces";font-style:normal;font-weight:500;font-display:swap;src:url(/fonts/fraunces-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:"Fraunces";font-style:normal;font-weight:600;font-display:swap;src:url(/fonts/fraunces-latin-600-normal.woff2) format("woff2")}
+
+:root{
+  --ground:#fbf8f3; --card:#ffffff; --soft:#f5f0e6; --line:#e4dccd; --line-strong:#c9bfae;
+  --ink:#1b2430; --muted:#464f5c; --quiet:#566170;
+  --gold:#d97706; --gold-ink:#8a4b00; --gold-soft:#fff3dc;
+  --note:#fff8e8; --note-ink:#4a3708; --note-line:#ead7a5;
+  --ok:#eaf5ee; --ok-ink:#17543a; --ok-line:#b9dcc8;
+  --radius:14px; --gap:16px;
+  --face:"Plus Jakarta Sans",-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --display:"Fraunces",Georgia,"Times New Roman",serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;background:var(--ground)}
+body{margin:0;background:var(--ground);color:var(--ink);font:400 17px/1.6 var(--face);min-height:100vh;display:flex;flex-direction:column}
+h1,h2,h3{font-family:var(--display);font-weight:600;line-height:1.2;margin:0 0 .5em;color:var(--ink)}
+h1{font-size:34px} h2{font-size:25px} h3{font-size:20px}
+p{margin:0 0 .9em}
+a{color:var(--ink);text-decoration-color:var(--gold);text-decoration-thickness:2px;text-underline-offset:3px}
+a:hover{text-decoration-thickness:3px}
+:where(a,button,input,select,textarea,summary,[tabindex]:not([tabindex="-1"])):focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.skip{position:absolute;left:12px;top:-200px;background:var(--card);color:var(--ink);border:2px solid var(--gold);border-radius:10px;padding:10px 16px;z-index:50}
+.skip:focus{top:12px}
+.wrap{width:100%;max-width:760px;margin:0 auto;padding:0 16px}
+.wrap.wide{max-width:1080px}
+
+/* the top of every page: the mark and the name, with a gold line under it */
+.top{background:var(--card);border-bottom:3px solid var(--gold)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;min-height:70px;padding-top:8px;padding-bottom:8px}
+.lock{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--ink);min-width:0}
+.lock .mark{width:44px;height:44px;flex:none;color:var(--ink)}
+.lock .words{display:flex;flex-direction:column;min-width:0}
+.lock .name{font:600 20px/1.1 var(--display);color:var(--ink)}
+.lock .small{font-size:12.5px;color:var(--muted);line-height:1.3;margin-top:2px}
+.nav{display:flex;align-items:center;gap:6px 18px;flex-wrap:wrap;font-size:16px}
+.nav a:not(.btn){display:inline-flex;align-items:center;min-height:44px;color:var(--ink);font-weight:500;text-decoration:none;border-bottom:2px solid transparent}
+.nav a:not(.btn):hover,.nav a[aria-current="page"]:not(.btn){border-bottom-color:var(--gold)}
+
+main{flex:1;padding:26px 0 44px}
+main:focus{outline:none}
+.foot{border-top:1px solid var(--line);background:var(--card);color:var(--muted);font-size:14.5px}
+.foot .wrap{padding-top:18px;padding-bottom:22px}
+.foot p{margin:0 0 .5em}
+.foot .links a{margin-right:16px}
+.foot a{color:var(--muted)}
+
+/* buttons: the only dark fill on any page */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:10px 22px;border-radius:12px;border:2px solid var(--ink);background:var(--ink);color:#ffffff;font:600 16px/1.2 var(--face);text-decoration:none;cursor:pointer}
+.btn:hover{background:#2c3848;border-color:#2c3848}
+.btn.ghost{background:var(--card);color:var(--ink)}
+.btn.ghost:hover{background:var(--gold-soft);border-color:var(--ink)}
+.btn.small{min-height:44px;padding:8px 16px;font-size:15px}
+.btn[disabled]{opacity:.55;cursor:not-allowed}
+.link{background:none;border:0;padding:0;min-height:44px;color:var(--ink);font:500 16px var(--face);text-decoration:underline;text-decoration-color:var(--gold);text-decoration-thickness:2px;text-underline-offset:3px;cursor:pointer}
+
+/* the front */
+.hero{padding:30px 0 34px;border-bottom:1px solid var(--line)}
+.hero h1{font-size:40px;max-width:16em}
+.eyebrow,.label{font-size:12.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-ink);margin:0 0 .5em}
+.eyebrow::before{content:"";display:block;width:44px;height:4px;background:var(--gold);border-radius:2px;margin-bottom:12px}
+.lead{font-size:19px;color:var(--muted);max-width:40em}
+.cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}
+.band{padding:30px 0;border-bottom:1px solid var(--line)}
+.band.alt{background:var(--soft)}
+.three{display:grid;grid-template-columns:1fr;gap:var(--gap);margin-bottom:12px}
+.two{display:grid;grid-template-columns:1fr;gap:var(--gap)}
+@media (min-width:800px){.three{grid-template-columns:repeat(3,1fr)}.two{grid-template-columns:repeat(2,1fr)}}
+.note{background:var(--note);color:var(--note-ink);border:1px solid var(--note-line);border-left:4px solid var(--gold);border-radius:10px;padding:12px 16px;margin:0 0 var(--gap)}
+.cta-card{text-align:left}
+
+/* cards and rows */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin:0 0 var(--gap);box-shadow:0 1px 2px rgba(27,36,48,.05)}
+.card h2,.card h3{margin-top:0}
+.card p:last-child{margin-bottom:0}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.row.between{justify-content:space-between}
+.grow{flex:1;min-width:0}
+.muted{color:var(--muted)} .quiet{color:var(--quiet);font-size:15px}
+.small{font-size:14px}
+.stack>*+*{margin-top:var(--gap)}
+.stack>h1+*{margin-top:8px}
+hr{border:0;border-top:1px solid var(--line);margin:18px 0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* a post */
+.posts{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,430px),1fr));gap:var(--gap);align-items:start}
+.posts .card{margin:0}
+.post .meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.tag{display:inline-block;font-size:12.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-ink);border:1.5px solid var(--gold);border-radius:999px;padding:3px 12px}
+.tag.ask{background:var(--gold-soft)}
+.tag.give{background:var(--card)}
+.cat{font-size:14px;color:var(--muted)}
+.post-title{font-size:22px;margin-bottom:.25em}
+.post-title a{text-decoration:none}
+.post-title a:hover{text-decoration:underline;text-decoration-color:var(--gold)}
+.who{font-weight:600;margin-bottom:.4em}
+.place{font-size:15px;color:var(--muted);margin-bottom:.4em}
+.post .words{white-space:pre-wrap;overflow-wrap:anywhere;margin-bottom:.7em}
+.when{font-size:14.5px;color:var(--muted)}
+.dot{color:var(--gold)}
+.actions{margin-top:14px}
+.answer-slot:not(:empty){margin-top:14px;padding-top:14px;border-top:2px solid var(--gold)}
+
+/* the board's filters */
+.filters .grid{display:grid;grid-template-columns:1fr;gap:12px}
+@media (min-width:700px){.filters .grid{grid-template-columns:repeat(4,1fr)}.filters .field.wide{grid-column:1/-1}}
+.count{color:var(--muted);margin:0 0 12px}
+.pager{display:flex;gap:16px;align-items:center;justify-content:center;margin-top:22px;flex-wrap:wrap}
+
+/* forms */
+.field{margin:0 0 14px}
+label,.lab{display:block;font-weight:600;margin-bottom:5px}
+.help{font-size:14.5px;color:var(--muted);margin:3px 0 0}
+input[type=text],input[type=email],input[type=search],input[type=url],input[type=tel],input[type=date],input[type=number],select,textarea{width:100%;min-height:46px;padding:10px 12px;border:1.5px solid var(--line-strong);border-radius:10px;background:var(--card);color:var(--ink);font:400 16px/1.4 var(--face)}
+textarea{min-height:130px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:3px solid var(--gold);outline-offset:1px;border-color:var(--ink)}
+.formgrid{display:grid;grid-template-columns:1fr;gap:0 16px}
+@media (min-width:700px){.formgrid{grid-template-columns:1fr 1fr}.formgrid .full{grid-column:1/-1}}
+
+/* what the page tells a person: calm, never alarming */
+.msg{border-radius:10px;padding:12px 16px;margin:0 0 var(--gap);border:1px solid var(--note-line);background:var(--note);color:var(--note-ink);border-left:4px solid var(--gold)}
+.msg.ok{background:var(--ok);color:var(--ok-ink);border-color:var(--ok-line);border-left-color:var(--ok-ink)}
+.status{display:inline-block;font-size:14px;font-weight:600;border-radius:8px;padding:5px 10px;background:var(--gold-soft);color:var(--note-ink);border:1px solid var(--note-line)}
+.status.public{background:var(--ok);color:var(--ok-ink);border-color:var(--ok-line)}
+.status.closed{background:var(--soft);color:var(--muted);border-color:var(--line)}
+.mine{border-top:1px solid var(--line);padding:14px 0}
+.mine:first-of-type{border-top:0}
+.mine h3{font-size:18px;margin-bottom:.2em}
+.person{display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--line)}
+.person:first-of-type{border-top:0}
+.kv{display:grid;grid-template-columns:1fr;gap:2px 16px;margin:0}
+@media (min-width:600px){.kv{grid-template-columns:200px 1fr}}
+.kv dt{font-weight:600;color:var(--muted)} .kv dd{margin:0 0 8px;overflow-wrap:anywhere}
+.quote{white-space:pre-wrap;overflow-wrap:anywhere;border-left:4px solid var(--gold);padding:2px 0 2px 14px;margin:8px 0}

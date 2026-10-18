@@ -1,0 +1,41 @@
+/* tests/banned.mjs — the things no page of this site may carry, in one place, read by the unit test and the API test.
+   Founder, 2026-10-18: no CDN, no tracking, no AI, no money, nothing about taxes, no price, no "compliance" talk, no LinkedIn. */
+
+/* the words a person reads: tags and scripts and styles are taken off first */
+export function visibleText(html) {
+  return String(html).replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/<[^>]+>/g, " ").replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/\s+/g, " ").trim();
+}
+
+export const READ = [
+  [/\$/, "a dollar sign (no prices, no money)"],
+  [/\bAI\b/, "the letters AI"],
+  [/\bA\.I\.\b/, "A.I."],
+  [/artificial intelligence|machine learning|chatbot|\bgpt\b|language model/i, "a word about artificial intelligence"],
+  [/tax[- ]?deductib|deductib|tax[- ]exempt|tax receipt|\btax(es)?\b/i, "a word about taxes or deductions"],
+  [/compliance (score|gauge|audit)|tax audit/i, "a compliance score"],
+  [/linkedin/i, "LinkedIn"],
+  [/\bpricing\b|\bpackages?\b|\bstarter\b|\benterprise\b|\bsubscribe\b|\bper month\b|\bper year\b|\bbuy now\b|\bcheckout\b/i, "a price or a package"],
+  [/builder\s?buy\s?box|\bloxo\b|\bbidvoice\b|cross universal/i, "a name that stays behind the front"],
+  [/\b(donate|donation|tithe|tithing|paypal|venmo|zelle|cash app)\b/i, "a way to give money"],
+];
+
+/* the source of a page, and of its script and style files */
+export const SOURCE = [
+  [/\bcdn\b|cdnjs|jsdelivr|unpkg|googleapis|gstatic|tailwindcss|fontawesome|cloudflare|googletagmanager|google-analytics|gtag\(|analytics|plausible|segment\.com|hotjar|facebook\.net|doubleclick|sentry\.io/i, "a third-party host or a tracker"],
+  [/<script(?![^>]*\bsrc=)[^>]*>/i, "an inline script"],
+  [/\son[a-z]+\s*=/i, "an event attribute"],
+  [/\sstyle\s*=/i, "a style attribute"],
+  [/<link[^>]+href="https?:\/\//i, "a stylesheet or icon from another host"],
+  [/<script[^>]+src="https?:\/\//i, "a script from another host"],
+  [/<(img|iframe|source|video|audio)[^>]+src="https?:\/\//i, "a picture or frame from another host"],
+  [/\bred\b|#(?:f00|ff0000|dc2626|ef4444|b91c1c|991b1b)/i, "red"],
+];
+
+/** every banned thing found in one page's HTML (the words it reads and its source), as a list of short sentences */
+export function checkPage(html) {
+  const out = [], text = visibleText(html);
+  for (const [re, why] of READ) if (re.test(text)) out.push("reads " + why + ": " + (text.match(re) || [""])[0]);
+  for (const [re, why] of SOURCE) { const body = String(html).replace(/<!--[\s\S]*?-->/g, ""); if (re.test(body)) out.push("carries " + why); }
+  return out;
+}

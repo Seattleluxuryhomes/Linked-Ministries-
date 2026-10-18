@@ -70,7 +70,7 @@ function parseMail(cur) {
   return { from: cur.from, to: cur.to, subject: hdr("Subject"), replyTo: hdr("Reply-To"), toHeader: hdr("To"), text: enc ? qp(body) : body, raw: cur.data };
 }
 export async function smtpStandIn({ reject = false } = {}) {
-  const mails = []; const sockets = new Set();
+  const mails = []; const sockets = new Set(); const state = { reject };
   const server = net.createServer((sock) => {
     sockets.add(sock); sock.on("close", () => sockets.delete(sock)); sock.on("error", () => {});
     let buf = "", inData = false, cur = { from: "", to: [], data: "" };
@@ -81,7 +81,7 @@ export async function smtpStandIn({ reject = false } = {}) {
         if (inData) {
           const i = buf.indexOf("\r\n.\r\n"); if (i < 0) break;
           cur.data = buf.slice(0, i); buf = buf.slice(i + 5); inData = false;
-          if (reject) sock.write("550 5.7.1 refused by the stand-in\r\n"); else { mails.push(parseMail(cur)); sock.write("250 2.0.0 accepted as STANDIN" + mails.length + "\r\n"); }
+          if (state.reject) sock.write("550 5.7.1 refused by the stand-in\r\n"); else { mails.push(parseMail(cur)); sock.write("250 2.0.0 accepted as STANDIN" + mails.length + "\r\n"); }
           cur = { from: "", to: [], data: "" }; continue;
         }
         const i = buf.indexOf("\r\n"); if (i < 0) break;
@@ -99,7 +99,7 @@ export async function smtpStandIn({ reject = false } = {}) {
   await new Promise((r) => server.listen(0, "127.0.0.1", r));
   const port = server.address().port;
   return {
-    port, mails, url: `smtp://127.0.0.1:${port}?ignoreTLS=true`,
+    port, mails, refuse: (v = true) => { state.reject = v; }, url: `smtp://127.0.0.1:${port}?ignoreTLS=true`,
     last: () => mails[mails.length - 1] || null,
     codeFor: (email) => { const m = [...mails].reverse().find((x) => x.to.includes(email) && /sign-in code/.test(x.subject)); const c = m && /^(\d{6}) is your/.exec(m.subject); return c && c[1]; },
     stop: async () => { for (const s of sockets) s.destroy(); await new Promise((r) => server.close(r)); },
