@@ -104,7 +104,7 @@ export async function revokeSession(token) {
 /* Who am I, in terms the pages understand: a person with no ministry yet, or a person in a ministry; maybe a steward. */
 export async function whoami(user) {
   return asUser(user.id, async (c) => {
-    const person = (await c.query("select user_id, ministry_id, role, full_name, steward from lm.people where user_id = $1", [user.id])).rows[0] || null;
+    const person = (await c.query("select user_id, ministry_id, role, full_name, steward, treasurer from lm.people where user_id = $1", [user.id])).rows[0] || null;
     const ministry = person && person.ministry_id ? (await c.query("select lm.my_ministry_profile() as m")).rows[0].m : null;
     const invites = person && person.ministry_id ? [] : (await c.query("select lm.my_invites() as i")).rows[0].i;
     return {
@@ -112,6 +112,7 @@ export async function whoami(user) {
       user: { id: user.id, email: user.email, name: (person && person.full_name) || user.full_name || null },
       person: person ? { role: person.role, steward: person.steward } : null,
       steward: !!(person && person.steward),
+      treasurer: !!(person && person.treasurer),
       ministry: ministry ? {
         id: ministry.id, name: ministry.name, city: ministry.city, state: ministry.state, about: ministry.about, website: ministry.website,
         contact_name: ministry.contact_name, contact_email: ministry.contact_email, status: ministry.status, review_note: ministry.review_note,

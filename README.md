@@ -32,6 +32,8 @@ copied are listed in `commons.json`, each with where it came from.
 | Route | What it is |
 |---|---|
 | `/`, `/board`, `/board/<id>`, `/terms`, `/privacy` | Public pages, built whole on the server from the database's public view. The terms and the privacy page are drafts a lawyer has not read, and say so at the top |
+| `/giving`, `/give`, `/api/giving` | Where the money went: every approved and paid grant, totals added up from the rows (no donor is ever named), the last twelve months as an inline SVG chart, the status line, the Form 990 link once set. `/give` is the Give button's page: no payment service is connected, so it says so and has no form |
+| `/treasury`, `/api/treasury/...` | Treasurers only: record a gift, correct one, send a receipt, propose a grant, approve it (a different treasurer), mark it paid, set the giving door, download the ledger as a CSV |
 | `/m/<slug>`, `/photos/<id>` | A ministry's own public page and its pictures. Built whole on the server from the copy a steward read; a picture is served only while that copy names it. The ministry's own people see a private preview of the draft at the same address |
 | `/join`, `/me`, `/steward` | Signed-in pages (a shell and a script) |
 | `/api/health` | `{"status":"ok","service":"Linked Ministries"}` and nothing else |
@@ -58,6 +60,49 @@ copied are listed in `commons.json`, each with where it came from.
 | 5 | `/me` | The lead edits any time. The public keeps seeing the copy a steward read until a steward reads the change. A change to the public name or city sends the whole ministry back to be read, as before. |
 
 A "Give" button shows on the page only when the giving door is open (see below) and the ministry has set a link of its own for gifts. The link is the ministry's, is labelled as theirs, and Linked Ministries never collects or sees that gift.
+
+## Giving: the ledger, with the money door closed (migration 0008)
+
+Founder, 2026-10-18: "We are a safe and transparent place to donate money." The standard is proved by the record, not claimed. The board
+still moves no money between ministries; Linked Ministries may fund an ask from its own gifts when its board says yes.
+
+| Rule | Where it is enforced |
+|---|---|
+| A gift is a record that is only added to. A mistake is a new row that points at the old one; a gift can never go below zero. | Triggers on `lm.gifts` refuse update, delete and truncate, even for the operator's SQL |
+| Receipt numbers are the database's, in order, with no gap (a gift that fails uses no number). | `lm.gifts_guard` locks one counter row |
+| A grant is proposed by one treasurer and approved by a different one, after the board's vote is written down by name (yes, abstained, no, the document). | A CHECK on `lm.grants` (`grants_two_people`), `lm.grants_guard`, `lm.board_votes` |
+| A grant cannot be more than the money gifts that came in and are not already promised (gifts in kind are not money). | `lm.grants_guard` under a lock |
+| An approved grant is never changed, only marked paid with a reference. Nothing is deleted. | `lm.grants_guard` |
+| The giving door starts closed and opens only when the Washington registration number and its date are both filled in. | A CHECK on `lm.giving_settings` (`door_needs_registration`) |
+| A treasurer is a steward with one more flag, set by SQL or by another treasurer; the last one cannot be removed. | `lm.treasurer_guard` |
+| Every row writes an `events` row with a name on it: ids, amounts, field names. Never a donor, an email, a note, a reason or a board member. | `lm.audit_money` |
+| The public reads sums of the rows and the list of grants, never a donor. Nobody reads the tables directly. | `lm.giving_public()`, no grant on any table |
+| A receipt email goes to the donor's address only when the mail provider accepts it, and says "Why you got this". Until the IRS letter is dated it says only that the receipt is a record of the gift. | `server/api.mjs`, `server/emails.mjs` (`receiptEmail`) |
+| The two banned phrases about deducting a gift (named in `tests/banned.mjs`) appear nowhere. Only when `IRS_LETTER_DATE` is set in `server/words.mjs` does one page sentence, the IRS's own, say a gift may be deducted. | `tests/unit-test.mjs`, `tests/banned.mjs` |
+
+### What a treasurer does
+
+| # | Where | What happens |
+|---|---|---|
+| 1 | the database | The operator makes the first treasurer: `select lm.make_treasurer('EMAIL');` (they become a steward too). After that a treasurer makes another on `/treasury`. |
+| 2 | `/treasury` | "Record a gift": name (or Anonymous), email if given, dollars, day, how it came in, a note. The receipt number is shown. If an email was given, the screen says whether the receipt email went. |
+| 3 | `/treasury` | "Propose a grant": a ministry on the network or an outside organization, dollars, what for in words. |
+| 4 | `/treasury` | A different treasurer presses "Approve", writes the day of the vote, the names (one per line) of who voted yes, abstained and no, and the document that holds the vote. The proposer sees "a different treasurer must approve it". |
+| 5 | `/treasury` | "Mark paid" with a reference (a check or transfer number). |
+| 6 | `/treasury` | "Correct this gift" writes a new row. "Send the receipt" sends it again if the first did not go. |
+| 7 | `/treasury` | The giving door: the registration number, its date, the Form 990 link, and "The door is open". |
+| 8 | `/giving` | Anyone reads the result, signed out. |
+
+The Give button on `/giving` (and on a ministry's page, when that ministry has set its own link) shows only when the door is open. It goes to
+`/give`, which says the payment service is not connected. Wiring a processor is a later decision with the founder's own keys; none is in
+this repository.
+
+### Payroll is not built
+
+Payroll is not app code and is not built here. It needs a payroll provider (to hold the employer's tax accounts, run the payments, file the
+returns and keep the records), a decision about who is paid and how (employee or contractor), and a bank account the board has approved.
+When the board has chosen a provider, the app's part is small: a grant-like record of what was paid, written the same way (two treasurers,
+a named vote, a reference). Do not write payroll arithmetic in this repository.
 
 ## Run it on your machine
 
@@ -92,6 +137,12 @@ makes the browser test write screenshots.
 | `tests/db-test.mjs` | The database as every person (and, since the audit: the strict email shape, two stewards or two leads removing each other at once, reports, and leaving): one ministry never reads another's drafts, people or answers; a non-steward cannot approve (by function or by writing the table); the last lead cannot be removed; a post over 90 days is refused; public always has a named reader; approved words are frozen; an answer is a record; the public reads named columns of public rows only; a name on every event. |
 | `tests/api-test.mjs` | Over HTTP with a stand-in mail server that speaks real SMTP: join, profile, post, steward approval, filters, answer (one email, the right headers), a refusing provider, no provider at all, the team, the wrong person asking for what is not theirs. |
 | `tests/boot-test.mjs` | The server boots alone in production mode against an empty and an older database, and refuses to start without `DATABASE_URL`, with codes printed, with no mail, with a short key, with an http address, with an edited migration. |
+| `tests/db-pages-test.mjs` | The ministry page as every person: only the copy a steward read is public, the address is unique and final once public, the form's rules held by the database, pictures served only when the live copy names them, a ministry that leaves takes its page. |
+| `tests/api-pages-test.mjs` | The page builder over HTTP: the form, a picture checked and cleaned (where it was taken is taken out), the private preview, the steward, the public page signed out, the sitemap, the board's link. |
+| `tests/browser-page-test.mjs` | Real clicks at 390 and 1440: a lead makes the page from the form, a steward approves it, a visitor opens it, and it prints to a PDF. |
+| `tests/db-giving-test.mjs` | The ledger as every person: records only added to, no gap in receipt numbers, two different treasurers, the board's vote, a grant no larger than the gifts, the door's CHECK, no donor in any event, the public reads sums only. |
+| `tests/api-giving-test.mjs` | The treasury over HTTP with a real SMTP stand-in: a receipt only when the provider takes it, the vote, /giving signed out, the door and the Give button, the CSV that cannot run as a formula. |
+| `tests/browser-giving-test.mjs` | Real clicks at 390 and 1440: two treasurers, a gift, a grant proposed and approved by a different person, /giving signed out, the door closed and open. |
 | `tests/light-test.mjs` | No dark surface and no red on any page or state (the terms, the privacy page, the report form, the delete page included), at 390 and 1440, and it can fail. |
 | `tests/browser-test.mjs` | Real clicks in Chromium at 390 and 1440: visit, filter, join, make a ministry, post, steward approval and send-back, second ministry answers, poster closes. Zero page errors, nothing sideways, buttons 44 pixels or taller. |
 
@@ -110,6 +161,8 @@ makes the browser test write screenshots.
 | The founder's one editable line, and the refusal words | `server/words.mjs` |
 | The boot guard, security headers, mail | `server/config.mjs`, `server/headers.mjs`, `server/mail.mjs` |
 | Shared lists and every sentence the pages say | `public/js/pure.js` |
+| The ministry's page (`lm.pages`, pictures) | `migrations/0007_ministry_pages.sql`, `server/site.mjs`, `lib/photo.mjs`, `public/js/page.js` |
+| The giving ledger, grants, the board's vote, the door, treasurers | `migrations/0008_giving_ledger.sql`, `public/js/treasury.js`, `lib/csv.mjs` |
 | Reports, leaving the network (a person's own deletion) | `migrations/0006_reports_and_leaving.sql` |
 | The audit's database fixes (strict email, locks, contact out of reach) | `migrations/0005_hardening.sql` |
 | The words of /terms and /privacy, and every email | `server/legal.mjs`, `server/emails.mjs` |
@@ -123,10 +176,12 @@ A person can delete their own account on `/me` (Settings, Your account). One who
 operator with one line in the database's SQL box (it does exactly what the button does, and refuses the last steward):
 `select lm.account_erase((select id from auth.users where lower(email) = lower('EMAIL')));`
 
-## Editing the nonprofit line
+## Editing what is true about the corporation
 
-The line at the bottom of every page says the application for 501(c)(3) recognition is "not yet filed". When that changes, a
-developer edits one value, `FILING_STATUS`, in `server/words.mjs`. No page says anything about taxes or gifts.
+Three facts live in `server/words.mjs` and nowhere else: `FORMED` (the Secretary of State confirmed the articles), `APPLIED_501C3` (the
+application is filed) and `IRS_LETTER_DATE` (the date on the IRS letter, `YYYY-MM-DD`, once a letter has come). The footer line, the status
+line on `/giving` and the receipt email all read them. Until `IRS_LETTER_DATE` is set, no page and no email says a gift is deductible.
+When it is set, one sentence, the IRS's own (`IRS_PHRASE`), appears, and a lawyer checks it against the letter first.
 
 ## Putting it on the internet
 

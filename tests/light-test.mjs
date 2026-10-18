@@ -49,6 +49,14 @@ const { pool } = await import("../server/db.mjs");
 const world = await seedWorld({ base: s.base, smtp, sql: (q) => pool.query(q) });
 const extras = await seedAlexExtras({ world, smtp });
 const alexPage = await seedAlexPage({ world });
+/* a little money, so /giving and the treasury have something to paint: two treasurers, a gift, a grant voted on, a grant waiting */
+{ const { signIn } = await import("./helpers.mjs"); const tara = client(s.base); await signIn(tara, null, "tara@linkedm.example", { smtp });
+  await pool.query("select lm.make_treasurer('sam@linkedm.example')"); await pool.query("select lm.make_treasurer('tara@linkedm.example')");
+  const day0 = new Date().toISOString().slice(0, 10);
+  await world.sam.post("/api/treasury/gifts", { donor_name: "Jordan Donor", donor_email: "jordan@donor.example", amount: "1500", method: "check", received_on: day0 });
+  const g1 = await world.sam.post("/api/treasury/grants", { recipient_kind: "ministry", ministry_id: alexPage.ministryId, amount: "400", purpose: "Help with a van for the Saturday meals" });
+  await tara.post(`/api/treasury/grants/${g1.json.id}/approve`, { voted_on: day0, yes: "Ann Board\nBob Board", abstain: "", no: "", doc_ref: "Minutes of the board, item 4" });
+  await world.sam.post("/api/treasury/grants", { recipient_kind: "outside", recipient_name: "Neighbor Care Clinic", amount: "100", purpose: "Winter coats for the people we serve" }); }
 const browser = await launch(); const snap = shots(SHOTS);
 const lightCheck = (page) => page.evaluate(() => {
   const lum = (r, g, b) => { const c = [r, g, b].map((v) => v / 255).map((x) => (x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4))); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
@@ -68,7 +76,7 @@ const lightCheck = (page) => page.evaluate(() => {
 const cookieOf = (cl) => cl.jar().split("=").slice(1).join("=");
 const firstPost = world.ids["Ten folding tables for our Saturday meal"];
 const anyId = (extras.erin, firstPost);
-const PUBLIC = ["/", "/board", "/board?kind=ask&state=WA", "/board?q=zebra", "/board/" + firstPost, "/terms", "/privacy", "/join", "/me", "/steward", "/nope", "/board/00000000-0000-4000-8000-000000000000", "/m/" + alexPage.slug, "/m/not-a-page"];
+const PUBLIC = ["/", "/board", "/board?kind=ask&state=WA", "/board?q=zebra", "/board/" + firstPost, "/terms", "/privacy", "/join", "/me", "/steward", "/nope", "/board/00000000-0000-4000-8000-000000000000", "/m/" + alexPage.slug, "/m/not-a-page", "/giving", "/give"];
 await pool.query("select lm.report_create($1, 'scam', 'This looks wrong to me.', 'reporter@example.org')", [firstPost]);   /* so the steward's page has a report to paint */
 let pages = 0;
 for (const kind of ["phone", "desk"]) {
@@ -102,7 +110,7 @@ for (const kind of ["phone", "desk"]) {
   await c1.close();
   const fresh = client(s.base); { const { signIn } = await import("./helpers.mjs"); await signIn(fresh, null, "newcomer@example.org", { smtp }); }
   const c2 = await who(fresh, ["/join", "/me"], "a person with no ministry yet"); await c2.close();
-  const c3 = await who(world.sam, ["/steward", "/me"], "a steward's"); await c3.close();
+  const c3 = await who(world.sam, ["/steward", "/me", "/treasury"], "a steward's"); await c3.close();
   const c4 = await who(world.c["blake@bravo.example"], [`/board/${firstPost}`], "an answering ministry's");
   await c4.page.click("a[data-answer]"); await c4.page.waitForSelector("form textarea[name=words]"); { const bad = await lightCheck(c4.page); pages++; ok(bad.length === 0, `${kind}: the answer form is light`, bad.slice(0, 3)); } await c4.close();
 }

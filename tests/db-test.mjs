@@ -254,7 +254,7 @@ for (const t of ["app.sessions", "app.login_codes", "rl.events", "lm.invites"]) 
 ok((await refused(q(a1, "select rl.take('x','y',1,'1 minute')"), /permission denied|42501/)).refused, "nor call the rate-limit functions");
 const fnRows = await admin(`select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'lm' and p.prosecdef
    and has_function_privilege('anon', p.oid, 'execute') order by 1`);
-ok(fnRows.map((r) => r.proname).join() === "ministry_is_public,page_list_public,page_public,page_slug_of,photo_get", "the public can call five functions and no more: is this ministry public, and the four that answer only for a public page and its pictures (tests/db-pages-test.mjs)", fnRows);
+ok(fnRows.map((r) => r.proname).join() === "giving_door_open,giving_public,ministry_is_public,page_list_public,page_public,page_slug_of,photo_get", "the public can call seven functions and no more: is this ministry public, the four that answer only for a public page and its pictures, and the two that answer for the giving record (sums of the rows, no donor)", fnRows);
 const authFns = await admin(`select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'lm' and has_function_privilege('authenticated', p.oid, 'execute') and p.proname in ('make_steward','log','audit','posts_guard','people_guard')`);
 ok(authFns.length === 0, "a signed-in person cannot call make_steward, log or a trigger function directly", authFns);
 
@@ -410,7 +410,7 @@ ok(authFns.length === 0, "a signed-in person cannot call make_steward, log or a 
 
 /* ===== 15. the migrations are recorded and applied ===== */
 const applied = await admin("select name from public.lm_migrations order by name");
-ok(applied.map((a) => a.name).join() === "0001_base.sql,0002_ministries.sql,0003_board.sql,0004_grants.sql,0005_hardening.sql,0006_reports_and_leaving.sql,0007_ministry_pages.sql,local-supabase-shim.sql", "every migration and the stand-in are recorded as applied", applied);
+ok(applied.map((a) => a.name).join() === "0001_base.sql,0002_ministries.sql,0003_board.sql,0004_grants.sql,0005_hardening.sql,0006_reports_and_leaving.sql,0007_ministry_pages.sql,0008_giving_ledger.sql,local-supabase-shim.sql", "every migration and the stand-in are recorded as applied", applied);
 ok((await admin("select count(*)::int n from pg_policies where schemaname = 'lm'"))[0].n >= 7, "row-level security policies are in place");
 ok((await admin("select count(*)::int n from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'lm' and c.relkind = 'r' and not c.relrowsecurity"))[0].n === 0, "every table in lm has row-level security on");
 

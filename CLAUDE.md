@@ -27,10 +27,14 @@ Founder, 2026-10-18: "So if a ministry wants something or needs something we nee
    sidebar; the only dark fill is a button (and the 44-pixel ink tile of the mark, which is a logo, drawn as an SVG). Never alarmed: no red. `tests/light-test.mjs` fails on any dark surface and on red.
 6. **Plain words**, grade 8 or under, on every public sentence. `lib/plainwords.mjs` reads them in `tests/plainwords-test.mjs`. The one
    named exception is the founder's own line about the nonprofit corporation, which carries a legal name.
-7. **No AI. No payments. No money category. No tracking.** The network moves no money and says so. No CDN, no analytics, no Tailwind
-   CDN, no unpkg, no font host: every face is in `public/fonts`. No inline script and no style attribute (the policy allows neither).
-   Nothing about tax deductibility, anywhere. No prices or packages: the old page's are in `docs/OLD-PAGE.md`; whether a paid tier
-   ever returns is the founder's decision and a lawyer's question first.
+7. **No AI. No payment processor. No money category. No tracking.** The board moves no money between ministries and says so. Founder,
+   2026-10-18 (D: "We are a safe and transparent place to donate money"): Linked Ministries itself takes gifts and makes grants, through a
+   ledger built with the door closed (`migrations/0008_giving_ledger.sql`; the founder ruled this over the old "no payments" line, so the
+   rule now reads: no processor and no card number is ever in this repository, and the Give button goes to a page that says no
+   processor is connected). No CDN, no analytics, no Tailwind CDN, no unpkg, no font host: every face is in `public/fonts`. No inline
+   script and no style attribute (the policy allows neither). The two banned phrases about deducting a gift (`tests/banned.mjs` names them) appear nowhere; only once
+   `IRS_LETTER_DATE` is set does one sentence, the IRS's own, say a gift may be deducted. No prices or packages: the old page's are in
+   `docs/OLD-PAGE.md`; whether a paid tier ever returns is the founder's decision and a lawyer's question first.
 8. **An applied migration is never edited.** The next change is the next numbered file. After adding one, run
    `npm run migrations:freeze` in the same commit. The server keeps each file's hash and refuses to start if one moved.
 9. **No credentials, keys or real personal information** in the repository, the log or a page. `.env.example` has names only. No
@@ -39,15 +43,20 @@ Founder, 2026-10-18: "So if a ministry wants something or needs something we nee
     A record with nobody's name on it becomes the founder's problem.
 11. **Names.** The product is "Linked Ministries", linkedm.org. The technology under the founder's other products is named nowhere a
     person can read it. `tests/unit-test.mjs` scans every page and string.
-12. **Two lines that never move:** the footer says "Linked Ministries is a Washington nonprofit corporation; its application for
-    501(c)(3) recognition is not yet filed." (the one value to edit is `FILING_STATUS` in `server/words.mjs`), and every page says
+12. **Two lines that never move:** the footer says "Linked Ministries is forming as a Washington nonprofit corporation; its application for
+    501(c)(3) recognition is not yet filed." (three facts in `server/words.mjs` build it and the status line on /giving and the receipt:
+    `FORMED`, `APPLIED_501C3`, `IRS_LETTER_DATE`; a developer flips each on the day it is true), and every page says
     "If someone is in danger, call 911. If someone is thinking of hurting themselves, call or text 988."
 13. **Legal exposure, audited 2026-10-18.** `/terms` and `/privacy` are drafts a lawyer has not read and say so at the top (`server/legal.mjs`).
-    Nothing anywhere claims 501(c)(3) status or says a gift is deductible (the footer's one line, `FILING_STATUS`, is the only place that
-    names the application); nothing is set beside another company's name; every post carries the stay-safe line and a Report link; a report
+    Nothing anywhere claims 501(c)(3) status or says a gift is deductible (the footer's line and the /giving status line, both built in
+    `server/words.mjs` from what is true that day, are the only places that name the application); nothing is set beside another company's name; every post carries the stay-safe line and a Report link; a report
     saves, emails the stewards, and hides nothing until a steward acts; a person can download and delete their own data; every email says who
     sent it and why and sells nothing. `tests/banned.mjs` and `tests/unit-test.mjs` hold each of these.
-14. **A new database function gets no grant until it needs one.** Postgres lets everyone run a new function: revoke it from public, anon and
+14. **Money is a record, and a person approves it.** Gifts, board votes and receipts are only ever added to; a mistake is a new row that
+    points at the old one. A grant needs two different named treasurers and the board's vote by name (a CHECK on the table, not a screen).
+    No event holds a donor's name, an email, a note or a board member. The public reads sums of the rows, never a donor. A treasurer is a
+    steward with one more flag. `tests/db-giving-test.mjs` holds each of these.
+15. **A new database function gets no grant until it needs one.** Postgres lets everyone run a new function: revoke it from public, anon and
     authenticated in the same migration, and grant only what a signed-in person needs (0004's blanket revoke covered only what existed then).
     Whatever reads a contact address, or erases a person, runs on the service connection alone.
 

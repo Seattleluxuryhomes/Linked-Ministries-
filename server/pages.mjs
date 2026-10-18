@@ -4,8 +4,8 @@
    text is never markup. No inline script, no style attribute, nothing from anyone else's server (every face is in /fonts, every
    picture is drawn here as inline SVG). */
 import { verse } from "./scripture.mjs";
-import { PRODUCT, CATEGORIES, KIND, KINDS, STATES, categoryLabel, dateWords, CRISIS, NO_MONEY, STAY_SAFE, WORDS } from "../public/js/pure.js";
-import { NONPROFIT_LINE } from "./words.mjs";
+import { PRODUCT, CATEGORIES, KIND, KINDS, STATES, categoryLabel, dateWords, CRISIS, NO_MONEY, STAY_SAFE, WORDS, money, methodLabel, receiptCode, GRANT_STATUS } from "../public/js/pure.js";
+import { NONPROFIT_LINE, FLAGS, statusLine } from "./words.mjs";
 import { TERMS, PRIVACY, DRAFT_LINE, LAST_CHANGED } from "./legal.mjs";
 
 const AMP = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
@@ -62,7 +62,7 @@ ${image ? "" : `<meta property="og:image:width" content="1200">
 <a class="skip" href="#main">Skip to the page</a>
 <header class="top"><div class="wrap wide">
 <a class="lock" href="/" aria-label="${e(PRODUCT.name)}, home">${MARK}<span class="words"><span class="name">${e(PRODUCT.name)}</span><span class="small">${e(PRODUCT.domain)}</span></span></a>
-<nav class="nav" aria-label="Main"><a href="/board"${nav === "board" ? ' aria-current="page"' : ""}>Board</a><a href="/me"${nav === "me" ? ' aria-current="page"' : ""}>My ministry</a><a class="btn small" href="/join"${nav === "join" ? ' aria-current="page"' : ""}>Join the network</a></nav>
+<nav class="nav" aria-label="Main"><a href="/board"${nav === "board" ? ' aria-current="page"' : ""}>Board</a><a href="/giving"${nav === "giving" ? ' aria-current="page"' : ""}>Giving</a><a href="/me"${nav === "me" ? ' aria-current="page"' : ""}>My ministry</a><a class="btn small" href="/join"${nav === "join" ? ' aria-current="page"' : ""}>Join the network</a></nav>
 </div></header>
 <main id="main" tabindex="-1">
 ${body}
@@ -74,7 +74,7 @@ ${verse("jas_1_27","small")}
 <p class="line">${e(NONPROFIT_LINE)}</p>
 <p>${e(CRISIS)}</p>
 </div>
-<p class="links"><a href="/board">Board</a> <a href="/join">Join the network</a> <a href="/terms">Terms</a> <a href="/privacy">Privacy</a> <a href="${e(PRODUCT.da.url)}" rel="noopener">${e(PRODUCT.da.name)}</a></p>
+<p class="links"><a href="/board">Board</a> <a href="/giving">Giving</a> <a href="/join">Join the network</a> <a href="/terms">Terms</a> <a href="/privacy">Privacy</a> <a href="${e(PRODUCT.da.url)}" rel="noopener">${e(PRODUCT.da.name)}</a></p>
 </div>
 </div></footer>
 ${script ? `<script type="module" src="${e(script)}"></script>` : ""}
@@ -111,7 +111,7 @@ function emptyBoard({ filtered, compact = false }) {
 }
 
 /* ---- the front ------------------------------------------------------------------------------------------------------------------ */
-export function frontPage({ latest, base = "", notice = "" }) {
+export function frontPage({ latest, base = "", notice = "", giving = { open: false } }) {
   const cards = latest.length ? latest.map((p) => postCard(p, { button: false })).join("\n") : emptyBoard({ filtered: false, compact: true });
   const body = `<section class="hero"><div class="wrap wide hero-grid">
 <div class="hero-words">
@@ -153,7 +153,7 @@ ${verse("cor2_9_7")}
 <div class="three">
 <div class="card"><p class="label">How it works</p><h3>Gifts come in. Grants go out.</h3><p>People give to Linked Ministries. The board picks where the money goes. It can go to a ministry's ask. It can go to housing for people in recovery. It can go to the free program. The board votes. The vote is written down.</p></div>
 <div class="card"><p class="label">What you can see</p><h3>Every grant, published.</h3><p>Who got it, how much, what for, and the day the board said yes. Every gift gets a numbered receipt. No one person can move money alone.</p></div>
-<div class="card"><p class="label">Today</p><h3>Not taking gifts online yet.</h3><p>Linked Ministries is forming as a Washington nonprofit. Online giving opens after the state registration is filed. We will say here when it does.</p></div>
+<div class="card"><p class="label">Today</p>${giving && giving.open ? `<h3>Gifts online are open.</h3><p>The board says the registration is filed. A gift gets a numbered receipt, and every grant is shown on the giving page.</p>` : `<h3>Not taking gifts online yet.</h3><p>Linked Ministries is forming as a Washington nonprofit. Online giving opens after the state registration is filed. <a href="/giving">We will say there when it does.</a></p>`}<p><a class="btn ghost small" href="/giving">Where the money went</a></p></div>
 </div>
 </div></section>
 <section class="band"><div class="wrap wide">
@@ -288,4 +288,76 @@ ${photos ? `<div class="mphotos${(c.photos || []).length === 1 ? " one" : ""}">$
   const desc = `${c.tagline} ${place}.`.slice(0, 200);
   return layout({ title: name, body, base, path: "/m/" + page.slug, noindex: preview, ogType: "profile", ogTitle: `${name} · ${place}`, description: desc,
     image: first ? "/photos/" + first.id : "", imageAlt: first ? (first.alt || "A picture from " + name) : "", notice });
+}
+
+/* ---- giving: where the money went, and the door ---------------------------------------------------------------------------------------------------------- */
+const MON = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"], MON_FULL = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+/* the last twelve months as bars, drawn here from the rows: gifts in (gold) and grants approved (slate). The numbers are in the table under it. */
+export function givingChart(months) {
+  const W = 600, H = 250, L = 8, B = 34, T = 14, plotH = H - B - T, slot = (W - L * 2) / months.length, bw = Math.min(18, slot / 2 - 2);
+  const max = Math.max(0, ...months.map((m) => Math.max(Number(m.gifts_cents), Number(m.grants_cents))));
+  const h = (c) => (max ? Math.max(Number(c) > 0 ? 2 : 0, Math.round((Number(c) / max) * plotH)) : 0);
+  const bars = months.map((m, i) => {
+    const x = L + i * slot + slot / 2, gh = h(m.gifts_cents), rh = h(m.grants_cents), mi = Number(m.month.slice(5)) - 1;
+    return `<g><rect x="${(x - bw - 1).toFixed(1)}" y="${T + plotH - gh}" width="${bw.toFixed(1)}" height="${gh}" rx="2" fill="#d97706"/><rect x="${(x + 1).toFixed(1)}" y="${T + plotH - rh}" width="${bw.toFixed(1)}" height="${rh}" rx="2" fill="#566170"/><text x="${x.toFixed(1)}" y="${H - 14}" text-anchor="middle" font-size="15" fill="#464f5c">${MON[mi]}</text>${mi === 0 || i === 0 ? `<text x="${x.toFixed(1)}" y="${H - 1}" text-anchor="middle" font-size="12" fill="#566170">${e(m.month.slice(0, 4))}</text>` : ""}</g>`;
+  }).join("");
+  const label = `Bar chart of the last twelve months. Gifts in, and grants approved, in dollars. ${max ? "The tallest bar is " + money(max) + "." : "There are none yet."}`;
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${e(label)}"><title>${e(label)}</title><line x1="${L}" y1="${T + plotH}" x2="${W - L}" y2="${T + plotH}" stroke="#c9bfae" stroke-width="1.5"/>${bars}</svg>`;
+}
+
+function monthRows(months) {
+  return months.map((m) => `<tr><th scope="row">${e(MON_FULL[Number(m.month.slice(5)) - 1])} ${e(m.month.slice(0, 4))}</th><td class="cash">${e(money(m.gifts_cents))}</td><td class="cash">${e(money(m.grants_cents))}</td></tr>`).join("");
+}
+
+export function givingPage({ giving, base = "", notice = "", flags = FLAGS }) {
+  const g = giving, closed = !g.door_open, reg = g.registration_number && g.registration_date;
+  const doorCard = closed
+    ? `<div class="card door closed"><p class="label">Gifts online</p><h2>Not yet.</h2><p>Linked Ministries is not taking gifts online yet.</p><p>${reg ? `Its registration is on file, but the door is not open.` : "Washington wants a charity to register before it asks for gifts. Linked Ministries has not finished that registration. The door opens when it has."}</p>${reg ? "" : `<p class="quiet">There is no Give button until then.</p>`}</div>`
+    : `<div class="card door open"><p class="label">Gifts online</p><h2>The door is open.</h2><p>A gift is written down by a treasurer and gets a numbered receipt. Every grant is voted on by the board and shown on this page.</p><p><a class="btn" href="/give">Give</a></p></div>`;
+  const regCard = reg ? `<p class="quiet">Washington charitable solicitation registration ${e(g.registration_number)}, dated ${e(dateWords(g.registration_date))}.</p>` : "";
+  const grants = g.grants.length ? g.grants.map((x) => `<article class="card grant"><div class="row between"><h3>${x.page_slug ? `<a href="/m/${e(x.page_slug)}">${e(x.recipient_name)}</a>` : e(x.recipient_name)}</h3><p class="amt">${e(money(x.amount_cents))}</p></div>
+<p>${e(x.purpose)}</p>
+<p class="when">The board voted yes on ${e(dateWords(x.voted_on))}: ${x.yes} yes${x.abstain ? `, ${x.abstain} abstained` : ""}${x.no ? `, ${x.no} no` : ""}. Record: ${e(x.doc_ref)}.</p>
+<p class="status${x.status === "paid" ? " public" : ""}">${x.status === "paid" ? `Paid on ${e(dateWords(x.paid_on))}.` : e(GRANT_STATUS.approved)}</p></article>`).join("\n")
+    : `<div class="card empty compact"><h3>No grants yet</h3><p>When the board votes yes on a grant, it is shown here: who got it, how much, what for, and the day of the vote.</p></div>`;
+  const body = `<div class="wrap wide">
+<div class="pagehead"><p class="eyebrow">Giving</p><h1>Where the money went</h1>
+<p class="lead">Every gift is written down. Every grant is voted on by the board and shown here. These numbers are added up from the record, not typed.</p></div>
+<div class="giving-top">
+${doorCard}
+<div class="card"><p class="label">What is true today</p><p>${e(statusLine(flags))}</p>${regCard}<p class="quiet">${g.form990_url ? `<a href="${e(g.form990_url)}" rel="noopener nofollow">Read the Form 990</a>` : "When Linked Ministries files a Form 990, the link is here."}</p></div>
+</div>
+<section aria-labelledby="g-totals"><h2 id="g-totals">The totals</h2>
+<div class="three totals">
+<div class="card"><p class="label">Gifts received</p><p class="big">${e(money(g.money_cents))}</p><p class="quiet">${g.money_count} ${g.money_count === 1 ? "gift" : "gifts"}. No donor names are shown.</p></div>
+<div class="card"><p class="label">Granted by the board</p><p class="big">${e(money(g.granted_cents))}</p><p class="quiet">${g.granted_count} ${g.granted_count === 1 ? "grant" : "grants"}.</p></div>
+<div class="card"><p class="label">Of that, paid</p><p class="big">${e(money(g.paid_cents))}</p><p class="quiet">The rest is approved and waits to be paid.</p></div>
+</div>
+${g.in_kind_count ? `<p class="note">${g.in_kind_count} ${g.in_kind_count === 1 ? "gift" : "gifts"} of goods or services, worth ${e(money(g.in_kind_cents))}, are not counted as money above.</p>` : ""}
+</section>
+<section aria-labelledby="g-chart"><h2 id="g-chart">The last twelve months</h2>
+<div class="card chartcard">${givingChart(g.months)}<p class="legend"><svg class="sw" viewBox="0 0 12 12" aria-hidden="true"><rect width="12" height="12" rx="3" fill="#d97706"/></svg> Gifts in <svg class="sw" viewBox="0 0 12 12" aria-hidden="true"><rect width="12" height="12" rx="3" fill="#566170"/></svg> Grants approved</p>
+<table class="months"><caption class="sr">Gifts in and grants approved, by month</caption><thead><tr><th scope="col">Month</th><th scope="col" class="cash">Gifts in</th><th scope="col" class="cash">Grants approved</th></tr></thead><tbody>${monthRows(g.months)}</tbody></table></div>
+</section>
+${verse("cor2_9_7")}
+<section aria-labelledby="g-grants"><h2 id="g-grants">Every grant</h2>
+<div class="grants">${grants}</div></section>
+<section aria-labelledby="g-safe"><div class="card"><h2 id="g-safe">How this is kept safe</h2><ul class="plain">
+<li>A gift is written down once, with the next receipt number. It is never changed. A mistake is fixed by a new row.</li>
+<li>One treasurer proposes a grant. A different treasurer approves it, after the board votes, by name.</li>
+<li>A grant is never more than the gifts that came in.</li>
+<li>The board moves no money between ministries. Linked Ministries may fund an ask from its gifts when its board says yes.</li></ul>
+${notice ? `<p>Questions? Write to <a href="mailto:${e(notice)}">${e(notice)}</a>.</p>` : ""}</div></section>
+</div>`;
+  return layout({ title: "Where the money went", body, nav: "giving", base, path: "/giving", description: "Every gift Linked Ministries receives is written down, and every grant is voted on and shown here, with the amounts added up from the record." });
+}
+
+/* the Give button's page: with no payment processor connected it says so, and offers nothing that would only look like it works */
+export function givePage({ open, base = "", notice = "" }) {
+  const body = `<div class="wrap prose"><p class="back"><a href="/giving">Back to where the money went</a></p>
+<h1>${open ? "Giving online is not connected yet" : "Not taking gifts online yet"}</h1>
+<div class="card">${open ? `<p>The payment service is not connected yet. Nothing can be sent or saved on this page, so there is no form here.</p><p>The board will say on <a href="/giving">the giving page</a> when it is.</p>` : `<p>Linked Ministries is not taking gifts online yet. The giving page says why.</p>`}
+${notice ? `<p>To ask about giving another way, <a href="mailto:${e(notice)}">write to us</a>.</p>` : ""}
+<p class="row"><a class="btn" href="/giving">Where the money went</a><a class="btn ghost" href="/board">See the board</a></p></div></div>`;
+  return layout({ title: "Give", body, base, path: "/give", noindex: true });
 }

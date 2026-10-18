@@ -40,9 +40,15 @@ export const SOURCE = [
 ];
 
 /** every banned thing found in one page's HTML (the words it reads and its source), as a list of short sentences */
-export function checkPage(html) {
+/* founder, 2026-10-18: Linked Ministries takes gifts and makes grants. On a page about money (the giving pages, the front, a ministry's Give card, the
+   treasury) a dollar sign, a word about giving and the true statement about the application are allowed. What stays banned everywhere, with no exception
+   until the IRS letter is dated (IRS_LETTER_DATE in server/words.mjs): "tax-deductible" and "write-off". */
+const MONEY_OK = new Set(["a dollar sign (no prices, no money)", "a word about taxes or deductions", "a way to give money", "a claim of nonprofit status (only the footer's own line may say the application is not filed)"]);
+export const NEVER = [[/tax[- ]?deductible|write[- ]?offs?\b|tax[- ]exempt|tax receipt/i, "tax-deductible or write-off (only the IRS's own sentence, and only once IRS_LETTER_DATE is set)"]];
+export function checkPage(html, { money = false, irsLetter = false } = {}) {
   const out = [], text = visibleText(html).split(NONPROFIT_LINE).join(" ");   /* the founder's one line about the corporation is the only place that may name the application */
-  for (const [re, why] of READ) if (re.test(text)) out.push("reads " + why + ": " + (text.match(re) || [""])[0]);
+  for (const [re, why] of READ) if (!(money && MONEY_OK.has(why)) && re.test(text)) out.push("reads " + why + ": " + (text.match(re) || [""])[0]);
+  if (!irsLetter) for (const [re, why] of NEVER) if (re.test(text)) out.push("reads " + why + ": " + (text.match(re) || [""])[0]);
   for (const [re, why] of SOURCE) { const body = String(html).replace(/<!--[\s\S]*?-->/g, ""); if (re.test(body)) out.push("carries " + why); }
   return out;
 }

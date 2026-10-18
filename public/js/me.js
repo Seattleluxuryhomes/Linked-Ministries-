@@ -37,7 +37,7 @@ function render(me, posts, answers, team, pg) {
   parts.push(msg(MINISTRY_STATUS[m.status], m.status === "public" ? "ok" : undefined));
   if (m.status === "sent_back" && m.review_note) parts.push(h("p", { class: "msg" }, h("strong", {}, "Their note: "), m.review_note));
   if (flash) { parts.push(msg(flash.words, flash.ok ? "ok" : undefined)); flash = null; }
-  if (me.steward) parts.push(h("p", {}, h("a", { class: "btn ghost", href: "/steward" }, "Open the page for stewards")));
+  if (me.steward) parts.push(h("p", { class: "row" }, h("a", { class: "btn ghost", href: "/steward" }, "Open the page for stewards"), me.treasurer ? h("a", { class: "btn ghost", href: "/treasury", "data-act": "treasury" }, WORDS.treasuryOpen) : null));
 
   /* post */
   parts.push(h("div", { class: "row" },

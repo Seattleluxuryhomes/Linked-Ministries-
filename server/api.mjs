@@ -11,6 +11,10 @@ import { boardPost } from "./board.mjs";
 import express from "express";
 import { cleanPhoto, MAX_BYTES } from "../lib/photo.mjs";
 import { VERSES } from "./scripture.mjs";
+import { parseCents, receiptCode, methodLabel, GIFT_METHODS } from "../public/js/pure.js";
+import { receiptEmail } from "./emails.mjs";
+import { toCsv, dollars } from "../lib/csv.mjs";
+import { noticeEmail } from "../lib/email.mjs";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const bad = (words, status = 400, code = "bad_request") => Object.assign(new Error(code), { status, words, code });
@@ -74,7 +78,16 @@ function pageFields(b) {
   return f;
 }
 
-export function mount(app, { wrap, publicBase, now = () => Date.now() }) {
+const DAYRE = /^\d{4}-\d{2}-\d{2}$/;
+const names = (v) => String(v == null ? "" : Array.isArray(v) ? v.join("\n") : v).split(/\r?\n/).map((x) => x.trim().slice(0, 120)).filter(Boolean).slice(0, 40);
+function dollarsField(v, what) {
+  const c = parseCents(v);
+  if (c == null || c <= 0) throw bad(`Type the ${what} in dollars, like 25 or 25.50.`, 422, "amount_not_readable");
+  if (c > 1000000000) throw bad("That amount is too large for this page.", 422, "amount_too_large");
+  return c;
+}
+
+export function mount(app, { wrap, publicBase, env = process.env, now = () => Date.now() }) {
   const need = (req) => { if (!req.user) throw bad("Please sign in.", 401, "unauthenticated"); };
   const get = (path, fn) => app.get(path, wrap(async (req, res) => { need(req); res.set("cache-control", "no-store"); res.json(await fn(req)); }));
   const post = (path, fn, status = 200) => app.post(path, wrap(async (req, res) => { need(req); res.status(status).json(await fn(req)); }));
@@ -225,6 +238,93 @@ export function mount(app, { wrap, publicBase, now = () => Date.now() }) {
       emailed = !!(await sendEmail({ to: stewards.join(", "), subject: mail.subject, text: mail.text, ...(email ? { replyTo: email } : {}) })).sent;
     }
     res.status(201).json({ ok: true, saved: true, emailed, id: rid, words: emailed ? "Thank you. Your report was sent to the stewards. The post stays up until a steward reads it." : "Thank you. Your report was saved, but the email to the stewards did not go out. A steward will see it on their page." });
+  }));
+
+  /* ---- the treasury: gifts, grants, the board's vote, the door. Treasurers only; the database decides (lm.is_treasurer) ---- */
+  const view = async (req) => (await one(req, "select lm.treasury_view() as v")).v;
+  get("/api/treasury", view);
+  /* a gift: written down first (the receipt number is the database's), then the receipt email, and its record only if the mail provider took it */
+  const sendReceipt = async (req, gift) => {
+    if (!gift.donor_email) return { emailed: false, reason: "no_email", words: "No receipt email was sent, because no email address was given." };
+    if (!emailConfigured()) return { emailed: false, reason: "mail_not_set_up", words: "No receipt email was sent: this site is not set up to send email." };
+    const mail = receiptEmail({ receiptNo: gift.receipt_no, donor: gift.donor_name, amountCents: gift.amount_cents, receivedOn: gift.received_on, method: gift.method, notice: noticeEmail(env), base: publicBase(req) });
+    const sent = await sendEmail({ to: gift.donor_email, subject: mail.subject, text: mail.text });
+    if (!sent.sent) return { emailed: false, reason: "mail_failed", words: "The receipt email did not go out. The gift is recorded. You can send the receipt again from the ledger." };
+    await one(req, "select lm.gift_receipt_record($1, $2) as id", [gift.id, sent.id || null]);
+    return { emailed: true, reason: "sent", words: "A receipt email was sent, and the mail provider took it." };
+  };
+  post("/api/treasury/gifts", async (req) => {
+    const b = req.body || {};
+    const cents = dollarsField(b.amount, "amount"), method = str(b.method, 12), on = str(b.received_on, 10), email = str(b.donor_email, 254).toLowerCase();
+    if (!GIFT_METHODS.some((m) => m[0] === method)) throw bad("Choose how the gift came in.", 422, "method_needed");
+    if (!DAYRE.test(on)) throw bad("Choose the day the gift came in.", 422, "date_needed");
+    if (email && !EMAIL.test(email)) throw bad("That email address does not look right. Or leave it empty.", 422, "email_not_readable");
+    await slow(req, "gift", 300);
+    const g = (await one(req, "select lm.gift_record($1,$2,$3,$4::date,$5,$6) as g", [str(b.donor_name, 120), email || null, cents, on, method, str(b.note, 500) || null])).g;
+    const receipt = await sendReceipt(req, g);
+    return { ok: true, gift: { id: g.id, receipt_no: g.receipt_no, code: receiptCode(g.receipt_no), amount_cents: g.amount_cents }, receipt, words: `Recorded. Receipt ${receiptCode(g.receipt_no)}. ${receipt.words}` };
+  }, 201);
+  post("/api/treasury/gifts/:id/correct", async (req) => {
+    const b = req.body || {}; const neg = /^\s*-/.test(String(b.change || ""));
+    const c = parseCents(String(b.change || "").replace(/^\s*-/, ""));
+    if (c == null || c === 0) throw bad("Type the change in dollars, like 5 or -5.", 422, "amount_not_readable");
+    const on = str(b.received_on, 10);
+    const r = (await one(req, "select lm.gift_correct($1,$2,$3,$4) as c", [id(req.params.id), (neg ? -c : c), DAYRE.test(on) ? on : null, str(b.note, 500)])).c;
+    return { ok: true, receipt_no: r.receipt_no, code: receiptCode(r.receipt_no), words: `Recorded as a new row, receipt ${receiptCode(r.receipt_no)}. The first record is unchanged.` };
+  }, 201);
+  post("/api/treasury/gifts/:id/receipt", async (req) => {
+    const g = (await one(req, "select lm.gift_get($1) as g", [id(req.params.id)])).g;
+    if (g.corrects_id) throw bad("A correction has no receipt of its own. Send the receipt of the first gift.", 422, "not_a_first_gift");
+    const receipt = await sendReceipt(req, g);
+    if (!receipt.emailed) throw Object.assign(bad(receipt.words, receipt.reason === "mail_failed" ? 502 : receipt.reason === "mail_not_set_up" ? 503 : 422, receipt.reason), {});
+    return { ok: true, receipt, words: receipt.words };
+  });
+  post("/api/treasury/grants", async (req) => {
+    const b = req.body || {}, kind = str(b.recipient_kind, 10);
+    if (kind !== "ministry" && kind !== "outside") throw bad("Choose who gets the grant.", 422, "recipient_needed");
+    if (kind === "outside" && str(b.recipient_name, 120).length < 2) throw bad("Type the name of the organization.", 422, "name_needed");
+    if (kind === "ministry") id(b.ministry_id);
+    const cents = dollarsField(b.amount, "amount");
+    if (str(b.purpose, 500).length < 10) throw bad("Say what the grant is for, in a sentence.", 422, "purpose_needed");
+    await slow(req, "grant", 100);
+    const r = await one(req, "select lm.grant_propose($1,$2,$3,$4,$5) as id", [kind, kind === "ministry" ? String(b.ministry_id).toLowerCase() : null, kind === "outside" ? str(b.recipient_name, 120) : null, cents, str(b.purpose, 500)]);
+    return { ok: true, id: r.id, words: "Proposed. A different treasurer approves it after the board votes." };
+  }, 201);
+  post("/api/treasury/grants/:id/approve", async (req) => {
+    const b = req.body || {}, on = str(b.voted_on, 10);
+    if (!DAYRE.test(on)) throw bad("Choose the day of the vote.", 422, "date_needed");
+    if (str(b.doc_ref, 200).length < 3) throw bad("Name the document that holds the vote.", 422, "doc_needed");
+    const yes = names(b.yes), abstain = names(b.abstain), no = names(b.no);
+    if (!yes.length) throw bad("Write who voted yes, one name on each line.", 422, "names_needed");
+    await one(req, "select lm.grant_approve($1,$2::date,$3,$4,$5,$6)", [id(req.params.id), on, yes, abstain, no, str(b.doc_ref, 200)]);
+    return { ok: true, words: "Approved. The vote is written down, and the grant is on the public page." };
+  });
+  post("/api/treasury/grants/:id/decline", async (req) => { await one(req, "select lm.grant_decline($1,$2)", [id(req.params.id), str((req.body || {}).note, 500)]); return { ok: true, words: "Declined." }; });
+  post("/api/treasury/grants/:id/paid", async (req) => { await one(req, "select lm.grant_paid($1,$2)", [id(req.params.id), str((req.body || {}).reference, 120)]); return { ok: true, words: "Marked paid." }; });
+  post("/api/treasury/settings", async (req) => {
+    const b = req.body || {}, d = str(b.registration_date, 10);
+    if (d && !DAYRE.test(d)) throw bad("Choose the registration date.", 422, "date_needed");
+    await one(req, "select lm.giving_settings_set($1,$2::date,$3,$4)", [str(b.registration_number, 60) || null, d || null, str(b.form990_url, 300) || null, b.door_open === true]);
+    return { ok: true, words: "Saved." };
+  });
+  post("/api/treasury/treasurers", async (req) => {
+    const email = str((req.body || {}).email, 254).toLowerCase();
+    if (!EMAIL.test(email)) throw bad("That email address does not look right.", 422, "email_not_readable");
+    await one(req, "select lm.treasurer_set($1, $2)", [email, (req.body || {}).on !== false]);
+    return { ok: true, words: "Done." };
+  });
+  /* the ledger as a spreadsheet file. It is read only; the database writes down who took it. */
+  app.get("/api/treasury/export.csv", wrap(async (req, res) => {
+    need(req);
+    const what = str(req.query.what, 8) === "grants" ? "grants" : "gifts";
+    const v = await view(req);
+    await one(req, "select lm.treasury_export_logged($1)", [what]);
+    const csv = what === "grants"
+      ? toCsv(["status", "recipient", "amount_dollars", "what_for", "proposed_by", "proposed_on", "approved_by", "voted_on", "voted_yes", "abstained", "voted_no", "document", "paid_on", "payment_reference", "declined_note"],
+          v.grants.map((g) => [g.status, g.recipient_name, dollars(g.amount_cents), g.purpose, g.proposed_by_name, String(g.proposed_at || "").slice(0, 10), g.approved_by_name || "", g.vote ? g.vote.voted_on : "", g.vote ? g.vote.yes_names.join("; ") : "", g.vote ? g.vote.abstain_names.join("; ") : "", g.vote ? g.vote.no_names.join("; ") : "", g.vote ? g.vote.doc_ref : "", String(g.paid_at || "").slice(0, 10), g.paid_ref || "", g.decline_note || ""]))
+      : toCsv(["receipt", "day", "donor", "email", "amount_dollars", "how", "corrects_receipt", "note", "recorded_by", "receipt_email_sent"],
+          v.gifts.map((g) => [receiptCode(g.receipt_no), g.received_on, g.donor_name, g.donor_email || "", dollars(g.amount_cents), methodLabel(g.method), g.corrects_id ? receiptCode((v.gifts.find((x) => x.id === g.corrects_id) || {}).receipt_no) : "", g.note || "", g.recorded_by_name, g.receipt_sent_at ? String(g.receipt_sent_at).slice(0, 10) : ""]));
+    res.set({ "content-type": "text/csv; charset=utf-8", "cache-control": "no-store", "content-disposition": `attachment; filename="linked-ministries-${what}.csv"` }).send(csv);
   }));
 
   /* ---- stewards -------------------------------------------------------------------------------------------------------- */

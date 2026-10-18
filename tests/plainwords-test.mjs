@@ -11,7 +11,8 @@ import { verdict, failures } from "../lib/plainwords.mjs";
 import { WORDS, POST_STATUS, MINISTRY_STATUS, CLOSE_REASON, KIND, NO_MONEY, CRISIS, STAY_SAFE, REPORT_REASONS } from "../public/js/pure.js";
 import { signInEmail, answerEmail, inviteEmail, reportEmail } from "../server/emails.mjs";
 import { NONPROFIT_LINE, IRS_PHRASE } from "../server/words.mjs";
-import { ministryPage, frontPage, boardPage, postPage, missingPostPage, notFoundPage, shellPage, termsPage, privacyPage, postCard } from "../server/pages.mjs";
+import { receiptEmail } from "../server/emails.mjs";
+import { givingPage, givePage, ministryPage, frontPage, boardPage, postPage, missingPostPage, notFoundPage, shellPage, termsPage, privacyPage, postCard } from "../server/pages.mjs";
 
 const T = counter("plainwords-test"); const { ok } = T;
 const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
@@ -36,12 +37,13 @@ const LEGAL = NONPROFIT_LINE;
 ok(verdict(LEGAL, { ceiling: 14 }).ok && !plain(LEGAL) && LEGAL.split(/\s+/).length <= 25, `the nonprofit line is the one named exception (grade ${verdict(LEGAL).grade.toFixed(1)}, ${LEGAL.split(/\s+/).length} words): the founder's sentence, with a legal name in it`);
 
 /* every public page's own words (the posts in them are other people's, and Scripture is the Bible's, so both are left out here) */
-const pages = { ministry: ministryPage({ page: { slug: "alpha", name: "Alpha Table Ministry", city: "Seattle", state: "WA", live_at: "2026-10-18T10:00:00Z", live: { tagline: "x", about: "x", meets: [{ day: "Sundays", time: "9 am", place: "The hall" }], email: "a@b.example", website: "https://a.example", give_url: "https://pay.example/g", photos: [] } }, notice: "notices@linkedm.example", giving: { open: true } }), front: frontPage({ latest: [] }), board: boardPage({ result: { posts: [], total: 0, page: 1, pages: 1, filters: { kind: "", category: "", state: "", city: "", q: "" } } }),
+const gv = { door_open: true, registration_number: "WA-123456", registration_date: "2026-10-01", form990_url: null, money_cents: 106200, money_count: 5, in_kind_cents: 80000, in_kind_count: 1, granted_cents: 30000, granted_count: 1, paid_cents: 30000, months: Array.from({ length: 12 }, (_, i) => ({ month: `2026-${String(i + 1).padStart(2, "0")}`, gifts_cents: 0, grants_cents: 0 })), grants: [{ recipient_name: "Alpha", recipient_kind: "ministry", page_slug: null, amount_cents: 30000, purpose: "x", status: "approved", voted_on: "2026-10-18", paid_on: null, doc_ref: "x", yes: 2, abstain: 1, no: 1 }] };
+const pages = { giving: givingPage({ giving: gv }), givingClosed: givingPage({ giving: { ...gv, door_open: false, registration_number: null, registration_date: null, grants: [] } }), give: givePage({ open: true, notice: "notices@linkedm.example" }), giveClosed: givePage({ open: false }), ministry: ministryPage({ page: { slug: "alpha", name: "Alpha Table Ministry", city: "Seattle", state: "WA", live_at: "2026-10-18T10:00:00Z", live: { tagline: "x", about: "x", meets: [{ day: "Sundays", time: "9 am", place: "The hall" }], email: "a@b.example", website: "https://a.example", give_url: "https://pay.example/g", photos: [] } }, notice: "notices@linkedm.example", giving: { open: true } }), front: frontPage({ latest: [] }), board: boardPage({ result: { posts: [], total: 0, page: 1, pages: 1, filters: { kind: "", category: "", state: "", city: "", q: "" } } }),
   missing: missingPostPage(), notFound: notFoundPage(), terms: termsPage({ notice: "notices@linkedm.example" }), privacy: privacyPage({ notice: "notices@linkedm.example" }), termsNoAddress: termsPage({}),
   card: postCard({ id: "11111111-1111-4111-8111-111111111111", kind: "ask", category: "furniture", title: "x", body: "x", city: "Seattle", state: "WA", open_until: "2026-11-17", posted_at: "2026-10-18T10:00:00Z", ministry: "x", ministry_city: "Seattle", ministry_state: "WA" }), join: shellPage({ title: "Join the network", script: "/js/join.js" }), me: shellPage({ title: "Your ministry", script: "/js/me.js" }), steward: shellPage({ title: "Waiting to be read", script: "/js/steward.js" }) };
 let sentences = 0;
 for (const [name, html] of Object.entries(pages)) {
-  const blocks = html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<svg[\s\S]*?<\/svg>|<select[\s\S]*?<\/select>|<blockquote class="scripture[\s\S]*?<\/blockquote>/gi, " ").replace(/<\/(p|h1|h2|h3|li|label|div|a|button|span)>/gi, "\n").split("\n").map((b) => visibleText(b)).filter((b) => b.split(/\s+/).length >= 4);
+  const blocks = html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<svg[\s\S]*?<\/svg>|<select[\s\S]*?<\/select>|<blockquote class="scripture[\s\S]*?<\/blockquote>/gi, " ").replace(/<\/(p|h1|h2|h3|li|label|div|a|button|span|td|th|tr|caption|figcaption)>/gi, "\n").split("\n").map((b) => visibleText(b)).filter((b) => b.split(/\s+/).length >= 4);
   for (const b of blocks) { if (b === LEGAL) continue; sentences++; check(`page ${name}`, b); }
 }
 ok(sentences >= 120, `${sentences} blocks of words on the public pages were read`);
@@ -50,7 +52,7 @@ ok(sentences >= 120, `${sentences} blocks of words on the public pages were read
 const strings = (src) => [...src.matchAll(/"((?:[^"\\\n]|\\.)*)"|`((?:[^`\\\n$]|\\.)*)`/g)].map((m) => (m[1] != null ? m[1] : m[2]).replace(/\\"/g, '"').replace(/\\'/g, "'")).filter((s) => /^[A-Z]/.test(s) && /\s[a-z]+\s+[a-z]+\s+[a-z]+/i.test(s) && s.split(/\s+/).length >= 5 && !/^(select|insert|update|delete|Mozilla|default-src|Contact:)/i.test(s) && !/[{}<>=;]|function|return |\.mjs|\.js\b/.test(s));
 let spoken = 0;
 for (const file of ["server/words.mjs", "server/api.mjs", "server/index.mjs", "server/auth.mjs"]) for (const s of strings(read(file))) { if (s === IRS_PHRASE) continue; /* the IRS's own sentence, quoted exactly from its letter; shown only once IRS_LETTER_DATE is set (the second named exception) */ spoken++; check(file, s); }
-for (const file of ["public/js/common.js", "public/js/page.js", "public/js/join.js", "public/js/me.js", "public/js/steward.js", "public/js/board.js"]) for (const s of strings(read(file))) { spoken++; check(file, s); }
+for (const file of ["public/js/common.js", "public/js/page.js", "public/js/treasury.js", "public/js/join.js", "public/js/me.js", "public/js/steward.js", "public/js/board.js"]) for (const s of strings(read(file))) { spoken++; check(file, s); }
 ok(spoken >= 40, `${spoken} sentences in the server and the scripts were read`);
 
 /* every email, as the server writes it: each sentence of the words that are ours (what a person typed is theirs) */
@@ -65,4 +67,8 @@ ok(mailSentences >= 15, `${mailSentences} lines of the four emails were read`);
 
 /* the email a ministry gets, as written in api.mjs (the lines that are plain text) */
 for (const s of ["answered your ask on the Linked Ministries board.", "This message came from the Linked Ministries board. The board moves no money, and Linked Ministries does not take part in what you agree on.", "If someone is in danger, call 911. If someone is thinking of hurting themselves, call or text 988."]) check("the answer email", s);
+/* the receipt email, as the server writes it: the lines that are ours (what a person typed is theirs) */
+{ let n = 0; const r = receiptEmail({ receiptNo: 12, donor: "Jordan Donor", amountCents: 102550, receivedOn: "2026-10-18", method: "check", notice: "notices@linkedm.example", base: "https://linkedm.org" });
+  for (const l of r.text.split("\n").filter((x) => x.trim() && !/^(Hello |Receipt number:|Day it came in:|Amount:|How it came in:|Every gift and every grant is counted)/.test(x)).filter((x) => !/@/.test(x) || /Why you got this/.test(x))) { n++; check("the receipt email", l.replace(/https?:\S+/g, "").replace(/\(linkedm\.org\)/g, "")); }
+  ok(n >= 3, `${n} lines of the receipt email were read`); }
 process.exit(T.done());

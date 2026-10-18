@@ -127,6 +127,28 @@ The same line with the space marked (1 space): `select␣lm.make_steward('EMAIL'
 To make a second steward later, a steward signs in, opens the page for stewards and types the other person's email (that
 person must have signed in once). The last steward cannot be removed.
 
+## Step 8b. Make the first treasurer (one line of SQL, one blank)
+
+A treasurer is a steward who writes down gifts and grants and approves the grants another treasurer proposed. Nothing is taken online
+until the giving door is opened, and the door opens only when the Washington registration number and its date are filled in on the
+treasury page. Make the first treasurer the same way as the first steward (the person becomes a steward too).
+
+| # | You do | The screen shows |
+|---|---|---|
+| 1 | In the project, click the **Postgres** card, then **Data**, then **Query** | An empty box for SQL. |
+| 2 | Paste the line below. Replace `EMAIL` with the treasurer's own email address, keeping the two quote marks | The line with the address between the quote marks. |
+| 3 | Click **Run** | A one-row result with a long id. |
+| 4 | That person signs in at <https://linkedm.org/join>, then opens <https://linkedm.org/treasury> | "The treasury", with the totals and the forms. |
+
+```
+select lm.make_treasurer('EMAIL');
+```
+
+The same line with the space marked (1 space): `select␣lm.make_treasurer('EMAIL');`
+
+A treasurer makes the next one on the treasury page. The last treasurer cannot be removed. A grant always needs two different
+treasurers, so make at least two before the first grant.
+
 ## Step 9. Someone asks you to delete them
 
 A person can do it themselves (My ministry, then Settings, then Your account). If one writes to the notice address instead, make sure it is them, then run this in the Postgres card's Query box. Replace `EMAIL` with their address, in the same place, keeping the quote marks. Nothing is typed twice, and it refuses the last steward.

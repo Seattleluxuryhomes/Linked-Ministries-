@@ -25,6 +25,12 @@ export const TERMS = {
       "What two ministries agree on is between them. Linked Ministries is not part of it.",
       "We do not give legal, medical or counseling advice.",
     ]],
+    ["Gifts and grants", [
+      "Linked Ministries may take gifts, and its board may use them to fund a grant. A treasurer writes each gift down and gives it a receipt number. A gift record is never changed or deleted. A mistake is fixed by a new row.",
+      "Two different treasurers handle each grant, and the board's vote is written down. Every approved grant is shown on the giving page. The page shows no donor.",
+      "Gifts online open after the state registration is filed. Until then, this site takes no gift.",
+      "A ministry may link to its own way of taking gifts. That link is the ministry's own. Linked Ministries does not collect or see those gifts.",
+    ]],
     ["Your part", [
       "Post only what is true, and only what you may share. Do not ask for money.",
       "Do not post anything that breaks the law, that tricks people, or that could hurt someone.",
@@ -81,13 +87,17 @@ export const PRIVACY = {
         "Answers you send and get: the words, a phone number if you add one, and the reply email.",
         "A sign-in code, kept for 10 minutes and stored scrambled. A sign-in record, kept for 30 days.",
         "A short record of who did what, and when. It holds names and ids. It never holds the words you wrote.",
-        "Reports: what the person chose, what they wrote, and their email if they gave one."],
+        "Reports: what the person chose, what they wrote, and their email if they gave one.",
+        "Gifts: the donor's name (or Anonymous), the day, the amount, and how it came in. An email, only if the donor gave one.",
+        "Grants: who got each one, how much, what for, and the board's vote."],
     ]],
     ["Who can see what", [
       "Anyone can see a public post. They see its title, its words, and its city and dates. They also see your ministry's name and city.",
       "Your ministry's contact email is never on the board. We use it to send you answers by email, and for nothing else.",
       "When you answer a post, the ministry that posted gets one email. It has your ministry's name, your name, your words, your email, and your phone if you add one.",
       "Stewards can see ministry pages, posts that wait to be read, and reports. They need this to do their work.",
+      "Treasurers can see who gave a gift. The public sees only totals and the list of grants. A donor's name or email is never on a public page.",
+      "A ministry's own page is public once a person has read it. It shows only what the ministry chose to put there.",
       "Another ministry cannot see your drafts, your team, or answers it was not part of.",
     ]],
     ["Email we send", [
@@ -114,6 +124,7 @@ export const PRIVACY = {
         "If others are on your team, you only leave the team. A lead must name another lead first.",
         "Answers you sent lose their words, phone and email in our copy. We cannot take back an email that was already sent.",
         "The record of what you did stays, with your name taken off. It says: A person who left.",
+        "The record of a gift stays, because honest books need it. It is never shown to the public.",
         "The last steward cannot delete an account. Another steward must be named first."],
     ]],
     ["Children", [

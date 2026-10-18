@@ -26,3 +26,8 @@ export async function photo(id, userId) {
 
 /** the signed-in person's own page (a preview of the draft at /m/<slug> for its ministry's people) */
 export const myPage = (userId) => asUser(userId, async (c) => (await c.query("select lm.page_mine() as p")).rows[0].p);
+
+/** the giving record for /giving and the Give button: sums of the rows (never a donor), every approved and paid grant, the door */
+export const givingPublic = () => asAnon(async (c) => (await c.query("select lm.giving_public() as g")).rows[0].g);
+/** only whether the door is open (a ministry's page shows its Give button only then) */
+export const givingDoor = () => asAnon(async (c) => (await c.query("select lm.giving_door_open() as o")).rows[0].o === true);

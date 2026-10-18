@@ -8,8 +8,8 @@
      FORMED          true on the day the Washington Secretary of State confirms the articles
      APPLIED_501C3   true on the day the application for 501(c)(3) recognition is filed with the IRS
      IRS_LETTER_DATE the date on the IRS letter, as YYYY-MM-DD, and only when a letter has come ("" until then)
-   Until IRS_LETTER_DATE is set, no page and no email says a gift is deductible, and nothing says "tax-deductible" or "write-off"
-   at all. Once it is set, only the IRS's own sentence (IRS_PHRASE) says so, and a lawyer checks it against the letter. */
+   Until IRS_LETTER_DATE is set, no page and no email says a gift is deductible, and the two banned phrases (tests/banned.mjs names
+   them) appear nowhere. Once it is set, only the IRS's own sentence (IRS_PHRASE) says so, and a lawyer checks it against the letter. */
 export const FORMED = false;
 export const APPLIED_501C3 = false;
 export const IRS_LETTER_DATE = "";
@@ -24,7 +24,7 @@ const letterDay = (d) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(d |
 
 /** the status line on /giving: what is true today about the corporation and the IRS, and no more */
 export function statusLine(flags = FLAGS) {
-  const body = flags.FORMED ? "Linked Ministries is a Washington nonprofit corporation." : "Linked Ministries is forming as a Washington nonprofit corporation.";
+  const body = flags.FORMED ? "Linked Ministries is a nonprofit in Washington." : "Linked Ministries is forming as a nonprofit in Washington.";
   if (flags.IRS_LETTER_DATE && letterDay(flags.IRS_LETTER_DATE)) return `${body} Linked Ministries is recognized under 501(c)(3), letter dated ${letterDay(flags.IRS_LETTER_DATE)}.`;
   if (flags.APPLIED_501C3) return `${body} Linked Ministries has applied for 501(c)(3) status.`;
   return `${body} Linked Ministries has not applied for 501(c)(3) status yet.`;
@@ -79,6 +79,27 @@ const REFUSALS = {
   slug_edited_once: [409, "The address can be changed once before the page is public. That one change is used."],
   too_many_photos: [409, "A page holds two pictures at most."],
   photo_not_found: [422, "That picture was not found. Add it again."],
+  treasurer_required: [403, "Only a treasurer at Linked Ministries can do that."],
+  last_treasurer: [409, "Linked Ministries always keeps one treasurer once it has one. Make someone else a treasurer first."],
+  treasurer_is_steward: [409, "A treasurer is a steward. Take the treasurer role off first."],
+  steward_first: [409, "Make that person a steward first. A treasurer is a steward."],
+  two_people: [409, "The person who proposed a grant cannot approve it. A different treasurer approves."],
+  vote_needed: [409, "Write down the board's vote first."],
+  not_enough_yes: [422, "The board needs more yes votes, by name."],
+  names_not_readable: [422, "Write each board member's name once, on its own line."],
+  names_twice: [422, "A board member is in one list only."],
+  not_enough_gifts: [409, "Linked Ministries has not received enough gifts to fund that grant."],
+  not_proposed: [409, "Only a proposed grant can be approved."],
+  records_only: [409, "That is a record. It is never changed or deleted. A mistake is fixed by a new row."],
+  below_zero: [422, "A correction cannot take a gift below zero."],
+  cannot_correct: [422, "A correction points at the first record of a gift."],
+  date_in_future: [422, "That day has not come yet."],
+  registration_needed: [409, "The giving door opens only when the registration number and its date are both filled in."],
+  reference_needed: [422, "Write the reference of the payment."],
+  url_not_readable: [422, "That link must start with https://."],
+  no_such_gift: [404, "That gift was not found."],
+  no_such_grant: [404, "That grant was not found."],
+  not_you: [403, "A record is written under your own name."],
 };
 
 /** Map a thrown error to { status, body } for the API. Never leaks a stack, a table name or a value. */

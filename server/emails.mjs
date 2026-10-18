@@ -1,7 +1,8 @@
 /* emails.mjs — every email this site sends, as plain text, in one place. Each one says who sent it and why, in the first lines, and
    none is marketing: a sign-in code, an answer to a post, an invitation to a team, and a note to the stewards about a report. The
    tests read every sentence at grade 8 or under (tests/plainwords-test.mjs) and check that none sells anything. */
-import { CRISIS, PRODUCT, STAY_SAFE, REPORT_REASONS } from "../public/js/pure.js";
+import { CRISIS, PRODUCT, STAY_SAFE, REPORT_REASONS, money, methodLabel, receiptCode, dateWords } from "../public/js/pure.js";
+import { receiptStatusLine, FLAGS } from "./words.mjs";
 
 const WHO = `${PRODUCT.name} (${PRODUCT.domain}) is a free board where ministries ask for help and offer help.`;
 const NO_ADS = "We send no news and no ads.";
@@ -52,5 +53,21 @@ export function reportEmail({ title, ministry, reason, note, reporter, url, stew
       reporter ? `They gave this address, so you can write back: ${reporter}` : "They gave no address.", "",
       "Nothing has been hidden. The post stays on the board until a steward closes it or keeps it.",
       `Read the report and decide here: ${stewardUrl}`, ""].join("\n"),
+  };
+}
+
+/* the receipt for a gift: one message, because a treasurer wrote the gift down and the donor gave an email address. It says what a receipt
+   is. Before the IRS letter it says nothing about deductions, and it says what is true about the application, no more. */
+export function receiptEmail({ receiptNo, donor, amountCents, receivedOn, method, notice, base = "https://linkedm.org", flags = FLAGS }) {
+  const code = receiptCode(receiptNo);
+  return {
+    subject: `Receipt ${code} from ${PRODUCT.name}`,
+    text: [donor && donor !== "Anonymous" ? `Hello ${donor},` : "Hello,", "",
+      `Why you got this: you gave a gift to ${PRODUCT.name}, and a treasurer wrote it down. This is the receipt. ${WHO}`,
+      `We sent this one message because of that gift, and for no other reason. ${NO_ADS}`, "",
+      `Receipt number: ${code}`, `Day it came in: ${dateWords(receivedOn)}`, `Amount: ${money(amountCents)}`, `How it came in: ${methodLabel(method)}`, "",
+      receiptStatusLine(flags), "",
+      `Every gift and every grant is counted on a public page: ${String(base).replace(/\/+$/, "")}/giving. Your name is never on it.`,
+      notice ? `If something here is wrong, write to ${notice}.` : "If something here is wrong, reply to this message.", ""].join("\n"),
   };
 }

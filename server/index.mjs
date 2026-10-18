@@ -11,8 +11,8 @@ import { mount, dayLimits } from "./api.mjs";
 import { emailConfigured } from "./mail.mjs";
 import { refusal } from "./words.mjs";
 import { boardQuery, boardPost } from "./board.mjs";
-import { publicPage, publicPageList, photo, myPage } from "./site.mjs";
-import { frontPage, boardPage, postPage, missingPostPage, shellPage, notFoundPage, termsPage, privacyPage, ministryPage } from "./pages.mjs";
+import { publicPage, publicPageList, photo, myPage, givingPublic, givingDoor } from "./site.mjs";
+import { frontPage, boardPage, postPage, missingPostPage, shellPage, notFoundPage, termsPage, privacyPage, ministryPage, givingPage, givePage } from "./pages.mjs";
 import { noticeEmail } from "../lib/email.mjs";
 import { PRODUCT, CATEGORIES, STATES } from "../public/js/pure.js";
 
@@ -69,6 +69,9 @@ export function buildApp({ env = process.env } = {}) {
   /* ---- what any page needs to know, with no sign-in -------------------------------------------------------------------------- */
   app.get("/api/product", (req, res) => { res.set("cache-control", "public, max-age=60"); res.json({ name: PRODUCT.name, mail: emailConfigured(), categories: CATEGORIES.map(([id, label]) => ({ id, label })), states: STATES.map(([code, name]) => ({ code, name })), limits: dayLimits() }); });
 
+  /* the giving record, read by anyone: sums of the rows, every approved and paid grant, never a donor */
+  app.get("/api/giving", wrap(async (req, res) => { res.set("cache-control", "no-cache").json(await givingPublic()); }));
+
   /* ---- the board, read by anyone: the database hands back public posts only ---------------------------------------------------- */
   app.get("/api/board", wrap(async (req, res) => {
     const r = await boardQuery(req.query);
@@ -103,7 +106,7 @@ export function buildApp({ env = process.env } = {}) {
   }));
 
   /* ---- the signed-in API ------------------------------------------------------------------------------------------------- */
-  mount(app, { wrap, publicBase });
+  mount(app, { wrap, publicBase, env });
   app.use("/api", (req, res) => res.status(404).json({ error: "not_found", words: "That was not found." }));
   app.use((err, req, res, next) => {
     const r = refusal(err);
@@ -115,14 +118,14 @@ export function buildApp({ env = process.env } = {}) {
   /* ---- the pages ----------------------------------------------------------------------------------------------------------- */
   const html = (res, status, body) => res.status(status).type("html").send(body);
   const where = (req) => ({ base: String(env.LEXOS_PUBLIC_URL || "").replace(/\/+$/, ""), notice: noticeEmail(env) });
-  app.get("/", wrap(async (req, res) => { const r = await boardQuery({}, { limit: 6 }); res.set("cache-control", "no-cache"); html(res, 200, frontPage({ latest: r.posts, ...where(req) })); }));
+  app.get("/", wrap(async (req, res) => { const r = await boardQuery({}, { limit: 6 }); res.set("cache-control", "no-cache"); html(res, 200, frontPage({ latest: r.posts, giving: { open: await givingDoor() }, ...where(req) })); }));
   app.get("/board", wrap(async (req, res) => { const r = await boardQuery(req.query); res.set("cache-control", "no-cache"); html(res, 200, boardPage({ result: r, ...where(req) })); }));
   app.get("/board/:id", wrap(async (req, res) => { const p = await boardPost(req.params.id); res.set("cache-control", "no-cache"); p ? html(res, 200, postPage({ post: p, ...where(req) })) : html(res, 404, missingPostPage(where(req))); }));
   /* a ministry's own page. The public sees the copy a steward read; a ministry's own people see their draft as a preview (never indexed). */
   app.get("/m/:slug", wrap(async (req, res) => {
     const pg = await publicPage(req.params.slug);
     res.set("cache-control", "no-cache");
-    if (pg) return html(res, 200, ministryPage({ page: pg, ...where(req), giving: { open: false } }));
+    if (pg) return html(res, 200, ministryPage({ page: pg, ...where(req), giving: { open: await givingDoor() } }));
     const t = cookies(req)[COOKIE]; let u = null; if (t) { try { u = await sessionUser(t); } catch (e) { u = null; } }
     if (u) {
       const mine = await myPage(u.id);
@@ -140,18 +143,23 @@ export function buildApp({ env = process.env } = {}) {
     if (!ph) return res.status(404).type("text/plain").send("That picture was not found.");
     res.set({ "content-type": ph.content_type, "cache-control": ph.is_public ? "public, max-age=300" : "private, no-store", "content-length": String(ph.bytes.length), "content-disposition": "inline" }).end(ph.bytes);
   }));
+  /* where the money went: the record, added up from its rows by the database for the public role. No donor is in it. */
+  app.get("/giving", wrap(async (req, res) => { res.set("cache-control", "no-cache"); html(res, 200, givingPage({ giving: await givingPublic(), ...where(req) })); }));
+  /* the Give button: no payment service is connected, so this page says so and has no form */
+  app.get("/give", wrap(async (req, res) => { res.set("cache-control", "no-cache"); html(res, 200, givePage({ open: await givingDoor(), ...where(req) })); }));
   app.get("/terms", (req, res) => { res.set("cache-control", "public, max-age=300"); html(res, 200, termsPage(where(req))); });
   app.get("/privacy", (req, res) => { res.set("cache-control", "public, max-age=300"); html(res, 200, privacyPage(where(req))); });
   app.get("/join", (req, res) => html(res, 200, shellPage({ title: "Join the network", script: "/js/join.js", nav: "join", ...where(req) })));
   app.get("/me", (req, res) => html(res, 200, shellPage({ title: "Your ministry", script: "/js/me.js", nav: "me", ...where(req) })));
+  app.get("/treasury", (req, res) => html(res, 200, shellPage({ title: "The treasury", script: "/js/treasury.js", nav: "", ...where(req) })));
   app.get("/steward", (req, res) => html(res, 200, shellPage({ title: "Waiting to be read", script: "/js/steward.js", nav: "", ...where(req) })));
   /* the front, the board, the terms and the privacy page are the public pages; the signed-in pages and the API are kept out of search */
-  app.get("/robots.txt", (req, res) => res.type("text/plain").send(["User-agent: *", "Disallow: /me", "Disallow: /steward", "Disallow: /join", "Disallow: /api", "Allow: /", "", `Sitemap: ${publicBase(req)}/sitemap.xml`, ""].join("\n")));
+  app.get("/robots.txt", (req, res) => res.type("text/plain").send(["User-agent: *", "Disallow: /me", "Disallow: /steward", "Disallow: /treasury", "Disallow: /join", "Disallow: /api", "Allow: /", "", `Sitemap: ${publicBase(req)}/sitemap.xml`, ""].join("\n")));
   /* only what the public may read: the front, the board, the two legal pages, and each open post that a person read. Never a draft, a waiting post, a closed one or a post of a ministry nobody has read. */
   app.get("/sitemap.xml", wrap(async (req, res) => {
     const b = publicBase(req), r = await boardQuery({}, { limit: 500 });
     const pg = await publicPageList();
-    const urls = [["/", null], ["/board", null], ["/terms", null], ["/privacy", null], ...pg.map((p) => ["/m/" + p.slug, p.live_at]), ...r.posts.map((p) => ["/board/" + p.id, p.posted_at])];
+    const urls = [["/", null], ["/board", null], ["/giving", null], ["/terms", null], ["/privacy", null], ...pg.map((p) => ["/m/" + p.slug, p.live_at]), ...r.posts.map((p) => ["/board/" + p.id, p.posted_at])];
     res.type("application/xml").set("cache-control", "public, max-age=300").send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(([u, d]) => `<url><loc>${b}${u}</loc>${d ? `<lastmod>${d}</lastmod>` : ""}</url>`).join("\n")}\n</urlset>\n`);
   }));
   app.get("/favicon.ico", (req, res) => res.type("image/x-icon").set("cache-control", "public, max-age=86400").sendFile(path.join(PUBLIC, "favicon.ico")));

@@ -10,10 +10,13 @@ import { counter, ROOT } from "./helpers.mjs";
 import { checkPage, visibleText, READ, SOURCE } from "./banned.mjs";
 import { CATEGORIES, CATEGORY_IDS, KIND, KINDS, STATES, STATE_CODES, WORDS, dateWords, categoryLabel, NO_MONEY, CRISIS, POST_STATUS, MINISTRY_STATUS } from "../public/js/pure.js";
 import { checkConfig } from "../server/config.mjs";
-import { refusal, NONPROFIT_LINE, FILING_STATUS, FORMED } from "../server/words.mjs";
+import { refusal, NONPROFIT_LINE, FILING_STATUS, FORMED, FLAGS, statusLine, receiptStatusLine, IRS_PHRASE, APPLIED_501C3, IRS_LETTER_DATE } from "../server/words.mjs";
+import { receiptEmail } from "../server/emails.mjs";
+import { toCsv, cell, dollars } from "../lib/csv.mjs";
+import { money, parseCents, receiptCode } from "../public/js/pure.js";
 import { cleanFilters } from "../server/board.mjs";
 import { dayLimits } from "../server/api.mjs";
-import { frontPage, boardPage, postPage, missingPostPage, shellPage, notFoundPage, termsPage, privacyPage, e, postCard, MARK, ministryPage } from "../server/pages.mjs";
+import { frontPage, boardPage, postPage, missingPostPage, shellPage, notFoundPage, termsPage, privacyPage, e, postCard, MARK, ministryPage, givingPage, givePage, givingChart } from "../server/pages.mjs";
 import { noticeEmail } from "../lib/email.mjs";
 import { signInEmail, answerEmail, inviteEmail, reportEmail } from "../server/emails.mjs";
 import { TERMS, PRIVACY, DRAFT_LINE } from "../server/legal.mjs";
@@ -80,15 +83,18 @@ const sample = [
   { id: "22222222-2222-4222-8222-222222222222", kind: "give", category: "food", title: "Surplus canned goods", body: "Forty cases to give away.", city: "Tacoma", state: "WA", open_until: "2026-11-02", posted_at: "2026-10-17T10:00:00Z", ministry: "Gamma Outreach", ministry_city: "Seattle", ministry_state: "WA" },
 ];
 const samplePage = { slug: "alpha-table-ministry", name: "Alpha Table Ministry", city: "Seattle", state: "WA", live_at: "2026-10-18T10:00:00Z", live: { tagline: "A hot meal every Saturday", about: "We serve a hot meal every Saturday.\nEveryone is welcome.", meets: [{ day: "Saturdays", time: "12:00 pm", place: "Grace Hall" }], email: "hello@alpha.example", phone: "206-555-0100", website: "https://alpha.example.org", give_url: "https://pay.alpha.example/give", verse: "heb_13_2", photos: [{ id: "33333333-3333-4333-8333-333333333333", alt: "Tables" }] } };
+const months = Array.from({ length: 12 }, (_, i) => ({ month: `${i < 3 ? 2026 : 2025}-${String(((i + 9) % 12) + 1).padStart(2, "0")}`, gifts_cents: i === 11 ? 106200 : i * 1000, grants_cents: i === 11 ? 30000 : 0 })).sort((a, b) => a.month.localeCompare(b.month));
+const sampleGiving = { door_open: false, registration_number: null, registration_date: null, form990_url: null, money_cents: 106200, money_count: 5, in_kind_cents: 80000, in_kind_count: 1, granted_cents: 30000, granted_count: 1, paid_cents: 30000, months,
+  grants: [{ recipient_name: "Alpha Table Ministry", recipient_kind: "ministry", page_slug: "alpha-table-ministry", amount_cents: 30000, purpose: "Help with a van for the Saturday meals", status: "paid", voted_on: "2026-10-18", paid_on: "2026-10-19", doc_ref: "Minutes of the board, item 4", yes: 2, abstain: 1, no: 0 }] };
 const result = (posts, filters = {}) => ({ posts, total: posts.length, page: 1, pages: 1, filters: { kind: "", category: "", state: "", city: "", q: "", ...filters } });
 const built = {
   front: frontPage({ latest: sample }), frontEmpty: frontPage({ latest: [] }), board: boardPage({ result: result(sample) }), boardEmpty: boardPage({ result: result([]) }),
   boardFiltered: boardPage({ result: result([], { kind: "ask", q: "zebra" }) }), post: postPage({ post: sample[0] }), missing: missingPostPage(), notFound: notFoundPage(),
-  ministry: ministryPage({ page: samplePage, notice: "notices@linkedm.example" }), ministryOpen: ministryPage({ page: samplePage, giving: { open: true } }), ministryPreview: ministryPage({ page: samplePage, preview: true }), terms: termsPage({ notice: "notices@linkedm.example" }), privacy: privacyPage({ notice: "notices@linkedm.example" }), termsNoAddress: termsPage({}),
+  giving: givingPage({ giving: sampleGiving }), givingOpen: givingPage({ giving: { ...sampleGiving, door_open: true, registration_number: "WA-123456", registration_date: "2026-10-01", form990_url: "https://example.org/990.pdf" } }), givingEmpty: givingPage({ giving: { ...sampleGiving, money_cents: 0, money_count: 0, in_kind_count: 0, granted_cents: 0, granted_count: 0, paid_cents: 0, grants: [], months: months.map((m) => ({ ...m, gifts_cents: 0, grants_cents: 0 })) } }), give: givePage({ open: false }), giveOpen: givePage({ open: true, notice: "notices@linkedm.example" }), ministry: ministryPage({ page: samplePage, notice: "notices@linkedm.example" }), ministryOpen: ministryPage({ page: samplePage, giving: { open: true } }), ministryPreview: ministryPage({ page: samplePage, preview: true }), terms: termsPage({ notice: "notices@linkedm.example" }), privacy: privacyPage({ notice: "notices@linkedm.example" }), termsNoAddress: termsPage({}),
   join: shellPage({ title: "Join the network", script: "/js/join.js", nav: "join" }), me: shellPage({ title: "Your ministry", script: "/js/me.js", nav: "me" }), steward: shellPage({ title: "Waiting to be read", script: "/js/steward.js" }),
 };
 for (const [name, html] of Object.entries(built)) {
-  const bad = checkPage(html); ok(bad.length === 0, `page ${name}: nothing banned, no inline script, no style attribute, no other host`, bad);
+  const bad = checkPage(html, { money: /^(giving|give|ministryOpen)/.test(name) }); ok(bad.length === 0, `page ${name}: nothing banned, no inline script, no style attribute, no other host, never tax-deductible or write-off`, bad);
   ok(html.includes(NONPROFIT_LINE) && html.includes("If someone is in danger, call 911. If someone is thinking of hurting themselves, call or text 988."), `page ${name}: the nonprofit line and the emergency line are in the footer`);
   ok(/<title>[^<]{3,}<\/title>/.test(html) && /<meta name="viewport"/.test(html) && /<html lang="en">/.test(html) && /<meta name="color-scheme" content="light">/.test(html), `page ${name}: a title, a viewport, a language and a light colour scheme`);
   ok(/Linked Ministries/.test(html) && /<svg class="mark"/.test(html), `page ${name}: the name and the mark`);
@@ -117,11 +123,46 @@ ok(!/<script(?![^>]*src)/.test(built.me) && /<script type="module" src="\/js\/me
   ok(!/<script>alert|<b>X|<img src=x/.test(evil) && /&lt;script&gt;alert/.test(evil), "a ministry's words are escaped: text is never markup");
   ok(!/blockquote class="scripture/.test(evil.replace(/<footer[\s\S]*<\/footer>/, "")), "a verse key the file does not hold shows nothing: never a guess"); }
 
+/* ---- giving: where the money went, the door, the flags, the receipt (founder, 2026-10-18: safe and transparent) ---- */
+{ const t = (h) => visibleText(h).split(NONPROFIT_LINE).join(" ");
+  const g = built.giving, o = built.givingOpen, em = built.givingEmpty;
+  ok(money(106200) === "$1,062.00" && money(5) === "$0.05" && money(-2550) === "-$25.50" && money(100000000) === "$1,000,000.00" && parseCents("1,062.5") === 106250 && parseCents("20") === 2000 && parseCents("$3.07") === 307 && parseCents("1.234") === null && parseCents("-5") === null && parseCents("") === null && parseCents("abc") === null && parseCents("12345678901") === null, "money is whole cents, shown and read with integer maths: never a floating-point number");
+  ok(receiptCode(1) === "LM-000001" && receiptCode(123456) === "LM-123456", "a receipt number looks like LM-000001");
+  ok(/Where the money went/.test(g) && /Linked Ministries is not taking gifts online yet/.test(g) && /has not finished that registration/.test(g) && !/href="\/give"/.test(g) && !/class="btn"[^>]*>Give</.test(g), "with the door closed the page says so, says why (the registration), and has no Give button");
+  ok(/href="\/give"/.test(o) && !/not taking gifts online yet/i.test(t(o)) && /WA-123456/.test(o) && /October 1, 2026/.test(o) && /href="https:\/\/example\.org\/990\.pdf"/.test(o), "with the door open it has the Give button, the registration and the Form 990 link");
+  ok(/\$1,062\.00/.test(g) && /5 gifts/.test(g) && /\$300\.00/.test(g) && /1 gift of goods or services, worth \$800\.00/.test(t(g)) && /Alpha Table Ministry/.test(g) && /2 yes, 1 abstained/.test(t(g)) && /Paid on October 19, 2026/.test(t(g)), "the totals, the count, the grant with its vote counts and its payment day are on the page");
+  ok(!/Ann Board|Jordan|@/.test(g), "no name of a person is on it");
+  ok((g.match(/<rect x=/g) || []).length === 24 && /<svg class="chart"[^>]*role="img"/.test(g) && /aria-label="Bar chart of the last twelve months/.test(g) && (g.match(/<tr><th scope="row">/g) || []).length === 12, "the chart is 24 bars drawn inline as SVG with a spoken label, and the same twelve months are in a table");
+  ok(/No grants yet/.test(em) && /\$0\.00/.test(em) && !/<rect x="[\d.]+" y="[\d.]+" width="[\d.]+" height="[1-9]/.test(givingChart(months.map((m) => ({ ...m, gifts_cents: 0, grants_cents: 0 })))), "with nothing yet the page says so and the chart draws no bar");
+  ok(/Not taking gifts online yet/.test(built.give) && !/<form|<input/.test(built.give) && /not connected yet/.test(built.giveOpen) && !/<form|<input/.test(built.giveOpen) && /Nothing can be sent or saved on this page/.test(built.giveOpen), "/give says the payment service is not connected, and has no form to fake it");
+  /* the flags */
+  ok(FORMED === false && APPLIED_501C3 === false && IRS_LETTER_DATE === "" && FLAGS.APPLIED_501C3 === false, "today: formed is not confirmed, the application is not filed, there is no IRS letter");
+  ok(statusLine({ FORMED: false, APPLIED_501C3: false, IRS_LETTER_DATE: "" }) === "Linked Ministries is forming as a nonprofit in Washington. Linked Ministries has not applied for 501(c)(3) status yet." && statusLine({ FORMED: true, APPLIED_501C3: true, IRS_LETTER_DATE: "" }) === "Linked Ministries is a nonprofit in Washington. Linked Ministries has applied for 501(c)(3) status." && statusLine({ FORMED: true, APPLIED_501C3: true, IRS_LETTER_DATE: "2027-03-02" }) === "Linked Ministries is a nonprofit in Washington. Linked Ministries is recognized under 501(c)(3), letter dated March 2, 2027.", "the status line has three states, and says only what is true in each");
+  const L = { FORMED: true, APPLIED_501C3: true, IRS_LETTER_DATE: "2027-03-02" }, A = { FORMED: true, APPLIED_501C3: true, IRS_LETTER_DATE: "" };
+  const withLetter = givingPage({ giving: sampleGiving, flags: L }), withApplied = givingPage({ giving: sampleGiving, flags: A });
+  ok(/recognized under 501\(c\)\(3\), letter dated March 2, 2027/.test(withLetter) && withLetter.includes(IRS_PHRASE) === false, "with a dated IRS letter the giving page says the letter's date");
+  ok(/has applied for 501\(c\)\(3\) status/.test(withApplied) && !/deduct|tax|write-off/i.test(t(withApplied)), "with the application filed it says so, and still says nothing about deductions");
+  ok(!/tax[- ]deductible|write[- ]?off/i.test(g + o + em + withLetter + withApplied + built.front + built.terms + built.privacy), "'tax-deductible' and 'write-off' are on no page");
+  const rc = (flags) => receiptEmail({ receiptNo: 12, donor: "Jordan Donor", amountCents: 102550, receivedOn: "2026-10-18", method: "check", notice: "notices@linkedm.example", base: "https://linkedm.org", flags });
+  const r0 = rc(FLAGS), rA = rc(A), rL = rc(L);
+  ok(r0.subject === "Receipt LM-000012 from Linked Ministries" && /Why you got this:/.test(r0.text) && /Receipt number: LM-000012/.test(r0.text) && /Day it came in: October 18, 2026/.test(r0.text) && /Amount: \$1,025\.50/.test(r0.text) && /How it came in: Check/.test(r0.text) && /https:\/\/linkedm\.org\/giving/.test(r0.text) && !/[\r\n]/.test(r0.subject), "the receipt says why it was sent, the number, the day, the amount, how it came in, and where the public record is");
+  ok(/has not applied for 501\(c\)\(3\) status yet; this receipt is a record of your gift\./.test(r0.text) && /has applied for 501\(c\)\(3\) status; this receipt is a record of your gift\./.test(rA.text) && !/deduct|tax|write-off/i.test(r0.text + rA.text), "until the IRS letter is dated the receipt says only what is true about the application, 'this receipt is a record of your gift', and nothing about deductions");
+  ok(/recognized under 501\(c\)\(3\), letter dated March 2, 2027/.test(rL.text) && rL.text.includes(IRS_PHRASE) && /Donors may deduct contributions to you as provided in section 170 of the Code\./.test(rL.text), "once the letter is dated, the receipt says so, with the IRS's own sentence and no other");
+  ok(!/Hello Anonymous/.test(receiptEmail({ receiptNo: 1, donor: "Anonymous", amountCents: 100, receivedOn: "2026-10-18", method: "cash", notice: "", base: "https://linkedm.org", flags: FLAGS }).text), "an anonymous donor is not greeted by that word");
+  /* nowhere in the code or the words, outside the one gated sentence */
+  const offenders = walk(".").filter((p) => /\.(mjs|js|html|css|json|sql|md|yml|example)$/.test(p) && !/^tests\//.test(p) && !/package-lock/.test(p) && /tax[- ]deductible|write[- ]?offs?\b/i.test(read(p)));
+  ok(offenders.length === 0, "the words 'tax-deductible' and 'write-off' are in no file of the repository (the tests name them to ban them)", offenders);
+  ok(read("server/words.mjs").split("IRS_PHRASE").length >= 3 && walk(".").filter((p) => /\.(mjs|js)$/.test(p) && !/^tests\//.test(p) && /Donors may deduct/.test(read(p))).join() === path.join("server", "words.mjs"), "the IRS's own sentence is written in one file only, and is shown only when IRS_LETTER_DATE is set");
+  /* the spreadsheet */
+  ok(cell("=SUM(A1)") === '"\'=SUM(A1)"' && cell("+1+2") === '"\'+1+2"' && cell("@cmd") === '"\'@cmd"' && cell("-5+cmd") === '"\'-5+cmd"' && cell("-25.50") === '"-25.50"' && cell('say "hi"') === '"say ""hi"""' && cell(null) === '""', "a cell that a spreadsheet would run as a formula gets a quote mark; a plain negative number does not; quotes are doubled");
+  ok(toCsv(["a", "b"], [["x", "=y"]]) === '"a","b"\r\n"x","\'=y"\r\n' && dollars(102550) === "1025.50" && dollars(-5) === "-0.05" && dollars(0) === "0.00" && dollars(100000000000) === "1000000000.00", "a CSV has a header, quoted cells and exact dollars from whole cents"); }
+
 /* ---- what a lawyer will ask about, answered in code (founder, 2026-10-18: nothing we can be sued for) ---- */
 {
   const all = { ...built }; const text = (h) => visibleText(h).split(NONPROFIT_LINE).join(" ");
   for (const [name, html] of Object.entries(all)) {
     ok(/href="\/terms"/.test(html) && /href="\/privacy"/.test(html), `page ${name}: the footer links the terms and the privacy page`);
+    if (/^(giving|give)/.test(name)) continue;   /* the giving pages are about money; the rule for them is below */
     ok(!/501\(c\)|tax|deduct|exempt|charitable|donat|tithe/i.test(text(html)), `page ${name}: no claim of nonprofit status, no word about taxes, no talk of donations`, text(html).match(/501\(c\)|tax\w*|deduct\w*|exempt|charitable|donat\w*|tithe/i));
   }
   ok(built.front.includes("forming as a Washington nonprofit corporation") && built.front.includes("not yet filed"), "the footer says the corporation is forming and the application is not filed, as the founder wrote it");
