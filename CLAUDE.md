@@ -24,7 +24,7 @@ Founder, 2026-10-18: "So if a ministry wants something or needs something we nee
 4. **Every mutation writes an `events` row with a name on it**, from the database, and the row holds ids and field names, never what
    a person wrote (an answer's words are in its own row and in the email, never in the event).
 5. **Light only.** A pale ground, white cards, dark words, one gold (#D97706) for lines and small labels. No dark theme, panel or
-   sidebar; the only dark fill is a button. Never alarmed: no red. `tests/light-test.mjs` fails on any dark surface and on red.
+   sidebar; the only dark fill is a button (and the 44-pixel ink tile of the mark, which is a logo, drawn as an SVG). Never alarmed: no red. `tests/light-test.mjs` fails on any dark surface and on red.
 6. **Plain words**, grade 8 or under, on every public sentence. `lib/plainwords.mjs` reads them in `tests/plainwords-test.mjs`. The one
    named exception is the founder's own line about the nonprofit corporation, which carries a legal name.
 7. **No AI. No payments. No money category. No tracking.** The network moves no money and says so. No CDN, no analytics, no Tailwind
@@ -42,6 +42,14 @@ Founder, 2026-10-18: "So if a ministry wants something or needs something we nee
 12. **Two lines that never move:** the footer says "Linked Ministries is a Washington nonprofit corporation; its application for
     501(c)(3) recognition is not yet filed." (the one value to edit is `FILING_STATUS` in `server/words.mjs`), and every page says
     "If someone is in danger, call 911. If someone is thinking of hurting themselves, call or text 988."
+13. **Legal exposure, audited 2026-10-18.** `/terms` and `/privacy` are drafts a lawyer has not read and say so at the top (`server/legal.mjs`).
+    Nothing anywhere claims 501(c)(3) status or says a gift is deductible (the footer's one line, `FILING_STATUS`, is the only place that
+    names the application); nothing is set beside another company's name; every post carries the stay-safe line and a Report link; a report
+    saves, emails the stewards, and hides nothing until a steward acts; a person can download and delete their own data; every email says who
+    sent it and why and sells nothing. `tests/banned.mjs` and `tests/unit-test.mjs` hold each of these.
+14. **A new database function gets no grant until it needs one.** Postgres lets everyone run a new function: revoke it from public, anon and
+    authenticated in the same migration, and grant only what a signed-in person needs (0004's blanket revoke covered only what existed then).
+    Whatever reads a contact address, or erases a person, runs on the service connection alone.
 
 ## Copy, never rebuild
 

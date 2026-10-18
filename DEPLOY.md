@@ -73,6 +73,7 @@ LEXOS_INTERNAL_KEY=<the KEY from Step 3>
 LEXOS_SMTP_URL=smtps://ben%40benmortongroup.com:<the 16-letter Google app password, no spaces>@smtp.gmail.com:465
 LEXOS_MAIL_FROM=ben@benmortongroup.com
 LEXOS_PUBLIC_URL=https://linkedm.org
+LEXOS_NOTICE_EMAIL=<the address for notices, for example legal@linkedm.org: a real mailbox>
 ```
 
 What each line is, in plain words:
@@ -88,6 +89,7 @@ What each line is, in plain words:
 | `LEXOS_SMTP_URL` | How sign-in codes and answers are emailed. The `@` in your address is written `%40` here, and only here. The password is your Google app password. |
 | `LEXOS_MAIL_FROM` | The address those emails come from. |
 | `LEXOS_PUBLIC_URL` | The site's own address, starting `https://`, with nothing after `.org`. |
+| `LEXOS_NOTICE_EMAIL` | The address printed on the terms and the privacy page for a takedown notice or a request to delete. It must be a mailbox someone reads. Leave the line out and the page shows the `LEXOS_MAIL_FROM` address instead, which is your own. |
 
 **Do not add** `LEXOS_DEV_CODES`. The server refuses to start with it: it prints sign-in codes in the log.
 
@@ -96,7 +98,7 @@ What each line is, in plain words:
 | # | You do | The screen shows |
 |---|---|---|
 | 1 | Open <https://linkedm.org/api/health> | Exactly `{"status":"ok","service":"Linked Ministries"}` and nothing else. |
-| 2 | Open <https://linkedm.org/> | A pale page: "Ministries helping ministries.", the gold line under the name, "Nothing is on the board yet", and at the bottom the line about the nonprofit corporation and the line about 911 and 988. |
+| 2 | Open <https://linkedm.org/> | A pale page: "Ministries helping ministries.", the gold line under the name, "This board is new" and "Nothing is on the board yet", and at the bottom the line about the nonprofit corporation, the line about 911 and 988, and the links to Terms and Privacy. |
 | 3 | Open <https://linkedm.org/join>, type your email, click **Send me a code** | "A code is on its way." and, in your inbox, a message with a six-number code. If it says "This site cannot send email right now", the mail settings in Step 6 are wrong: see below. |
 
 If step 1 shows a Railway error page instead, open the service, click **Deployments**, then **View logs**. The app says what is
@@ -124,6 +126,16 @@ The same line with the space marked (1 space): `select␣lm.make_steward('EMAIL'
 
 To make a second steward later, a steward signs in, opens the page for stewards and types the other person's email (that
 person must have signed in once). The last steward cannot be removed.
+
+## Step 9. Someone asks you to delete them
+
+A person can do it themselves (My ministry, then Settings, then Your account). If one writes to the notice address instead, make sure it is them, then run this in the Postgres card's Query box. Replace `EMAIL` with their address, in the same place, keeping the quote marks. Nothing is typed twice, and it refuses the last steward.
+
+```
+select lm.account_erase((select id from auth.users where lower(email) = lower('EMAIL')));
+```
+
+The same line with the spaces marked (8 spaces): `select␣lm.account_erase((select␣id␣from␣auth.users␣where␣lower(email)␣=␣lower('EMAIL')));`
 
 ## When something goes wrong
 

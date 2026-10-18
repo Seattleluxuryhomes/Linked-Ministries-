@@ -44,7 +44,7 @@ export const emailConfigured = () => !!process.env.LEXOS_SMTP_URL;
 export const oneLine = (s) => String(s == null ? "" : s).replace(/[\u0000-\u001f\u007f\u0085\u2028\u2029]+/g, " ").replace(/\s{2,}/g, " ").trim();
 
 export async function sendEmail({ to, subject, text, replyTo, attachments }) {
-  subject = oneLine(subject);
+  subject = oneLine(subject).slice(0, 200);
   const t = await smtp();
   if (!t) return { sent: false, reason: "LEXOS_SMTP_URL not configured" };
   try {

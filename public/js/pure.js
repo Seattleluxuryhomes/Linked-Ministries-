@@ -43,6 +43,7 @@ export function dateWords(v) {
 }
 
 export const CRISIS = "If someone is in danger, call 911. If someone is thinking of hurting themselves, call or text 988.";
+export const STAY_SAFE = "Stay safe: meet in a public place, bring someone with you, and never send money.";
 export const NO_MONEY = "Linked Ministries moves no money. Ministries ask for and give things, time, space and skills.";
 
 /* what a poster reads about a post, and what a lead reads about the ministry. "On the board" only when it is. */
@@ -57,7 +58,16 @@ export const MINISTRY_STATUS = {
   public: "A person at Linked Ministries read your ministry's page. It is part of the network.",
   sent_back: "A person at Linked Ministries sent your page back with a note. Change it and it goes back to be read.",
 };
-export const CLOSE_REASON = { met: "Met", no_longer_needed: "No longer needed" };
+export const CLOSE_REASON = { met: "Met", no_longer_needed: "No longer needed", removed: "Taken down by a steward" };
+/* what a person can say is wrong with a post (the Report button); a steward reads it, and nothing is hidden until a steward acts */
+export const REPORT_REASONS = {
+  scam: "It looks like a scam",
+  money: "It asks for money",
+  unsafe: "It does not look safe",
+  copy: "It copies my work",
+  private: "It shares private information",
+  other: "Something else",
+};
 
 /* every sentence the pages say by themselves; the tests read all of them */
 export const WORDS = {
@@ -157,4 +167,35 @@ export const WORDS = {
   answerHowItWorks: "One email goes to the ministry. It names your ministry and has your words and your email.",
   tryAgain: "Please try again.",
   noJs: "This page needs JavaScript turned on to work.",
+  emptyTitle: "This board is new",
+  emptyMore: "A ministry that joins can post the first ask or give.",
+  emptyFiltered: "No posts match",
+  report: "Report this post",
+  reportTitle: "Report this post",
+  reportLead: "A steward will read your report. The post stays up until a steward acts.",
+  reportWhy: "What is wrong?",
+  reportChoose: "Choose one",
+  reportNote: "Tell us more (if you can)",
+  reportEmail: "Your email (if you want an answer)",
+  reportSend: "Send report",
+  reportNeedWhy: "Choose what is wrong.",
+  agreeTerms: "terms",
+  agreePrivacy: "privacy page",
+  adultsOnly: "You must be 18 or older.",
+  accountTitle: "Your account",
+  accountDownload: "Download my data",
+  accountDownloadHelp: "One file with what we hold about you and your ministry.",
+  accountDelete: "Delete my account",
+  accountSure: "Yes, delete my account and my data",
+  accountKeep: "No, keep my account",
+  accountWarnAlone: "You are the only person in your ministry, so the ministry leaves with you. Its posts close, its page is hidden, and its contact name and email are erased.",
+  accountWarnTeam: "You will leave your ministry's team. Your sign-in, your name and your email are erased.",
+  accountWarnSent: "Answers you sent lose their words in our copy. Emails that already went out cannot be taken back. This cannot be undone.",
+  accountDone: "Your account is deleted. Thank you for the time you gave.",
+  removedNote: "A steward closed this post",
+  stewardEmptyTitle: "All read",
+  reportDecideNote: "A note for the record",
+  reportDecideHelp: "Say why, in plain words. If you close the post, its poster reads this note.",
+  reportClose: "Close the post",
+  reportKeep: "Keep the post",
 };

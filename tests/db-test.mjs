@@ -336,9 +336,81 @@ ok(authFns.length === 0, "a signed-in person cannot call make_steward, log or a 
   ok((await admin("select count(*)::int n from lm.people where user_id = $1", [a1]))[0].n === 1 && (await admin("select count(*)::int n from auth.users where id = $1", [a1]))[0].n === 1, "and nobody with a ministry is touched");
 }
 
+/* ===== 16. reports: anyone can tell the stewards; nothing is hidden until a steward acts ===== */
+{
+  const rp = await newPost(a2, "ask", "A post that gets reported", in30, true); await q(st, "select lm.post_review($1, true, null)", [rp]);
+  const draftP = await newPost(a2, "ask", "A draft nobody can report", in30, false);
+  ok((await refused(q(a1, "select lm.report_create($1,'scam',null,null)", [rp]), /permission denied|42501/)).refused && (await refused(q(st, "select lm.report_create($1,'scam',null,null)", [rp]), /permission denied|42501/)).refused, "no signed-in person, not even a steward, can call report_create: the service connection makes a report for a visitor");
+  ok((await refused(admin("select lm.report_create($1,'scam',null,null)", [draftP]), /post_not_open|not on the board/)).refused && (await refused(admin("select lm.report_create($1,'scam',null,null)", ["00000000-0000-4000-8000-000000000000"]), /post_not_open/)).refused, "a draft and a post that does not exist cannot be reported");
+  ok((await refused(admin("select lm.report_create($1,'spam',null,null)", [rp]))).refused && (await refused(admin("select lm.report_create($1,'scam',null,'a,b@c.example')", [rp]))).refused, "a reason that is not on the list, and an address that is a list, are each refused");
+  const r1 = (await admin("select lm.report_create($1,'scam','This looks wrong to me.','reporter@example.org') as id", [rp]))[0].id;
+  ok((await admin("select status from lm.posts where id = $1", [rp]))[0].status === "public", "a report hides nothing: the post is still public");
+  const ev = (await admin("select actor_label, kind, payload, ministry_id from lm.events where kind = 'report.created' and (payload ->> 'id') = $1", [r1]))[0];
+  ok(ev && ev.actor_label === "A visitor" && ev.ministry_id === mA && !JSON.stringify(ev.payload).match(/wrong|reporter@/), "the report writes an event with a name on it ('A visitor') and ids only, never the words or the address");
+  ok((await refused(q(a2, "select 1 from lm.reports"), /permission denied|42501/)).refused && (await refused(anon("select 1 from lm.reports"), /permission denied|42501/)).refused, "no one but the functions can read the reports table");
+  ok((await refused(q(a2, "select lm.steward_emails()"), /permission denied|42501/)).refused && (await admin("select lm.steward_emails() as v"))[0].v.includes("steward@example.org"), "the stewards' addresses are the service connection's alone");
+  const queue = (await q(st, "select lm.steward_queue() as q"))[0].q;
+  ok(queue.reports.length === 1 && queue.reports[0].id === r1 && queue.reports[0].reason === "scam" && queue.reports[0].post_title === "A post that gets reported" && queue.reports[0].email === "reporter@example.org", "the steward's queue holds the open report with the post, the reason, the note and the address");
+  ok((await refused(q(a2, "select lm.report_resolve($1,'keep','Reading it now')", [r1]), /steward_required/)).refused, "a person who is not a steward cannot act on a report");
+  ok((await refused(q(st, "select lm.report_resolve($1,'keep','')", [r1]), /note_required|short note/)).refused && (await refused(q(st, "select lm.report_resolve($1,'delete','A note here')", [r1]), /decision_not_known/)).refused, "a steward must write a note, and choose close or keep");
+  await q(st, "select lm.report_resolve($1,'keep','It is fine: a real ministry.')", [r1]);
+  const kept = (await admin("select status, handled_by, handled_note from lm.reports where id = $1", [r1]))[0];
+  ok(kept.status === "kept" && kept.handled_by === st && (await admin("select status from lm.posts where id = $1", [rp]))[0].status === "public" && (await admin("select actor_label from lm.events where kind = 'report.kept'"))[0].actor_label === "Sam Steward", "keeping a report leaves the post public, and the record names the steward");
+  ok((await refused(q(st, "select lm.report_resolve($1,'close','Closing it')", [r1]), /not_waiting|already read/)).refused, "a report that was read cannot be acted on twice");
+  const r2 = (await admin("select lm.report_create($1,'copy','This is my photograph.',null) as id", [rp]))[0].id, r3 = (await admin("select lm.report_create($1,'money',null,null) as id", [rp]))[0].id;
+  await q(st, "select lm.report_resolve($1,'close','Taken down: the photograph is not theirs.')", [r2]);
+  const closed = (await q(a2, "select status, closed_reason, review_note from lm.posts where id = $1", [rp]))[0];
+  ok(closed.status === "closed" && closed.closed_reason === "removed" && closed.review_note === "Taken down: the photograph is not theirs.", "closing a report takes the post down, and its poster reads the reason and the steward's note");
+  ok((await admin("select count(*)::int n from lm.reports where post_id = $1 and status = 'open'", [rp]))[0].n === 0 && (await anon("select count(*)::int n from lm.posts where id = $1", [rp]))[0].n === 0, "the other open reports on that post are closed with it, and the public no longer reads it");
+  ok((await admin("select actor_label from lm.events where kind = 'report.post_closed'"))[0].actor_label === "Sam Steward", "and that act has the steward's name on it");
+  ok((await refused(admin("insert into lm.reports (post_id, reason, status) values ($1, 'scam', 'kept')", [rp]), /check|23514/)).refused, "a report cannot be marked handled without the steward's name");
+  ok((await q(a2, "select closed_reason from lm.posts where id = $1", [rp]))[0].closed_reason === "removed" && (await refused(q(a2, "select lm.post_close($1, 'removed')", [rp]), /reason_not_known|already_closed/)).refused, "a poster cannot choose 'removed' as a reason of their own");
+}
+
+/* ===== 17. leaving: one transaction, the whole of it, with a name taken off the record ===== */
+{
+  const lead = await user("leave-lead@example.org", "Lee Lead"), mem = await user("leave-mem@example.org", "Maria Member");
+  const mX = await mk(lead, "Leaving Ministry", "Everett"); await q(lead, "select lm.team_invite('leave-mem@example.org')");
+  await q(mem, "select lm.team_accept($1, 'Maria Member')", [(await admin("select id from lm.invites where ministry_id = $1", [mX]))[0].id]);
+  await q(st, "select lm.ministry_review($1, true, null)", [mX]);
+  const pX = await newPost(lead, "give", "Chairs for anyone who needs them", in30, true); await q(st, "select lm.post_review($1, true, null)", [pX]);
+  const target = await newPost(a2, "ask", "Chairs wanted for a Friday night", in30, true); await q(st, "select lm.post_review($1, true, null)", [target]);
+  await q(mem, "select lm.answer_record($1, 'We can bring twelve chairs.', '206-555-0199', 'mail-x')", [target]);
+  const received = await q(c1, "select lm.answer_record($1, 'We would love the chairs, please.', null, 'mail-y') as id", [pX]);
+  await admin("insert into app.sessions (user_id, token_hash) values ($1, decode(md5('mem-session'), 'hex'))", [mem]);
+  await admin("insert into app.login_codes (user_id, code_hash, channel, sent_to) values ($1, decode(md5('mem-code'), 'hex'), 'email', 'leave-mem@example.org')", [mem]);
+  ok((await refused(q(lead, "select lm.account_delete()"), /last_lead|only lead/)).refused, "the only lead cannot delete their account while others are on the team");
+  ok((await refused(q(a1, "select lm.account_erase($1)", [mem]), /permission denied|42501/)).refused && (await refused(anon("select lm.account_delete()"), /permission denied|42501/)).refused, "no one can erase another person, and a stranger cannot erase anyone");
+  const r = (await q(mem, "select lm.account_delete() as r"))[0].r;
+  const pe = (await admin("select * from lm.people where user_id = $1", [mem]))[0], us = (await admin("select email, full_name from auth.users where id = $1", [mem]))[0];
+  ok(r.ministry_left === false && pe.ministry_id === null && pe.role === null && pe.full_name === "A person who left" && pe.steward === false, "a member who deletes their account only leaves the team, and the person row has no name");
+  ok(/^deleted-[0-9a-f]{32}@removed\.invalid$/.test(us.email) && us.full_name === null, "their email and name are gone from the sign-in row (a tombstone is left so older records still point at something)", us);
+  ok((await admin("select count(*)::int n from app.sessions where user_id = $1", [mem]))[0].n === 0 && (await admin("select count(*)::int n from app.login_codes where user_id = $1", [mem]))[0].n === 0, "their sessions and sign-in codes are erased");
+  const sent = (await admin("select words, phone, reply_email, from_user_id from lm.answers where post_id = $1", [target]))[0];
+  ok(sent.words === "[removed]" && sent.phone === null && sent.reply_email === "removed" && sent.from_user_id === mem, "the answer they sent keeps its place as a record and loses its words, its phone and its address");
+  ok((await admin("select count(*)::int n from lm.events where actor_id = $1 or actor_label = 'Maria Member'", [mem]))[0].n === 0, "no event carries their name or id any more");
+  const gone = (await admin("select actor_label, actor_id, payload, ministry_id from lm.events where kind = 'account.erased' and (payload ->> 'id') = $1", [mem]))[0];
+  ok(gone && gone.actor_label === "A person who left" && gone.actor_id === null && gone.ministry_id === mX && !JSON.stringify(gone.payload).includes("@") && gone.payload.ministry_left === false, "one new event says the account was erased: a name on it ('A person who left'), ids only");
+  ok((await admin("select status from lm.ministries where id = $1", [mX]))[0].status === "public" && (await admin("select count(*)::int n from lm.people where ministry_id = $1 and role = 'lead'", [mX]))[0].n === 1, "the ministry stays public and keeps its lead");
+  ok((await admin("insert into auth.users (email) values ('leave-mem@example.org') returning id")).length === 1, "and the same email address can sign up again, as a new person");
+  const r2 = (await q(lead, "select lm.account_delete() as r"))[0].r;
+  const mm = (await admin("select status, about, website, contact_name, contact_email, review_note from lm.ministries where id = $1", [mX]))[0];
+  ok(r2.ministry_left === true && mm.status === "left" && mm.website === null && mm.contact_name === "Removed" && mm.contact_email === "removed@removed.invalid" && mm.about === "This ministry left the network.", "the only person in a ministry takes the ministry out with them: hidden, and its contact name and email erased");
+  ok((await admin("select count(*)::int n from lm.posts where ministry_id = $1 and status <> 'closed'", [mX]))[0].n === 0 && (await anon("select count(*)::int n from lm.posts where ministry_id = $1", [mX]))[0].n === 0 && (await anon("select count(*)::int n from lm.ministries where id = $1", [mX]))[0].n === 0, "its posts are closed and the public reads none of it");
+  ok((await admin("select words, reply_email from lm.answers where id = $1", [received[0].id]))[0].words === "[removed]", "the words of an answer it had received are erased with it");
+  ok((await admin("select actor_label from lm.events where kind = 'account.erased' and (payload ->> 'id') = $1", [lead]))[0].actor_label === "A person who left" && (await admin("select count(*)::int n from lm.events where actor_label = 'Lee Lead'"))[0].n === 0, "and the lead's name is off the record too");
+  /* the last steward cannot leave; an answer is still a record for everyone else */
+  await admin("update lm.people set steward = false where steward and user_id <> $1", [st]);
+  ok((await refused(admin("select lm.account_erase($1)", [st]), /last_steward|keeps one steward/)).refused, "the last steward cannot delete their account until another steward is named");
+  ok((await refused(admin("update lm.answers set words = 'changed words here' where post_id = $1", [target]), /answers_are_records|record/)).refused, "outside a deletion, an answer is still a record that nobody changes, not even the operator's SQL");
+  { const c = await pool.connect(); try { await c.query("begin"); await c.query("select set_config('lm.erasing', 'on', true)"); let e = null; try { await c.query("update lm.answers set sent_at = now() - interval '1 day' where post_id = $1", [target]); } catch (x) { e = x; } ok(e && /answers_are_records|record/.test(e.message), "and even while a deletion is under way, only the words, phone and address of an answer can change, never its date"); } finally { await c.query("rollback"); c.release(); } }
+  const lone = await user("no-ministry-ever@example.org", "Nia Nobody");
+  ok((await admin("select lm.account_erase($1) as r", [lone]))[0].r.ministry_left === false && /^deleted-/.test((await admin("select email from auth.users where id = $1", [lone]))[0].email), "the operator can erase a person who never made a ministry, by one line of SQL");
+}
+
 /* ===== 15. the migrations are recorded and applied ===== */
 const applied = await admin("select name from public.lm_migrations order by name");
-ok(applied.map((a) => a.name).join() === "0001_base.sql,0002_ministries.sql,0003_board.sql,0004_grants.sql,0005_hardening.sql,local-supabase-shim.sql", "every migration and the stand-in are recorded as applied", applied);
+ok(applied.map((a) => a.name).join() === "0001_base.sql,0002_ministries.sql,0003_board.sql,0004_grants.sql,0005_hardening.sql,0006_reports_and_leaving.sql,local-supabase-shim.sql", "every migration and the stand-in are recorded as applied", applied);
 ok((await admin("select count(*)::int n from pg_policies where schemaname = 'lm'"))[0].n >= 7, "row-level security policies are in place");
 ok((await admin("select count(*)::int n from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'lm' and c.relkind = 'r' and not c.relrowsecurity"))[0].n === 0, "every table in lm has row-level security on");
 

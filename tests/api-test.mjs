@@ -268,12 +268,89 @@ ok((await dana.post(`/api/team/${dme.user.id}/remove`)).status === 409, "the one
     const before = smtp.mails.length; const capped = await gina.post(`/api/posts/${id2}/answer`, { words: "We could help with this one." });
     ok(capped.status === 429 && /a lot of answers/.test(capped.json.words) && smtp.mails.length === before && (await sql("select count(*)::int n from lm.answers where post_id = $1", [id2]))[0].n === 0, "a post that has had twenty-five answers today takes no more: nothing is sent and nothing is saved", capped.json); }
   /* a person keeps at most ten signed-in browsers */
-  { const { createSession, sessionUser } = await import("../server/auth.mjs"); const uid = (await sql("select id from auth.users where email = 'dana@alpha.example'"))[0].id; const toks = [];
+  { const { createSession, sessionUser } = await import("../server/auth.mjs"); const uid = (await sql("insert into auth.users (email) values ('sessions@probe.example') returning id"))[0].id; const toks = [];
     for (let i = 0; i < 13; i++) toks.push(await createSession(uid, "test", "127.0.0.1"));
     const live = (await sql("select count(*)::int n from app.sessions where user_id = $1 and revoked_at is null", [uid]))[0].n;
     ok(live === 10 && !(await sessionUser(toks[0])) && !!(await sessionUser(toks[12])), "a person keeps ten signed-in browsers at most: the oldest are signed out, the newest works", live); }
   /* a header is one line */
   { const { oneLine } = await import("../server/mail.mjs"); ok(oneLine("Gamma\r\nBcc: spy@evil.example") === "Gamma Bcc: spy@evil.example" && !/[\r\n]/.test(oneLine("a b\nc\td")), "a subject made from someone's words is one line, whatever they typed"); }
+}
+
+/* ---- the public pages a lawyer and a search engine read ---- */
+{
+  const gid = give.json.id, memberPost = (await sql("select id from lm.posts where title = 'Posted by a member'"))[0].id;
+  const terms = await anon.get("/terms"), priv = await anon.get("/privacy");
+  ok(terms.status === 200 && priv.status === 200 && /Draft\. A lawyer has not read this yet\./.test(terms.text) && /Draft\. A lawyer has not read this yet\./.test(priv.text), "/terms and /privacy answer, each with the line: Draft. A lawyer has not read this yet.");
+  ok(/href="mailto:board@linkedm\.test"/.test(terms.text) && /href="mailto:board@linkedm\.test"/.test(priv.text), "the notice address on both is the one mail is sent from (LEXOS_MAIL_FROM), as a mail link");
+  for (const [n, r] of [["/terms", terms], ["/privacy", priv]]) { const bad = checkPage(r.text); ok(bad.length === 0, `${n}: no script inline, no style attribute, nothing banned`, bad); }
+  ok(/href="\/terms"/.test(pages["/"]) && /href="\/privacy"/.test(pages["/"]) && /href="\/terms"/.test(pages["/board"]), "the front and the board link the terms and the privacy page in the footer");
+  const fb = await anon.get("/board/" + gid);
+  ok(/<meta property="og:image" content="http:\/\/127\.0\.0\.1:\d+\/img\/share\.png">/.test(fb.text) && /og:title" content="Surplus canned goods · Alpha Table Ministry"/.test(fb.text) && /twitter:card" content="summary_large_image"/.test(fb.text), "a post page says its own title and ministry to a link preview, with the share picture", fb.text.match(/og:[a-z:]+" content="[^"]*"/g));
+  const sm = (await anon.get("/sitemap.xml")).text;
+  ok(/<loc>[^<]+\/terms<\/loc>/.test(sm) && /<loc>[^<]+\/privacy<\/loc>/.test(sm) && sm.includes("/board/" + memberPost) && sm.includes("/board/" + gid), "the sitemap lists the front, the board, the terms, the privacy page and each open post");
+  ok(!sm.includes(draft.json.id) && !sm.includes("/board/" + pid) && !/\/(me|join|steward|api)\b/.test(sm) && !(await sql("select id from lm.posts where status <> 'public'")).some((r) => sm.includes(r.id)), "and not a draft, a waiting post, a closed post, or a private page: public pages only");
+  ok(/Sitemap: http:\/\/127\.0\.0\.1:\d+\/sitemap\.xml/.test((await anon.get("/robots.txt")).text) && /Disallow: \/api/.test((await anon.get("/robots.txt")).text), "robots.txt points to the sitemap and keeps the private pages and the API out");
+  const nf = await anon.get("/no-such-page");
+  ok(nf.status === 404 && /class="empty card"/.test(nf.text) && /noindex/.test(nf.text) && /Go to the first page/.test(nf.text), "a page that is not there is a 404 in the same style, with a way home, and noindex");
+  const fav = await fetch(s.base + "/favicon.ico"), share = await fetch(s.base + "/img/share.png"), icon = await fetch(s.base + "/img/icon.svg"), at = await fetch(s.base + "/img/apple-touch-icon.png");
+  ok(fav.status === 200 && /icon/.test(fav.headers.get("content-type")) && share.status === 200 && share.headers.get("content-type") === "image/png" && (await share.arrayBuffer()).byteLength < 150 * 1024 && icon.status === 200 && /svg/.test(icon.headers.get("content-type")) && at.status === 200, "the favicon, the share picture (under 150 KB), the icon file and the home-screen icon are all served");
+  ok(!/https?:\/\/(?!127\.0\.0\.1)/.test(pages["/"].replace(/https:\/\/www\.disciplesauthority\.org/g, "").replace(/http:\/\/www\.w3\.org\/2000\/svg/g, "")), "the front page names no other host but Disciples' Authority");
+}
+
+/* ---- a report: it is saved, then the stewards are emailed, and the screen says which of the two happened ---- */
+{
+  const gid = give.json.id; let made = 0;
+  const post = (b, c = anon, id = gid) => c.post(`/api/posts/${id}/report`, b);
+  ok((await post({ reason: "spam" })).status === 422 && (await post({})).status === 422 && (await post({ reason: "other" })).status === 422 && (await post({ reason: "scam", email: "a,b@c.example" })).status === 422, "a report needs one of the six reasons; 'something else' needs a few words; an address that is a list is refused");
+  ok((await post({ reason: "scam" }, anon, "00000000-0000-4000-8000-000000000000")).status === 404 && (await post({ reason: "scam" }, anon, draft.json.id)).status === 404 && (await post({ reason: "scam" }, anon, "not-an-id")).status === 404, "a post that is not on the board, a draft and a nonsense address cannot be reported");
+  ok((await sql("select count(*)::int n from lm.reports"))[0].n === 0, "none of those saved a report");
+  const before = smtp.mails.length;
+  const r1 = await post({ reason: "scam", note: "It looks wrong to me.", email: "Reporter@Example.org" }); made++;
+  await sleep(120);
+  const mail = smtp.mails.slice(before)[0];
+  ok(r1.status === 201 && r1.json.saved === true && r1.json.emailed === true && /sent to the stewards/.test(r1.json.words) && /stays up until a steward/.test(r1.json.words), "a report is saved and the stewards are emailed, and the screen says both in words", r1.json);
+  ok(mail && mail.to.includes("sam@linkedm.example") && mail.replyTo === "reporter@example.org" && /A post was reported on Linked Ministries: Surplus canned goods/.test(mail.subject) && /Nothing has been hidden/.test(mail.text) && /Why you got this/.test(mail.text) && /It looks wrong to me\./.test(mail.text) && /\/steward/.test(mail.text), "the steward's email names the post, the reason and the words, lets them reply to the reporter, and says nothing has been hidden", mail && mail.subject);
+  ok((await anon.get("/api/board/" + gid)).status === 200 && (await sql("select status from lm.posts where id = $1", [gid]))[0].status === "public", "the post is still on the board: a report hides nothing");
+  ok((await sql("select count(*)::int n from lm.reports where status = 'open'"))[0].n === 1 && (await sql("select actor_label from lm.events where kind = 'report.created'"))[0].actor_label === "A visitor", "one open report is a row, and its event has a name on it");
+  /* no fake state: the provider refuses, and the screen does not say the stewards were emailed */
+  smtp.refuse(true); const sentBefore = smtp.mails.length;
+  const r2 = await post({ reason: "unsafe" }); made++; smtp.refuse(false);
+  ok(r2.status === 201 && r2.json.saved === true && r2.json.emailed === false && /saved, but the email to the stewards did not go out/.test(r2.json.words) && !/sent to the stewards/.test(r2.json.words) && smtp.mails.length === sentBefore && (await sql("select count(*)::int n from lm.reports"))[0].n === 2, "when the mail provider refuses, the report is still saved and the screen says exactly that: saved, and the email did not go out", r2.json);
+  /* a steward acts: keep, then close */
+  const open = (await sam.get("/api/steward/queue")).json;
+  ok(open.reports.length === 2 && open.reports.every((r) => r.post_title === "Surplus canned goods") && open.reports.some((r) => r.note === "It looks wrong to me." && r.email === "reporter@example.org"), "the steward's queue holds both reports, with what the reporter wrote", open.reports);
+  ok((await blake.post(`/api/steward/reports/${open.reports[0].id}/resolve`, { action: "close", note: "Closing it" })).status === 403 && (await anon.post(`/api/steward/reports/${open.reports[0].id}/resolve`, { action: "close", note: "x" })).status === 401, "a person who is not a steward cannot act on a report");
+  ok((await sam.post(`/api/steward/reports/${open.reports[0].id}/resolve`, { action: "keep" })).status === 422 && (await sam.post(`/api/steward/reports/${open.reports[0].id}/resolve`, { action: "burn", note: "Nope" })).status === 400, "a steward must write a note, and choose close or keep");
+  const keep = await sam.post(`/api/steward/reports/${open.reports.find((r) => r.reason === "unsafe").id}/resolve`, { action: "keep", note: "Read it: it is a real ministry." });
+  ok(keep.status === 200 && (await anon.get("/api/board/" + gid)).status === 200, "keeping a report leaves the post on the board");
+  const close = await sam.post(`/api/steward/reports/${open.reports.find((r) => r.reason === "scam").id}/resolve`, { action: "close", note: "Taken down: please say who the van is for." });
+  ok(close.status === 200 && (await anon.get("/api/board/" + gid)).status === 404 && !(await anon.get("/board")).text.includes("Surplus canned goods"), "closing a report takes the post off the board, and only then");
+  const mineClosed = (await dana.get("/api/my/posts")).json.posts.find((p) => p.id === gid);
+  ok(mineClosed && mineClosed.status === "closed" && mineClosed.closed_reason === "removed" && mineClosed.review_note === "Taken down: please say who the van is for.", "the poster's ministry reads that a steward closed it, and why (no fake 'removed': it happened)");
+  ok((await sam.get("/api/steward/queue")).json.reports.length === 0, "and the queue is empty again");
+  /* limits: one machine, six reports an hour */
+  let ok201 = 0, last = 0; const mp = (await sql("select id from lm.posts where title = 'Posted by a member'"))[0].id;
+  for (let i = 0; i < 9; i++) { const r = await post({ reason: "other", note: "Something is wrong here." }, anon, mp); last = r.status; if (r.status === 201) ok201++; else break; }
+  ok(last === 429 && made + ok201 <= 6 && ok201 >= 1, "one machine can send six reports in an hour (a try at a post that is not there counts too), and the next is refused in words", { last, total: made + ok201 });
+}
+
+/* ---- a person's own data: a copy, and deleting it ---- */
+{
+  const keepCookie = dana.fork();
+  ok((await anon.get("/api/me/export")).status === 401 && (await anon.post("/api/me/delete", { confirm: true })).status === 401, "a stranger can neither download nor delete anything");
+  const ex = await dana.get("/api/me/export");
+  ok(ex.status === 200 && /attachment; filename="linked-ministries-my-data\.json"/.test(ex.headers.get("content-disposition") || "") && ex.json.you.email === "dana@alpha.example" && ex.json.ministry.name === "Alpha Table Ministry" && ex.json.posts.some((p) => p.title === "Posted by a member") && Array.isArray(ex.json.answers.received) && ex.json.team.people.length >= 1, "'Download my data' gives one file: the person, the ministry, its posts, its answers and its team", Object.keys(ex.json || {}));
+  ok(!/sessions|token_hash|code_hash|password/i.test(ex.text), "and no sign-in secret is in it");
+  ok((await dana.post("/api/me/delete", {})).status === 400 && (await dana.post("/api/me/delete", { confirm: "yes" })).status === 400 && (await dana.get("/api/me")).status === 200, "deleting needs the person to say they are sure; without it nothing happens");
+  const del = await dana.post("/api/me/delete", { confirm: true });
+  ok(del.status === 200 && del.json.ministry_left === true && del.json.words === "Your account is deleted." && /Max-Age=0/i.test(del.headers.getSetCookie().join(";")), "deleting says so only after the database did it, and signs the browser out", del.json);
+  ok((await keepCookie.get("/api/me")).status === 401, "the old session no longer works");
+  ok((await sql("select email, full_name from auth.users where email = 'dana@alpha.example'")).length === 0 && (await sql("select count(*)::int n from lm.events where actor_label = 'Dana Member'"))[0].n === 0, "the email address and the name are gone from the database, and from the record");
+  const status = (await sql("select status from lm.ministries where name = 'Alpha Table Ministry'"))[0].status;
+  ok(status === "left" && (await anon.get("/board")).text.indexOf("Alpha Table") < 0 && !(await anon.get("/sitemap.xml")).text.includes("/board/"), "the ministry that was only her leaves with her: it is off the board and out of the sitemap");
+  ok((await sql("select actor_label, kind from lm.events where kind = 'account.erased' order by created_at desc limit 1"))[0].actor_label === "A person who left", "the record of the deletion has a name on it: A person who left");
+  const again = client(s.base); await signIn(again, s, "dana@alpha.example", { smtp });
+  ok((await again.get("/api/me")).json.ministry === null, "the same address can join again, as a new person with no ministry");
 }
 
 /* ---- sign out ---- */

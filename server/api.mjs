@@ -5,7 +5,9 @@
 import { asUser, asAdmin } from "./db.mjs";
 import { whoami, limited, validEmail } from "./auth.mjs";
 import { sendEmail, emailConfigured } from "./mail.mjs";
-import { CATEGORY_IDS, STATE_CODES, KINDS } from "../public/js/pure.js";
+import { CATEGORY_IDS, STATE_CODES, KINDS, REPORT_REASONS } from "../public/js/pure.js";
+import { answerEmail, inviteEmail, reportEmail } from "./emails.mjs";
+import { boardPost } from "./board.mjs";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const bad = (words, status = 400, code = "bad_request") => Object.assign(new Error(code), { status, words, code });
@@ -60,6 +62,17 @@ export function mount(app, { wrap, publicBase, now = () => Date.now() }) {
 
   get("/api/me", async (req) => ({ ...(await whoami(req.user)), limits: dayLimits(now()) }));
 
+  /* everything this site holds about the signed-in person, as one file they can keep (the privacy page says so) */
+  app.get("/api/me/export", wrap(async (req, res) => {
+    need(req);
+    const me = await whoami(req.user);
+    const mine = me.ministry ? await rows(req, "select p.id, p.kind, p.category, p.title, p.body, p.city, p.state, to_char(p.open_until,'YYYY-MM-DD') as open_until, p.status, p.review_note, p.closed_reason, p.created_at from lm.posts p where p.ministry_id = lm.my_ministry() order by p.created_at") : [];
+    const answers = me.ministry ? (await one(req, "select lm.my_answers() as a")).a : { received: [], sent: [] };
+    const team = me.ministry ? (await one(req, "select lm.team_list() as t")).t : null;
+    res.set({ "cache-control": "no-store", "content-disposition": 'attachment; filename="linked-ministries-my-data.json"' });
+    res.json({ about_this_file: "What Linked Ministries holds about you and your ministry, on the day you asked.", made_on: new Date().toISOString(), you: me.user, ministry: me.ministry, posts: mine, answers, team });
+  }));
+
   /* ---- the ministry ---------------------------------------------------------------------------------------------------- */
   post("/api/ministry", async (req) => {
     const f = ministryFields(req.body || {});
@@ -84,8 +97,8 @@ export function mount(app, { wrap, publicBase, now = () => Date.now() }) {
     /* the person sees the invitation when they sign in with that address; the email below is a courtesy, and the page says so only if it went */
     let mailed = false;
     if (emailConfigured()) {
-      const m = await sendEmail({ to: email, subject: `${me.user.name || "Someone"} added you to ${me.ministry.name} on Linked Ministries`,
-        text: `${me.user.name || "A lead"} added you to the team at ${me.ministry.name} on Linked Ministries.\n\nSign in with this email address to join the team:\n${publicBase(req)}/join\n\nIf this is not for you, ignore this message.\n` });
+      const mail = inviteEmail({ inviter: me.user.name, ministry: me.ministry.name, joinUrl: `${publicBase(req)}/join` });
+      const m = await sendEmail({ to: email, subject: mail.subject, text: mail.text });
       mailed = !!m.sent;
     }
     return { ok: true, id: r.id, emailed: mailed };
@@ -142,26 +155,36 @@ export function mount(app, { wrap, publicBase, now = () => Date.now() }) {
     if (!to) throw bad("That post is not open any more.", 409, "post_not_open");
     /* one post, and one ministry's contact, can only be written to so often in a day, however many ministries ask */
     if (await limited(`answer-post:${pid}`, 25, 24 * 3600 * 1000) || await limited(`answer-to:${p.to_ministry_id}`, 60, 24 * 3600 * 1000)) throw bad("This ministry has had a lot of answers today. Please try again tomorrow.", 429, "too_many");
-    const place = `${p.from_city}, ${p.from_state}`;
-    const text = [
-      `Hello ${to.to_contact},`, "",
-      `${p.from_ministry} (${place}) answered your ${p.kind === "ask" ? "ask" : "give"} on the Linked Ministries board:`,
-      `"${p.title}"`, "",
-      p.kind === "ask" ? "They say they can help:" : "They say they need this:", "",
-      words, "",
-      `To reply, write to ${p.from_name} at ${p.from_email}${phone ? ` or call ${phone}` : ""}.`,
-      ...(p.from_website ? [`Their website: ${p.from_website}`] : []), "",
-      "This message came from the Linked Ministries board. Linked Ministries moves no money and does not take part in what you agree on.",
-      "If someone is in danger, call 911. If someone is thinking of hurting themselves, call or text 988.", "",
-    ].join("\n");
-    const subject = `${p.from_ministry} ${p.kind === "ask" ? "can help with" : "needs"}: ${p.title}`.replace(/[\r\n]+/g, " ").slice(0, 200);
-    const sent = await sendEmail({ to: to.to_email, subject, text, replyTo: p.from_email });
+    const mail = answerEmail({ toContact: to.to_contact, fromMinistry: p.from_ministry, place: `${p.from_city}, ${p.from_state}`, kind: p.kind, title: p.title, words, fromName: p.from_name, fromEmail: p.from_email, phone, website: p.from_website });
+    const sent = await sendEmail({ to: to.to_email, subject: mail.subject, text: mail.text, replyTo: p.from_email });
     if (!sent.sent) throw bad("The email did not go out, so nothing was saved. Try again in a minute.", 502, "mail_failed");
     /* the provider took it: now, and only now, it is a row */
     await one(req, "select lm.answer_record($1, $2, $3, $4) as id", [pid, words, phone || null, sent.id || null]);
     return { ok: true, sent_to: p.to_ministry, words: `Sent to ${p.to_ministry}.` };
     } finally { inFlight.delete(flightKey); }
   }, 201);
+
+  /* ---- a report: anyone who reads a public post can tell the stewards. It is saved, then the stewards are emailed, and the answer says
+     which of the two happened. Nothing is hidden by it: only a steward closes a post. ---- */
+  app.post("/api/posts/:id/report", wrap(async (req, res) => {
+    const pid = id(req.params.id), b = req.body || {};
+    const reason = str(b.reason, 12), note = str(b.note, 1000), email = str(b.email, 254).toLowerCase();
+    if (!Object.prototype.hasOwnProperty.call(REPORT_REASONS, reason)) throw bad("Choose what is wrong.", 422, "reason_needed");
+    if (reason === "other" && note.length < 5) throw bad("Say a little about what is wrong.", 422, "note_needed");
+    if (email && !validEmail(email)) throw bad("That email address does not look right. Or leave it empty.", 422, "email_not_readable");
+    if (await limited(`report-ip:${ip(req)}`, 6, 3600 * 1000) || await limited(`report-post:${pid}`, 20, 24 * 3600 * 1000)) throw bad("That is a lot of reports. Please wait a while and try again.", 429, "too_many");
+    const post = await boardPost(pid);
+    if (!post) throw bad("That post is not on the board any more.", 404, "not_found");
+    const q = (sql, params) => asAdmin(async (c) => (await c.query(sql, params)).rows[0]);
+    const rid = (await q("select lm.report_create($1, $2, $3, $4) as id", [pid, reason, note || null, email || null])).id;
+    const stewards = (await q("select lm.steward_emails() as v")).v || [];
+    let emailed = false;
+    if (stewards.length && emailConfigured()) {
+      const mail = reportEmail({ title: post.title, ministry: post.ministry, reason, note, reporter: email, url: `${publicBase(req)}/board/${pid}`, stewardUrl: `${publicBase(req)}/steward` });
+      emailed = !!(await sendEmail({ to: stewards.join(", "), subject: mail.subject, text: mail.text, ...(email ? { replyTo: email } : {}) })).sent;
+    }
+    res.status(201).json({ ok: true, saved: true, emailed, id: rid, words: emailed ? "Thank you. Your report was sent to the stewards. The post stays up until a steward reads it." : "Thank you. Your report was saved, but the email to the stewards did not go out. A steward will see it on their page." });
+  }));
 
   /* ---- stewards -------------------------------------------------------------------------------------------------------- */
   get("/api/steward/queue", async (req) => (await one(req, "select lm.steward_queue() as q")).q);
@@ -175,6 +198,12 @@ export function mount(app, { wrap, publicBase, now = () => Date.now() }) {
     const d = str((req.body || {}).decision, 12);
     if (d !== "approve" && d !== "send_back") throw bad("Choose approve or send back.", 400, "decision_needed");
     await one(req, "select lm.post_review($1, $2, $3)", [id(req.params.id), d === "approve", str((req.body || {}).note, 1000) || null]);
+    return { ok: true };
+  });
+  post("/api/steward/reports/:id/resolve", async (req) => {
+    const a = str((req.body || {}).action, 8);
+    if (a !== "close" && a !== "keep") throw bad("Choose close the post, or keep it.", 400, "decision_needed");
+    await one(req, "select lm.report_resolve($1, $2, $3)", [id(req.params.id), a, str((req.body || {}).note, 1000) || null]);
     return { ok: true };
   });
   post("/api/steward/stewards", async (req) => {

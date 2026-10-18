@@ -40,6 +40,8 @@ const REFUSALS = {
   answers_are_records: [409, "An answer that was sent is a record. It is never changed or deleted."],
   email_not_readable: [400, "That email address does not look right."],
   contact_required: [400, "An email address is needed."],
+  decision_not_known: [400, "Choose close the post, or keep it."],
+  no_such_report: [404, "That report was not found."],
 };
 
 /** Map a thrown error to { status, body } for the API. Never leaks a stack, a table name or a value. */

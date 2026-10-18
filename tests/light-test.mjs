@@ -67,12 +67,14 @@ const lightCheck = (page) => page.evaluate(() => {
 const cookieOf = (cl) => cl.jar().split("=").slice(1).join("=");
 const firstPost = world.ids["Ten folding tables for our Saturday meal"];
 const anyId = (extras.erin, firstPost);
-const PUBLIC = ["/", "/board", "/board?kind=ask&state=WA", "/board?q=zebra", "/board/" + firstPost, "/join", "/me", "/steward", "/nope", "/board/00000000-0000-4000-8000-000000000000"];
+const PUBLIC = ["/", "/board", "/board?kind=ask&state=WA", "/board?q=zebra", "/board/" + firstPost, "/terms", "/privacy", "/join", "/me", "/steward", "/nope", "/board/00000000-0000-4000-8000-000000000000"];
+await pool.query("select lm.report_create($1, 'scam', 'This looks wrong to me.', 'reporter@example.org')", [firstPost]);   /* so the steward's page has a report to paint */
 let pages = 0;
 for (const kind of ["phone", "desk"]) {
   const pub = await open(browser, s.base, kind);
   for (const r of PUBLIC) { await pub.page.goto(r); await pub.page.waitForSelector("body"); await pub.page.waitForTimeout(200); const bad = await lightCheck(pub.page); pages++; ok(bad.length === 0, `${kind}: ${r} is light`, bad.slice(0, 3)); }
   await pub.page.goto("/board"); await pub.page.click("a[data-answer] >> nth=0"); await pub.page.waitForTimeout(300); { const bad = await lightCheck(pub.page); pages++; ok(bad.length === 0, `${kind}: the board with the 'sign in to answer' note is light`, bad.slice(0, 3)); }
+  await pub.page.goto("/board"); await pub.page.click("a[data-report] >> nth=0"); await pub.page.waitForSelector("select[name=reason]"); { const bad = await lightCheck(pub.page); pages++; ok(bad.length === 0, `${kind}: the report form under a post is light`, bad.slice(0, 3)); }
   ok(pub.errors.length === 0, `${kind}: the public pages: zero page errors`, pub.errors.slice(0, 3));
   /* it can fail: a dark panel painted from script is caught, and so is red */
   await pub.page.goto("/"); await pub.page.evaluate(() => { const d = document.createElement("div"); d.className = "card"; d.textContent = "x"; d.style.background = "#0a0f1f"; document.querySelector("main").append(d); });
@@ -92,7 +94,9 @@ for (const kind of ["phone", "desk"]) {
   const alex = world.c["alex@alpha.example"];
   const c1 = await who(alex, ["/me", "/join", "/steward"], "a lead's");
   await c1.page.goto("/me"); await c1.page.waitForSelector("button:has-text('Post an ask')"); await c1.page.click("button:has-text('Post an ask')"); await c1.page.waitForSelector("form select[name=category]"); { const bad = await lightCheck(c1.page); pages++; ok(bad.length === 0, `${kind}: the form to post an ask is light`, bad.slice(0, 3)); }
-  await c1.page.click("button:has-text('Change this page')").catch(() => {}); { const bad = await lightCheck(c1.page); pages++; ok(bad.length === 0, `${kind}: the form to change the page is light`, bad.slice(0, 3)); }
+  await c1.page.goto("/me"); await c1.page.waitForSelector("details[data-fold=profile]"); for (const k of ["profile", "team", "account"]) await c1.page.click(`details[data-fold=${k}] summary`);
+  await c1.page.click("button:has-text('Change this page')"); await c1.page.waitForSelector("form input[name=contact_email]"); { const bad = await lightCheck(c1.page); pages++; ok(bad.length === 0, `${kind}: the form to change the page is light`, bad.slice(0, 3)); }
+  await c1.page.goto("/me"); await c1.page.waitForSelector("details[data-fold=account]"); await c1.page.click("details[data-fold=account] summary"); await c1.page.click("button:has-text('Delete my account')"); await c1.page.waitForSelector("button:has-text('Yes, delete my account and my data')"); { const bad = await lightCheck(c1.page); pages++; ok(bad.length === 0, `${kind}: the page that asks if you are sure you want to delete your account is light, and calm`, bad.slice(0, 3)); }
   await c1.close();
   const fresh = client(s.base); { const { signIn } = await import("./helpers.mjs"); await signIn(fresh, null, "newcomer@example.org", { smtp }); }
   const c2 = await who(fresh, ["/join", "/me"], "a person with no ministry yet"); await c2.close();
@@ -100,6 +104,6 @@ for (const kind of ["phone", "desk"]) {
   const c4 = await who(world.c["blake@bravo.example"], [`/board/${firstPost}`], "an answering ministry's");
   await c4.page.click("a[data-answer]"); await c4.page.waitForSelector("form textarea[name=words]"); { const bad = await lightCheck(c4.page); pages++; ok(bad.length === 0, `${kind}: the answer form is light`, bad.slice(0, 3)); } await c4.close();
 }
-ok(pages >= 40, `${pages} pages and states were painted and read`);
+ok(pages >= 50, `${pages} pages and states were painted and read`);
 await browser.close(); await s.stop(); await smtp.stop(); await pool.end();
 process.exit(T.done());

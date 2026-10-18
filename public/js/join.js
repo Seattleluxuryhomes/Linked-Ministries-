@@ -1,6 +1,6 @@
 /* join.js — /join: sign in by an email code, then (if this person has no ministry yet) join the one that asked them, or add their
    own. Nothing says "sent" unless the server said the mail provider took it. */
-import { h, get, post, msg, field, text, busy, values, ministryForm, safeNext } from "/js/common.js";
+import { h, get, post, msg, field, text, busy, values, ministryForm, safeNext, agreeLine } from "/js/common.js";
 import { WORDS } from "/js/pure.js";
 
 const app = document.getElementById("app");
@@ -17,9 +17,10 @@ async function start() {
 function emailStep(prefill = "") {
   const email = text("to", prefill, { type: "email", max: 254, required: true, auto: "email", mode: "email" });
   const out = h("div", { class: "out" });
-  const form = h("form", { class: "card", novalidate: true },
+  const form = h("form", { class: "card formcard", novalidate: true },
     field("Email", email, WORDS.joinLead), out,
-    h("p", { class: "row" }, h("button", { class: "btn", type: "submit" }, WORDS.sendCode)));
+    h("p", { class: "row" }, h("button", { class: "btn", type: "submit" }, WORDS.sendCode)),
+    agreeLine());
   form.addEventListener("submit", async (ev) => {
     ev.preventDefault(); out.replaceChildren();
     const btn = form.querySelector("button[type=submit]");
@@ -38,7 +39,7 @@ function emailStep(prefill = "") {
 function codeStep(to) {
   const code = text("code", "", { max: 12, required: true, auto: "one-time-code", mode: "numeric" });
   const out = h("div", { class: "out" });
-  const form = h("form", { class: "card", novalidate: true },
+  const form = h("form", { class: "card formcard", novalidate: true },
     msg(`${WORDS.codeSent} (${to})`, "ok"),
     field("Six-number code", code, WORDS.codeHint), out,
     h("p", { class: "row" }, h("button", { class: "btn", type: "submit" }, WORDS.signIn),
@@ -68,7 +69,7 @@ function signedIn(me) {
   for (const inv of me.invites || []) parts.push(inviteCard(inv, me, done));
   if ((me.invites || []).length) parts.push(h("h2", {}, WORDS.orOwn));
   parts.push(ministryForm({
-    v: { contact_name: me.user.name && me.user.name !== me.user.email ? me.user.name : "" }, email: me.user.email, submit: WORDS.profileSave,
+    v: { contact_name: me.user.name && me.user.name !== me.user.email ? me.user.name : "" }, email: me.user.email, submit: WORDS.profileSave, agree: true,
     onSubmit: async (v) => {
       const r = await post("/api/ministry", v);
       if (!r.ok) return { error: r.data.words || WORDS.tryAgain };
@@ -82,7 +83,7 @@ function signedIn(me) {
 function inviteCard(inv, me, done) {
   const name = text("name", me.user.name && me.user.name !== me.user.email ? me.user.name : "", { max: 120, required: true, auto: "name" });
   const out = h("div", { class: "out" });
-  const form = h("form", { class: "card", novalidate: true },
+  const form = h("form", { class: "card formcard", novalidate: true },
     h("h3", {}, WORDS.invitedTitle), h("p", {}, `${inv.ministry} (${inv.city}, ${inv.state})`),
     field(WORDS.yourName, name), out,
     h("p", { class: "row" }, h("button", { class: "btn", type: "submit" }, WORDS.invitedJoin)));

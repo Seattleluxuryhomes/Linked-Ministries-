@@ -64,10 +64,11 @@ export const codeFromLog = (logText, email) => { const lines = logText.split("\n
    It keeps every message it accepted. With reject:true it answers every message with a refusal (550), as a provider would. */
 const qp = (s) => s.replace(/=\r?\n/g, "").replace(/=([0-9A-F]{2})/g, (_, x) => String.fromCharCode(parseInt(x, 16)));
 function parseMail(cur) {
+  cur = { ...cur, data: cur.data.replace(/^\.\./gm, ".") };   /* a real server takes off the extra dot a sender puts before a line that starts with one */
   const [head, ...rest] = cur.data.split("\r\n\r\n"); const body = rest.join("\r\n\r\n");
   const hdr = (n) => { const m = new RegExp("^" + n + ":\\s*(.*(?:\\r?\\n[ \\t].*)*)", "im").exec(head); return m ? m[1].replace(/\r?\n[ \t]+/g, " ").trim() : ""; };
-  const enc = /quoted-printable/i.test(head);
-  return { from: cur.from, to: cur.to, subject: hdr("Subject"), replyTo: hdr("Reply-To"), toHeader: hdr("To"), text: enc ? qp(body) : body, raw: cur.data };
+  const enc = /quoted-printable/i.test(head), b64 = /Content-Transfer-Encoding:\s*base64/i.test(head);
+  return { from: cur.from, to: cur.to, subject: hdr("Subject"), replyTo: hdr("Reply-To"), toHeader: hdr("To"), text: b64 ? Buffer.from(body.replace(/\s+/g, ""), "base64").toString("utf8") : enc ? qp(body) : body, raw: cur.data };
 }
 export async function smtpStandIn({ reject = false } = {}) {
   const mails = []; const sockets = new Set(); const state = { reject };

@@ -60,8 +60,8 @@ export async function busy(button, fn) {
 }
 
 /** the ministry's profile form (used when a ministry is made and when a lead changes it) */
-export function ministryForm({ v = {}, email, submit, onSubmit, note }) {
-  const form = h("form", { class: "card", novalidate: true },
+export function ministryForm({ v = {}, email, submit, onSubmit, note, agree = false }) {
+  const form = h("form", { class: "card formcard", novalidate: true },
     note ? h("p", { class: "note" }, note) : null,
     h("div", { class: "formgrid" },
       field(WORDS.fieldName, text("name", v.name, { max: 120, required: true, auto: "organization" })),
@@ -72,7 +72,8 @@ export function ministryForm({ v = {}, email, submit, onSubmit, note }) {
       field(WORDS.fieldWebsite, text("website", v.website, { type: "url", max: 200, mode: "url", placeholder: "https://" })),
       field(WORDS.fieldContactEmail, text("contact_email", v.contact_email || email, { type: "email", max: 254, required: true, auto: "email" }), WORDS.fieldContactEmailHelp)),
     h("div", { class: "out" }),
-    h("p", { class: "row" }, h("button", { class: "btn", type: "submit" }, submit)));
+    h("p", { class: "row" }, h("button", { class: "btn", type: "submit" }, submit)),
+    agree ? agreeLine() : null);
   form.addEventListener("submit", async (ev) => {
     ev.preventDefault();
     const out = form.querySelector(".out"), btn = form.querySelector("button[type=submit]");
@@ -82,12 +83,17 @@ export function ministryForm({ v = {}, email, submit, onSubmit, note }) {
   return form;
 }
 
+/** "By joining you agree to the terms and the privacy page. You must be 18 or older." with both links */
+export function agreeLine() {
+  return h("p", { class: "agree" }, "By joining you agree to the ", h("a", { href: "/terms" }, WORDS.agreeTerms), " and the ", h("a", { href: "/privacy" }, WORDS.agreePrivacy), ". ", WORDS.adultsOnly);
+}
+
 /** the post form: kind is fixed by which button opened it */
 export function postForm({ kind, v = {}, ministry, limits, submitLabel, onSave, onSend }) {
   const until = v.open_until || addDays(limits.today, 30);
   const dateInput = text("open_until", until, { type: "date", required: true });
   dateInput.min = limits.today; dateInput.max = limits.max;
-  const form = h("form", { class: "card", novalidate: true },
+  const form = h("form", { class: "card formcard", novalidate: true },
     h("h3", {}, KIND[kind].post),
     h("p", { class: "note" }, WORDS.fieldBodyHelp),
     h("div", { class: "formgrid" },

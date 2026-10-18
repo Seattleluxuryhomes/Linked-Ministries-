@@ -2,7 +2,7 @@
   "version": 1,
   "about": "Pieces this repository copied from another of the founder's products (Cross Universal), the sharing map. origin_sha256 is the origin file's SHA-256 at origin_commit; local_sha256 is this file's. A verbatim piece equals its origin; an adapted piece says what changed; a shaped-on piece is written new on the same model, rulings and defaults. 'Do not rebuild what has been built: copy it.' Regenerate with: node tools/commons.mjs",
   "origin_repo": "cross-univeral",
-  "origin_commit": "91b4f56ff2853dad44b79f19450cbc1a09c21c30",
+  "origin_commit": "124e730b7d84dd5971204b5ff827ec310b7ed0f5",
   "pieces": [
     {
       "id": "plainwords",
@@ -111,7 +111,7 @@
       "origin_path": "behavioral-health-app/server/mail.mjs",
       "origin_sha256": "748bee1b285a7ce676a4808e632e8d51b77b7652b2f2b0467f98eb44b2b390a6",
       "local_path": "server/mail.mjs",
-      "local_sha256": "252894ed0df47a0b0201ac85f525f23b7b62f168b11ea8da33af9979dc123519",
+      "local_sha256": "01ab69070364db41567929634882dbaa8551a1082a3e5365f2c6ace1cd7c4304",
       "note": "The text-message sender is gone, the default From names this site, and a Reply-To can be set."
     },
     {
@@ -166,7 +166,7 @@
       "origin_path": "behavioral-health-app/server/auth.mjs",
       "origin_sha256": "3c74526981d28391176e245a64dc407ff6e96ccd76c97c31f823dac07e33ad2f",
       "local_path": "server/auth.mjs",
-      "local_sha256": "342a15a6ad497a50171198477caa3c4cd29df957802f5c527aab93affc19eb6a",
+      "local_sha256": "454786a8e317c1805e11ee172f61d01afe7daee07095612d6236d8ca29de47e8",
       "note": "Six-digit code by email, hash-stored, ten minutes, five tries, one use, five wrong codes lock an address, thirty-day httpOnly sessions. Anyone may sign in (the first sign-in makes the person); the phone channel is gone; the answer says plainly when no email can be sent."
     },
     {
@@ -177,7 +177,7 @@
       "origin_path": "behavioral-health-app/server/api.mjs",
       "origin_sha256": "8ee33e9349c194104e91d85d9ce378f4c820e10d25fc8485156f98c03a40a4e5",
       "local_path": "server/api.mjs",
-      "local_sha256": "ce686574f289704b55d0a928574b249ba7f292610eae8ff14e43b283dc3ad840",
+      "local_sha256": "98119d2501d71db71b6acd3fde996dd296dba1c82a042496ab6ca1bbe33e4277",
       "note": "Same pattern (asUser, functions decide, early friendly checks). The routes are this product's: ministries, team, posts, answers, stewards."
     },
     {
@@ -188,7 +188,7 @@
       "origin_path": "behavioral-health-app/server/index.mjs",
       "origin_sha256": "b1375df160f0be6f55b551c26472bdeb63eef9c9af918fff8ba44584fd168e21",
       "local_path": "server/index.mjs",
-      "local_sha256": "b0ee4fb254b30f81650692d6d59a0fc8a77ecdc64ff336832e52e5018226c7b7",
+      "local_sha256": "d7eb547f466ee0720fee4e4ef73431252d9254a8f1b8965d37b197e3c5e921b1",
       "note": "Same boot order and health answer (two words). Public pages are built on the server."
     },
     {
@@ -199,7 +199,7 @@
       "origin_path": "behavioral-health-app/server/words.mjs",
       "origin_sha256": "7d66d59b2ffd109e7ba740ea0f66090185974bb339207889072108b8262c41e8",
       "local_path": "server/words.mjs",
-      "local_sha256": "11a09f4014db28a2785e746e3435649ab09ab4a3f5580e8032792621bd4163aa",
+      "local_sha256": "990d8420aabadff2d2ab1e4682e71853e4372a4aba518cb037726a6509d789c3",
       "note": "Same refusal mapping (a code and a hint); the codes are this product's. The founder's one editable line lives here."
     },
     {
@@ -210,7 +210,7 @@
       "origin_path": "behavioral-health-app/public/js/common.js",
       "origin_sha256": "2fdb3638d46193dd3d4184ed2dd793e5595b006bed5c73821c076fdfe8c75358",
       "local_path": "public/js/common.js",
-      "local_sha256": "e7e95ca83d97848666decaf6bfc64368504cd653d8cf0d05749060c63b15b158",
+      "local_sha256": "92f4638fcf0e6d7e65cf0f6fb5f21c184d7744b50cd856e8c32925d4be4ff069",
       "note": "Same h() and api() helpers; the forms are this product's."
     },
     {
@@ -265,7 +265,7 @@
       "origin_path": "behavioral-health-app/tests/helpers.mjs",
       "origin_sha256": "31bf003a9137efa0be87d6aebaf6887ab66541ca4587610091844d8bcfd1e5ef",
       "local_path": "tests/helpers.mjs",
-      "local_sha256": "83a28a4b599a9d94e9e2933a14e5a238766294287ac1c13a8879f526d6209102",
+      "local_sha256": "2548b313715ae896ffd5fb0a342ab1c3701d737978bc39fc8842df8c68447e41",
       "note": "Database names are linkedm_t_*; adds a stand-in SMTP server (a real mail conversation) and a sign-in helper."
     },
     {
@@ -309,7 +309,7 @@
       "origin_path": "behavioral-health-app/tests/light-test.mjs",
       "origin_sha256": "e3e7289a423a030c9427e2617334f909a8f0f8104ccd5466a3be72e8aa063881",
       "local_path": "tests/light-test.mjs",
-      "local_sha256": "bef40389a690e12513ffe80525b146c2ef63c9cab933a95720a861f75176aae1",
+      "local_sha256": "8e24b4d1223b1597cad47a7d5cda7eacc19ca0cf238f8140d05e21b21a4d3e76",
       "note": "Same method (stylesheet tokens, painted pages, a dark panel is caught); adds a check for red and for contrast."
     },
     {
@@ -320,7 +320,7 @@
       "origin_path": "behavioral-health-app/tests/db-test.mjs",
       "origin_sha256": "e3ed64b0c1321e3ae22fbf7d18c5eb918907b5f1d46a55359eef58061c35b71a",
       "local_path": "tests/db-test.mjs",
-      "local_sha256": "438dd458e85a9d813ec5ae2732c4a9df3dd0baecc3c4a2f977098bc3162a46f7",
+      "local_sha256": "09530da4715e9a7f1dcb1c72b283864f0cdf37540f85cecb1d51d7ef7a800f25",
       "note": "Same method; this product's rules."
     },
     {
@@ -331,7 +331,7 @@
       "origin_path": "behavioral-health-app/tests/api-test.mjs",
       "origin_sha256": "b9aed98a7b54da362b31cbf559aa6e2637b2a6d38db924b6335cfdd21d646f7c",
       "local_path": "tests/api-test.mjs",
-      "local_sha256": "e215d18e2071b6a26ef270f139410875adde523ddf0fc27e6ddd321973f3b456",
+      "local_sha256": "d00d2cecbd884dc36657d90f3ffb2f2f3f7465b832bdc5d4c5d83272b201fd2d",
       "note": "Same method; adds the stand-in mail server."
     },
     {
@@ -342,7 +342,7 @@
       "origin_path": "behavioral-health-app/tests/browser-test.mjs",
       "origin_sha256": "ea133f994d92eafd8f78efa5e805a95ae402d27a7c1bf5ed0d47e60233f156e0",
       "local_path": "tests/browser-test.mjs",
-      "local_sha256": "1a62f50618916dd137f84a62191bbce3ba797f5dd6792727857fd7710c536802",
+      "local_sha256": "234cfedf1f2002dd38aebd75640013a7a5954d0b85efd18678ed2148a1d7f8d7",
       "note": "Same method; this product's journey."
     },
     {
@@ -353,7 +353,7 @@
       "origin_path": "behavioral-health-app/tests/unit-test.mjs",
       "origin_sha256": "6bead93056daa8752e1c7eaca4e74352772b4d62cc6832e2916b8d739b6ab620",
       "local_path": "tests/unit-test.mjs",
-      "local_sha256": "a2c1f98b58c6b44d3b76935b138ca6a997d6b8f11f492b9d254f93d55dd72743",
+      "local_sha256": "8fbc9a0e87ce30621dc27a317c80a00dda76e25366a4eb2f57745b05a17af7f4",
       "note": "The licence check, the commons check, the no-key scan and the migration checks are the original's."
     },
     {
@@ -375,7 +375,7 @@
       "origin_path": "behavioral-health-app/DEPLOY.md",
       "origin_sha256": "8c32d1bf183e7f3db4d657d7cdb5c98ad654564ea99e09d2ab9e784883d95ad9",
       "local_path": "DEPLOY.md",
-      "local_sha256": "53adb702b21b54cda6de27066d6f8916fd8cafa544c79c6211170d044042f4b7",
+      "local_sha256": "8b431613370afaa75aca64e13f0e8e1fdb36a10e0828b1147eeb725aa91e4fd7",
       "note": "Same form; this product's steps and variables."
     },
     {
@@ -386,7 +386,7 @@
       "origin_path": "behavioral-health-app/CLAUDE.md",
       "origin_sha256": "3c403645fae7028168c5ee3e1201d85863a7ebbf30225d2007cef282ce16842e",
       "local_path": "CLAUDE.md",
-      "local_sha256": "6e0f1e6f8d76237f88e6dcbf97d039363d16fcac00fbfe6b7dc8392547e15cd6",
+      "local_sha256": "a3ff7bf6963b712f7a754b5e7df1eeb2211d99630c041030275c92f5bf447909",
       "note": "Same form; this product's hard rules."
     },
     {
@@ -397,7 +397,7 @@
       "origin_path": "behavioral-health-app/.env.example",
       "origin_sha256": "4d8e45e2586e944d75608b0fadcbe93dca13931c1825a8fd58ff81faeae6dd60",
       "local_path": ".env.example",
-      "local_sha256": "02dfa5bf927edc5cb8fd3976484a34ecd2f0c66131d7d636c32d1d449cdb7642",
+      "local_sha256": "4f97f392c2f04a999db1f7d9d56018703f3d437520b475c8b6ce528a24255441",
       "note": "This product's variables."
     },
     {

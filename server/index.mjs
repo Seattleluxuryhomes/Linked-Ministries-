@@ -4,14 +4,15 @@ import express from "express";
 import path from "node:path";
 import crypto from "node:crypto";
 import { guardOrExit } from "./config.mjs";
-import { pool, migrate, asAdmin, ROOT } from "./db.mjs";
+import { pool, migrate, asAdmin, asUser, ROOT } from "./db.mjs";
 import { securityHeaders, sameOriginLock } from "./headers.mjs";
 import { startSignIn, verifyCode, sessionUser, revokeSession, whoami } from "./auth.mjs";
 import { mount, dayLimits } from "./api.mjs";
 import { emailConfigured } from "./mail.mjs";
 import { refusal } from "./words.mjs";
 import { boardQuery, boardPost } from "./board.mjs";
-import { frontPage, boardPage, postPage, missingPostPage, shellPage, notFoundPage } from "./pages.mjs";
+import { frontPage, boardPage, postPage, missingPostPage, shellPage, notFoundPage, termsPage, privacyPage } from "./pages.mjs";
+import { noticeEmail } from "../lib/email.mjs";
 import { PRODUCT, CATEGORIES, STATES } from "../public/js/pure.js";
 
 const PUBLIC = path.join(ROOT, "public");
@@ -91,6 +92,14 @@ export function buildApp({ env = process.env } = {}) {
     res.json({ ok: true, has_ministry: !!me.ministry, landing: me.ministry ? "/me" : "/join" });
   }));
   app.post("/api/auth/signout", wrap(async (req, res) => { await revokeSession(cookies(req)[COOKIE]); clearSession(res); res.json({ ok: true }); }));
+  /* delete my account: the database does all of it in one transaction (lm.account_delete) and says whether the ministry left with the person */
+  app.post("/api/me/delete", wrap(async (req, res) => {
+    if (!req.user) throw Object.assign(new Error("unauthenticated"), { status: 401, words: "Please sign in." });
+    if ((req.body || {}).confirm !== true) throw Object.assign(new Error("confirm_needed"), { status: 400, words: "Press the button to say you are sure." });
+    const r = (await asUser(req.user.id, async (c) => (await c.query("select lm.account_delete() as r")).rows[0])).r;
+    clearSession(res);
+    res.json({ ok: true, ministry_left: !!r.ministry_left, words: "Your account is deleted." });
+  }));
 
   /* ---- the signed-in API ------------------------------------------------------------------------------------------------- */
   mount(app, { wrap, publicBase });
@@ -104,16 +113,26 @@ export function buildApp({ env = process.env } = {}) {
 
   /* ---- the pages ----------------------------------------------------------------------------------------------------------- */
   const html = (res, status, body) => res.status(status).type("html").send(body);
-  app.get("/", wrap(async (req, res) => { const r = await boardQuery({}, { limit: 6 }); res.set("cache-control", "no-cache"); html(res, 200, frontPage({ latest: r.posts })); }));
-  app.get("/board", wrap(async (req, res) => { const r = await boardQuery(req.query); res.set("cache-control", "no-cache"); html(res, 200, boardPage({ result: r })); }));
-  app.get("/board/:id", wrap(async (req, res) => { const p = await boardPost(req.params.id); res.set("cache-control", "no-cache"); p ? html(res, 200, postPage({ post: p })) : html(res, 404, missingPostPage()); }));
-  app.get("/join", (req, res) => html(res, 200, shellPage({ title: "Join the network", script: "/js/join.js", nav: "join" })));
-  app.get("/me", (req, res) => html(res, 200, shellPage({ title: "Your ministry", script: "/js/me.js", nav: "me" })));
-  app.get("/steward", (req, res) => html(res, 200, shellPage({ title: "Waiting to be read", script: "/js/steward.js", nav: "" })));
-  app.get("/robots.txt", (req, res) => res.type("text/plain").send(["User-agent: *", "Disallow: /me", "Disallow: /steward", "Disallow: /join", "Disallow: /api", "Allow: /", ""].join("\n")));
-  app.get("/sitemap.xml", (req, res) => { const b = publicBase(req); res.type("application/xml").send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n<url><loc>${b}/</loc></url>\n<url><loc>${b}/board</loc></url>\n</urlset>\n`); });
+  const where = (req) => ({ base: String(env.LEXOS_PUBLIC_URL || "").replace(/\/+$/, ""), notice: noticeEmail(env) });
+  app.get("/", wrap(async (req, res) => { const r = await boardQuery({}, { limit: 6 }); res.set("cache-control", "no-cache"); html(res, 200, frontPage({ latest: r.posts, ...where(req) })); }));
+  app.get("/board", wrap(async (req, res) => { const r = await boardQuery(req.query); res.set("cache-control", "no-cache"); html(res, 200, boardPage({ result: r, ...where(req) })); }));
+  app.get("/board/:id", wrap(async (req, res) => { const p = await boardPost(req.params.id); res.set("cache-control", "no-cache"); p ? html(res, 200, postPage({ post: p, ...where(req) })) : html(res, 404, missingPostPage(where(req))); }));
+  app.get("/terms", (req, res) => { res.set("cache-control", "public, max-age=300"); html(res, 200, termsPage(where(req))); });
+  app.get("/privacy", (req, res) => { res.set("cache-control", "public, max-age=300"); html(res, 200, privacyPage(where(req))); });
+  app.get("/join", (req, res) => html(res, 200, shellPage({ title: "Join the network", script: "/js/join.js", nav: "join", ...where(req) })));
+  app.get("/me", (req, res) => html(res, 200, shellPage({ title: "Your ministry", script: "/js/me.js", nav: "me", ...where(req) })));
+  app.get("/steward", (req, res) => html(res, 200, shellPage({ title: "Waiting to be read", script: "/js/steward.js", nav: "", ...where(req) })));
+  /* the front, the board, the terms and the privacy page are the public pages; the signed-in pages and the API are kept out of search */
+  app.get("/robots.txt", (req, res) => res.type("text/plain").send(["User-agent: *", "Disallow: /me", "Disallow: /steward", "Disallow: /join", "Disallow: /api", "Allow: /", "", `Sitemap: ${publicBase(req)}/sitemap.xml`, ""].join("\n")));
+  /* only what the public may read: the front, the board, the two legal pages, and each open post that a person read. Never a draft, a waiting post, a closed one or a post of a ministry nobody has read. */
+  app.get("/sitemap.xml", wrap(async (req, res) => {
+    const b = publicBase(req), r = await boardQuery({}, { limit: 500 });
+    const urls = [["/", null], ["/board", null], ["/terms", null], ["/privacy", null], ...r.posts.map((p) => ["/board/" + p.id, p.posted_at])];
+    res.type("application/xml").set("cache-control", "public, max-age=300").send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(([u, d]) => `<url><loc>${b}${u}</loc>${d ? `<lastmod>${d}</lastmod>` : ""}</url>`).join("\n")}\n</urlset>\n`);
+  }));
+  app.get("/favicon.ico", (req, res) => res.type("image/x-icon").set("cache-control", "public, max-age=86400").sendFile(path.join(PUBLIC, "favicon.ico")));
   app.use(express.static(PUBLIC, { index: false, maxAge: "5m", setHeaders: (res, p) => { if (/\.(woff2)$/.test(p)) res.setHeader("Cache-Control", "public, max-age=31536000, immutable"); } }));
-  app.use((req, res) => html(res, 404, notFoundPage()));
+  app.use((req, res) => html(res, 404, notFoundPage(where(req))));
   return app;
 }
 

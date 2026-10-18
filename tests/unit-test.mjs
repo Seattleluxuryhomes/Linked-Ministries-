@@ -13,7 +13,11 @@ import { checkConfig } from "../server/config.mjs";
 import { refusal, NONPROFIT_LINE, FILING_STATUS, FORMED } from "../server/words.mjs";
 import { cleanFilters } from "../server/board.mjs";
 import { dayLimits } from "../server/api.mjs";
-import { frontPage, boardPage, postPage, missingPostPage, shellPage, notFoundPage, e, postCard } from "../server/pages.mjs";
+import { frontPage, boardPage, postPage, missingPostPage, shellPage, notFoundPage, termsPage, privacyPage, e, postCard, MARK } from "../server/pages.mjs";
+import { noticeEmail } from "../lib/email.mjs";
+import { signInEmail, answerEmail, inviteEmail, reportEmail } from "../server/emails.mjs";
+import { TERMS, PRIVACY, DRAFT_LINE } from "../server/legal.mjs";
+import { STAY_SAFE, REPORT_REASONS } from "../public/js/pure.js";
 import { smtpUrlWithTimeouts } from "../server/mail.mjs";
 import { normCode, normEmail, validEmail } from "../server/auth.mjs";
 import { securityHeaders, POLICY } from "../server/headers.mjs";
@@ -79,6 +83,7 @@ const result = (posts, filters = {}) => ({ posts, total: posts.length, page: 1, 
 const built = {
   front: frontPage({ latest: sample }), frontEmpty: frontPage({ latest: [] }), board: boardPage({ result: result(sample) }), boardEmpty: boardPage({ result: result([]) }),
   boardFiltered: boardPage({ result: result([], { kind: "ask", q: "zebra" }) }), post: postPage({ post: sample[0] }), missing: missingPostPage(), notFound: notFoundPage(),
+  terms: termsPage({ notice: "notices@linkedm.example" }), privacy: privacyPage({ notice: "notices@linkedm.example" }), termsNoAddress: termsPage({}),
   join: shellPage({ title: "Join the network", script: "/js/join.js", nav: "join" }), me: shellPage({ title: "Your ministry", script: "/js/me.js", nav: "me" }), steward: shellPage({ title: "Waiting to be read", script: "/js/steward.js" }),
 };
 for (const [name, html] of Object.entries(built)) {
@@ -99,6 +104,66 @@ ok(/No posts match/.test(built.boardFiltered) && /Clear/.test(built.boardFiltere
   const html = postCard(evil); ok(!/<script>|<img |<b>/.test(html) && html.includes("&lt;script&gt;") && html.includes("&amp; Co"), "what a person typed is escaped: text is never markup"); ok(e("a<b>&\"'") === "a&lt;b&gt;&amp;&quot;&#39;", "the escape covers < > & and both quotes"); }
 ok(!/<script(?![^>]*src)/.test(built.me) && /<script type="module" src="\/js\/me\.js">/.test(built.me) && /<noscript>/.test(built.me), "the signed-in pages are a shell and one script, with a plain note if scripts are off");
 { const m = built.board.match(/<main[\s\S]*<\/main>/)[0]; ok(!/\bred\b|alarm|danger-zone|error-red/i.test(m), "no alarm styling on the board"); }
+
+
+/* ---- what a lawyer will ask about, answered in code (founder, 2026-10-18: nothing we can be sued for) ---- */
+{
+  const all = { ...built }; const text = (h) => visibleText(h).split(NONPROFIT_LINE).join(" ");
+  for (const [name, html] of Object.entries(all)) {
+    ok(/href="\/terms"/.test(html) && /href="\/privacy"/.test(html), `page ${name}: the footer links the terms and the privacy page`);
+    ok(!/501\(c\)|tax|deduct|exempt|charitable|donat|tithe/i.test(text(html)), `page ${name}: no claim of nonprofit status, no word about taxes, no talk of donations`, text(html).match(/501\(c\)|tax\w*|deduct\w*|exempt|charitable|donat\w*|tithe/i));
+  }
+  ok(built.front.includes("forming as a Washington nonprofit corporation") && built.front.includes("not yet filed"), "the footer says the corporation is forming and the application is not filed, as the founder wrote it");
+  for (const name of ["terms", "privacy"]) { const main = built[name].match(/<main[\s\S]*?<\/main>/)[0]; ok(main.startsWith(`<main id="main" tabindex="-1">\n<div class="wrap prose">\n<p class="draft">${DRAFT_LINE}</p>\n<h1>`), `/${name} begins with the line: ${DRAFT_LINE}`); }
+  const T = text(built.terms), P = text(built.privacy);
+  ok(/free board/.test(T) && /forming as a Washington nonprofit corporation/.test(T), "the terms say what the service is: a free board, run by a Washington nonprofit corporation being formed");
+  ok(/do not check or vouch for any ministry or person/.test(T) && /We move no money/.test(T) && /do not promise that any ask will be met/.test(T), "the terms say Linked Ministries does not check or vouch for anyone, moves no money, and does not promise an ask is met");
+  ok(/18 or older/.test(T) && /No one under 18 may post/.test(T) && /not for anyone under 18/.test(P), "the terms and the privacy page say the service is for ministries and adults, and no one under 18 posts");
+  ok(/Stay safe: meet in a public place, bring someone with you, and never send money/.test(T) && /911/.test(T) && /988/.test(T), "the terms carry the stay-safe line and the 911 and 988 line");
+  ok(/Copyright and takedown/.test(T) && /notices@linkedm\.example/.test(T) && /good faith/.test(T) && /sign it with your name/i.test(T) && /close the post while we look/.test(T), "the terms give a notice address and a way to send a takedown by email, and say what the notice holds");
+  ok(/Report on a post/.test(T) && /Nothing is hidden when a report comes in/.test(T), "the terms say a report hides nothing until a steward acts");
+  ok(/href="mailto:notices@linkedm\.example"/.test(built.terms) && /href="mailto:notices@linkedm\.example"/.test(built.privacy) && !/mailto:/.test(built.termsNoAddress) && /the address on any email we send you/.test(built.termsNoAddress), "the notice address is a mail link; with none set the page says where to find one, and invents none");
+  ok(/email address and your name/.test(P) && /ministry's page/.test(P) && /posts/.test(P) && /Answers you send and get/.test(P), "the privacy page says what is stored: email, name, the ministry's page, posts, answers");
+  ok(/Anyone can see a public post/.test(P) && /contact email is never on the board/.test(P) && /one email/.test(P), "and who sees what: public posts are public, the contact email only reaches an answerer by email");
+  ok(/do not track you/.test(P) && /do not sell or rent your data/.test(P) && /show no ads/.test(P) && /one cookie/.test(P), "and that there is no tracking, no sale of data, no advertising, and one cookie");
+  ok(/Delete my account/.test(P) && /Download my data/.test(P) && /write to <a href="mailto:notices@linkedm.example">notices@linkedm.example<\/a>, and we will do it/.test(built.privacy), "and how to delete an account and its data, by one press or one email, and how to take a copy");
+  ok(!/\d+(,\d{3})* (dollars|users|ministries)\b/.test(T + P), "no number is claimed in the legal pages");
+  /* every post, everywhere, says to stay safe and can be reported */
+  const front = frontPage({ latest: sample }), board = boardPage({ result: result(sample) }), one = postPage({ post: sample[0] });
+  for (const [name, html] of [["front", front], ["board", board], ["post", one]]) {
+    const cards = (html.match(/<article class="post/g) || []).length, safe = (html.match(new RegExp(STAY_SAFE.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g")) || []).length, rep = (html.match(/data-report="/g) || []).length;
+    ok(cards >= 1 && safe === cards && rep === cards, `${name}: each of the ${cards} posts carries the stay-safe line and a Report link`, { cards, safe, rep });
+  }
+  ok(/class="reportlink" href="\/board\/[^"]+#report"/.test(front) && !/data-answer/.test(front), "on the front, Report is a plain link to the post's own page");
+  ok(/<h1 class="post-title">/.test(one) && !/<h3 class="post-title">/.test(one) && /<h3 class="post-title"><a /.test(board), "a post page has its title as the page heading, and on the board each title is a link");
+  /* the mark: drawn inline, small, gold on ink, the same file as the icon */
+  ok(Buffer.byteLength(MARK) < 2048 && /#1b2430/.test(MARK) && /#d97706/.test(MARK) && Buffer.byteLength(read("public/img/icon.svg")) < 2048 && /#d97706/.test(read("public/img/icon.svg")), "the mark is under 2 KB, gold on ink, inline in every page and in the icon file", Buffer.byteLength(MARK));
+  /* share card and icons */
+  { const png = fs.readFileSync(path.join(ROOT, "public/img/share.png")); ok(png.subarray(0, 8).toString("hex") === "89504e470d0a1a0a" && png.readUInt32BE(16) === 1200 && png.readUInt32BE(20) === 630 && png.length < 150 * 1024, `the share card is a 1200 by 630 PNG under 150 KB (${png.length} bytes)`);
+    const ico = fs.readFileSync(path.join(ROOT, "public/favicon.ico")); ok(ico.readUInt16LE(2) === 1 && ico.readUInt16LE(4) === 1 && ico.length < 8 * 1024, "the favicon is a real .ico file");
+    const at = fs.readFileSync(path.join(ROOT, "public/img/apple-touch-icon.png")); ok(at.readUInt32BE(16) === 180 && at.readUInt32BE(20) === 180, "and the home-screen icon is 180 by 180"); }
+  for (const [name, html] of [["front", frontPage({ latest: [], base: "https://linkedm.org" })], ["board", boardPage({ result: result(sample), base: "https://linkedm.org" })], ["post", postPage({ post: sample[0], base: "https://linkedm.org" })], ["terms", termsPage({ base: "https://linkedm.org" })]]) {
+    ok(/<meta property="og:title" content="[^"]+">/.test(html) && /<meta property="og:description" content="[^"]+">/.test(html) && html.includes('<meta property="og:image" content="https://linkedm.org/img/share.png">') && /og:image:width" content="1200"/.test(html) && /og:image:height" content="630"/.test(html) && /twitter:card" content="summary_large_image"/.test(html) && /twitter:image" content="https:\/\/linkedm\.org\/img\/share\.png"/.test(html), `${name}: a title, a line and a 1200 by 630 picture for Open Graph and Twitter`);
+    ok(/<link rel="icon" href="\/img\/icon\.svg"/.test(html) && /apple-touch-icon/.test(html) && /theme-color/.test(html), `${name}: the icon, the home-screen icon and the theme colour`);
+  }
+  ok(/og:title" content="Ten folding tables, please · Alpha Table Ministry"/.test(postPage({ post: sample[0] })), "a post's share title is its title and its ministry");
+  ok(/<meta name="robots" content="noindex,nofollow">/.test(built.join) && /<meta name="robots" content="noindex,nofollow">/.test(built.me) && /noindex/.test(built.notFound) && !/noindex/.test(built.front) && !/noindex/.test(built.terms), "the signed-in pages and the 404 are noindex; the public pages are not");
+  ok(/class="empty/.test(built.frontEmpty) && /This board is new/.test(built.frontEmpty) && /class="empty/.test(built.boardEmpty) && /class="empty/.test(built.notFound) && /class="empty/.test(built.missing), "an empty board, a missing post and a missing page each have a designed state, not a bare line");
+  /* the notice address */
+  ok(noticeEmail({ LEXOS_NOTICE_EMAIL: "Notices <n@linkedm.org>", LEXOS_MAIL_FROM: "b@linkedm.org" }) === "n@linkedm.org" && noticeEmail({ LEXOS_MAIL_FROM: "Linked Ministries <board@linkedm.org>" }) === "board@linkedm.org" && noticeEmail({ LEXOS_NOTICE_EMAIL: "a,b@c.example", LEXOS_MAIL_FROM: "x" }) === "" && noticeEmail({}) === "", "the notice address is LEXOS_NOTICE_EMAIL, else the sender address, else none; a list or junk is never used");
+  /* the emails: who sent it and why, no marketing, one-line subjects */
+  const mails = { signIn: signInEmail("123456"), answer: answerEmail({ toContact: "Alex", fromMinistry: "Bravo House", place: "Spokane, WA", kind: "ask", title: "Tables", words: "We can bring eleven.", fromName: "Blake", fromEmail: "blake@bravo.example", phone: "509-555-0142", website: "https://bravo.example.org" }),
+    invite: inviteEmail({ inviter: "Alex", ministry: "Alpha Table", joinUrl: "https://linkedm.org/join" }), report: reportEmail({ title: "Tables", ministry: "Alpha", reason: "scam", note: "It looks wrong.", reporter: "r@x.example", url: "https://linkedm.org/board/1", stewardUrl: "https://linkedm.org/steward" }) };
+  for (const [name, m] of Object.entries(mails)) {
+    ok(/Why you got this:/.test(m.text) && !/[\r\n]/.test(m.subject), `the ${name} email says why it was sent, and its subject is one line`);
+    ok(!/\b(sale|discount|offer ends|limited time|unsubscribe|newsletter|promo|buy|upgrade|\$)\b/i.test(m.text.replace(/We send no news and no ads\./g, "").replace(/offer help/g, "")) && !/https?:\/\/(?!linkedm\.org|bravo\.example)/.test(m.text), `the ${name} email sells nothing and links nowhere strange`);
+    ok(!/501\(c\)|tax|deduct|donat/i.test(m.text), `the ${name} email says nothing about taxes or donations`);
+  }
+  ok(/free board where ministries ask for help and offer help/.test(mails.signIn.text) && /We send no news and no ads/.test(mails.signIn.text) && /works for 10 minutes/.test(mails.signIn.text) && /^123456 is your Linked Ministries sign-in code$/.test(mails.signIn.subject), "the sign-in email says who sent it (Linked Ministries, linkedm.org), why, and that no news or ads follow");
+  ok(mails.answer.text.includes(STAY_SAFE) && /does not check or vouch/.test(mails.answer.text) && /911/.test(mails.answer.text) && /We sent you their words for them/.test(mails.answer.text), "the answer email carries the stay-safe line, the no-vouching line and 911 and 988, and says Linked Ministries sent it for them");
+  ok(/Nothing has been hidden/.test(mails.report.text) && /steward at Linked Ministries/.test(mails.report.text), "the report email tells a steward that nothing has been hidden");
+  ok(Object.keys(REPORT_REASONS).join() === "scam,money,unsafe,copy,private,other", "the Report form has six reasons, one of them copying");
+}
 
 /* ---- every static file: no CDN, no tracker, no third-party host, no inline script ---- */
 const surfaces = walk("public").filter((p) => /\.(js|css|svg)$/.test(p));

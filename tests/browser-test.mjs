@@ -166,6 +166,23 @@ for (const kind of ["phone", "desk"]) {
   await v.page.goto("/board"); await v.page.waitForSelector("article.post");
   ok((await v.page.locator(`article.post:has-text("${title}")`).count()) === 1 && (await v.page.locator(`article.post:has-text("${second}")`).count()) === 0, `${kind}: the board shows the approved post and not the one sent back`);
 
+  /* ---- anyone can report a post: it is saved, the stewards are emailed, and nothing is hidden ---- */
+  { const mailsBeforeReport = smtp.mails.length, R = `article.post:has-text("${title}") .report-slot`;
+    await v.page.locator(`article.post:has-text("${title}") a[data-report]`).click();
+    await v.page.waitForSelector(R + " select[name=reason]");
+    await calm(v.page, `${kind}: the report form`); await big(v.page, `${kind}: the report form`);
+    if (tag === "p") await snap(v.page, "report-390"); else await snap(v.page, "report-1440");
+    await v.page.click(R+" button:has-text('Send report')");
+    await v.page.waitForSelector(R+" .out .msg");
+    ok(/Choose what is wrong/.test(await v.page.locator(R+" .out").innerText()), `${kind}: a report with no reason is refused in words`);
+    await v.page.selectOption(R + " select[name=reason]", "scam"); await typeIn(v.page, R+" textarea[name=note]", "This looks wrong to me.");
+    ok(!(await v.page.locator(R+"").innerText()).includes("sent to the stewards"), `${kind}: before sending, the screen does not say the stewards were told`);
+    await v.page.click(R+" button:has-text('Send report')");
+    await v.page.waitForSelector(R+" .msg.ok");
+    ok(/Your report was sent to the stewards/.test(await v.page.locator(R+" .msg.ok").innerText()) && /A post was reported/.test((smtp.mails.slice(mailsBeforeReport)[0] || {}).subject || ""), `${kind}: the screen says the stewards were told after the mail provider took the email`);
+    ok((await sql("select count(*)::int n from lm.reports r join lm.posts p on p.id = r.post_id where p.title = $1 and r.status = 'open'", [title]))[0].n >= 1 && (await sql("select status from lm.posts where title = $1", [title]))[0].status === "public", `${kind}: the report is saved, and the post is still public`);
+    ok(/Stay safe: meet in a public place/.test(await v.page.locator(`article.post:has-text("${title}")`).innerText()), `${kind}: the post says to stay safe`); }
+
   /* ---- a second ministry answers ---- */
   const b = await open(browser, s.base, kind);
   await signInByUi(b.page, B.email, smtp);
@@ -204,6 +221,22 @@ for (const kind of ["phone", "desk"]) {
   await v.page.waitForSelector("text=Closed.");
   await v.page.goto("/board"); await v.page.waitForSelector("article.post");
   ok((await v.page.locator(`article.post:has-text("${title}")`).count()) === 0, `${kind}: a closed post is gone from the board`);
+  /* ---- the terms and the privacy page; then she deletes her account, and the ministry leaves with her ---- */
+  for (const [p, h] of [["/terms", "Terms of use"], ["/privacy", "Privacy"]]) { await v.page.goto(p); ok(await v.page.locator("main h1").innerText() === h && /Draft\. A lawyer has not read this yet\./.test(await textOf(v.page)), `${kind}: ${p} says it is a draft`); await calm(v.page, `${kind}: ${p}`); await big(v.page, `${kind}: ${p}`); await snap(v.page, `${p.slice(1)}-${kind === "phone" ? 390 : 1440}`); }
+  { const nj = await open(browser, s.base, kind); await nj.page.goto("/join"); await nj.page.waitForSelector("input[type=email]");
+    ok(/By joining you agree to the terms and the privacy page\. You must be 18 or older\./.test(await textOf(nj.page)) && (await nj.page.locator("main a[href='/terms']").count()) === 1 && (await nj.page.locator("main a[href='/privacy']").count()) === 1, `${kind}: the join form says: by joining you agree to the terms, and you must be 18 or older, with links`);
+    await calm(nj.page, `${kind}: the join form`); await big(nj.page, `${kind}: the join form`); await snap(nj.page, `join-${kind === "phone" ? 390 : 1440}`); await nj.close(); }
+  await v.page.goto("/me"); await v.page.waitForSelector("details[data-fold=account]"); await v.page.click("details[data-fold=account] summary");
+  await big(v.page, `${kind}: the account section`);
+  ok((await v.page.locator("a:has-text('Download my data')").getAttribute("href")) === "/api/me/export", `${kind}: the account section offers a copy of the data`);
+  await v.page.click("button:has-text('Delete my account')"); await v.page.waitForSelector("button:has-text('Yes, delete my account and my data')");
+  ok(/only person in your ministry, so the ministry leaves with you/.test(await textOf(v.page)) && (await sql("select count(*)::int n from auth.users where email = $1", [A.email]))[0].n === 1, `${kind}: before she is sure, it says what will happen, and nothing has been deleted`);
+  if (tag === "p") await snap(v.page, "delete-390"); else await snap(v.page, "delete-1440");
+  await v.page.click("button:has-text('No, keep my account')"); await v.page.waitForSelector("button:has-text('Delete my account')");
+  await v.page.click("button:has-text('Delete my account')"); await v.page.click("button:has-text('Yes, delete my account and my data')");
+  await v.page.waitForSelector("text=Your account is deleted. Thank you for the time you gave.");
+  ok((await sql("select status from lm.ministries where name = $1", [A.name]))[0].status === "left" && (await sql("select count(*)::int n from auth.users where email = $1", [A.email]))[0].n === 0, `${kind}: the screen says it only after the database did it: the ministry has left and her email is gone`);
+  await v.page.goto("/me"); await v.page.waitForURL(/\/join/);
   ok(v.errors.length === 0, `${kind}: every page of the first ministry: zero page errors`, v.errors.slice(0, 3));
   await v.close();
 }

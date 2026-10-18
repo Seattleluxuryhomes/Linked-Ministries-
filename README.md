@@ -31,16 +31,19 @@ copied are listed in `commons.json`, each with where it came from.
 
 | Route | What it is |
 |---|---|
-| `/`, `/board`, `/board/<id>` | Public pages, built whole on the server from the database's public view |
+| `/`, `/board`, `/board/<id>`, `/terms`, `/privacy` | Public pages, built whole on the server from the database's public view. The terms and the privacy page are drafts a lawyer has not read, and say so at the top |
 | `/join`, `/me`, `/steward` | Signed-in pages (a shell and a script) |
 | `/api/health` | `{"status":"ok","service":"Linked Ministries"}` and nothing else |
 | `/api/board`, `/api/board/<id>`, `/api/product` | Public reads |
+| `/api/posts/<id>/report` | Anyone reports a public post: saved, then the stewards are emailed; nothing is hidden until a steward acts |
+| `/robots.txt`, `/sitemap.xml`, `/favicon.ico`, `/img/share.png` | Search and share: the sitemap lists public pages and open posts only |
 | `/api/auth/start`, `/verify`, `/signout` | Sign in by emailed code |
 | `/api/me`, `/api/ministry`, `/api/ministry/update` | The person and the ministry |
+| `/api/me/export`, `/api/me/delete` | A person downloads what is held about them, or deletes their account (the database does it in one transaction) |
 | `/api/team`, `/invite`, `/accept`, `/<id>/role`, `/<id>/remove` | The ministry's people |
 | `/api/my/posts`, `/api/posts`, `/<id>/update`, `/submit`, `/close` | Posts |
 | `/api/posts/<id>/answer`, `/api/answers` | Answering |
-| `/api/steward/queue`, `/ministries/<id>/review`, `/posts/<id>/review`, `/stewards` | Stewards |
+| `/api/steward/queue`, `/ministries/<id>/review`, `/posts/<id>/review`, `/reports/<id>/resolve`, `/stewards` | Stewards |
 
 ## Run it on your machine
 
@@ -72,10 +75,10 @@ makes the browser test write screenshots.
 |---|---|
 | `tests/unit-test.mjs` | The lists (ten categories, none about money), the boot guard's every refusal, the refusal words, the filters, every page built with sample posts and escaped, nothing banned on any page (a CDN, a tracker, AI, a dollar sign, a word about taxes, a price, red, LinkedIn, a technology's name, a model's name), the migrations that must never change, the licences of what ships, `commons.json`, no key in the repository. |
 | `tests/plainwords-test.mjs` | Every public sentence, every refusal, every email line, every string in the scripts reads at grade 8 or under and at most 25 words. It can fail. |
-| `tests/db-test.mjs` | The database as every person: one ministry never reads another's drafts, people or answers; a non-steward cannot approve (by function or by writing the table); the last lead cannot be removed; a post over 90 days is refused; public always has a named reader; approved words are frozen; an answer is a record; the public reads named columns of public rows only; a name on every event. |
+| `tests/db-test.mjs` | The database as every person (and, since the audit: the strict email shape, two stewards or two leads removing each other at once, reports, and leaving): one ministry never reads another's drafts, people or answers; a non-steward cannot approve (by function or by writing the table); the last lead cannot be removed; a post over 90 days is refused; public always has a named reader; approved words are frozen; an answer is a record; the public reads named columns of public rows only; a name on every event. |
 | `tests/api-test.mjs` | Over HTTP with a stand-in mail server that speaks real SMTP: join, profile, post, steward approval, filters, answer (one email, the right headers), a refusing provider, no provider at all, the team, the wrong person asking for what is not theirs. |
 | `tests/boot-test.mjs` | The server boots alone in production mode against an empty and an older database, and refuses to start without `DATABASE_URL`, with codes printed, with no mail, with a short key, with an http address, with an edited migration. |
-| `tests/light-test.mjs` | No dark surface and no red on any page or state, at 390 and 1440, and it can fail. |
+| `tests/light-test.mjs` | No dark surface and no red on any page or state (the terms, the privacy page, the report form, the delete page included), at 390 and 1440, and it can fail. |
 | `tests/browser-test.mjs` | Real clicks in Chromium at 390 and 1440: visit, filter, join, make a ministry, post, steward approval and send-back, second ministry answers, poster closes. Zero page errors, nothing sideways, buttons 44 pixels or taller. |
 
 ## What is inside
@@ -93,8 +96,18 @@ makes the browser test write screenshots.
 | The founder's one editable line, and the refusal words | `server/words.mjs` |
 | The boot guard, security headers, mail | `server/config.mjs`, `server/headers.mjs`, `server/mail.mjs` |
 | Shared lists and every sentence the pages say | `public/js/pure.js` |
+| Reports, leaving the network (a person's own deletion) | `migrations/0006_reports_and_leaving.sql` |
+| The audit's database fixes (strict email, locks, contact out of reach) | `migrations/0005_hardening.sql` |
+| The words of /terms and /privacy, and every email | `server/legal.mjs`, `server/emails.mjs` |
 | One light stylesheet, six self-hosted faces | `public/css/lm.css`, `public/fonts/` |
+| The mark, the share card and the icons (redrawn by `node tools/make-images.mjs`) | `server/pages.mjs` (MARK), `public/img/`, `public/favicon.ico` |
 | The old front page's price list, kept for the founder | `docs/OLD-PAGE.md` |
+
+## Taking someone out when they ask by email
+
+A person can delete their own account on `/me` (Settings, Your account). One who writes to the notice address instead is erased by the
+operator with one line in the database's SQL box (it does exactly what the button does, and refuses the last steward):
+`select lm.account_erase((select id from auth.users where lower(email) = lower('EMAIL')));`
 
 ## Editing the nonprofit line
 

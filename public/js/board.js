@@ -1,8 +1,8 @@
 /* board.js — "I can help" / "We need this": the short form under a post. It checks who is asking, then sends one email through the
    server. The screen says "Sent to <ministry>" only after the server says the mail provider took the message; with no mail set
    up it says so and nothing is saved. */
-import { h, get, post, msg, field, area, text, busy, values } from "/js/common.js";
-import { WORDS, KIND } from "/js/pure.js";
+import { h, get, post, msg, field, area, text, select, busy, values } from "/js/common.js";
+import { WORDS, KIND, STAY_SAFE, REPORT_REASONS } from "/js/pure.js";
 
 let state = null;   // { me, product }, fetched once when the first form opens
 async function who() {
@@ -28,7 +28,7 @@ async function open(link) {
   const words = area("words", "", 1500), phone = text("phone", "", { type: "tel", max: 30, auto: "tel", mode: "tel" });
   const out = h("div", { class: "out" });
   const send = h("button", { class: "btn", type: "submit" }, WORDS.answerSend);
-  const form = h("form", { novalidate: true }, h("h4", {}, `${WORDS.answerTitle}: ${KIND[kind].button}`), h("p", { class: "help" }, WORDS.answerHowItWorks),
+  const form = h("form", { novalidate: true }, h("h4", {}, `${WORDS.answerTitle}: ${KIND[kind].button}`), h("p", { class: "help" }, WORDS.answerHowItWorks), h("p", { class: "note" }, STAY_SAFE),
     field(WORDS.answerWords, words, WORDS.answerWordsHelp), field(WORDS.answerPhone, phone), out,
     h("p", { class: "row" }, send, h("button", { class: "link", type: "button", on: { click: () => closeSlot(slot) } }, "Cancel")));
   form.addEventListener("submit", async (ev) => {
@@ -45,6 +45,35 @@ async function open(link) {
   words.focus();
   return true;
 }
+
+/* the report form under a post: it is saved, then the stewards are emailed, and the screen says which of the two happened */
+function openReport(link) {
+  const id = link.dataset.report, slot = document.getElementById("report-" + id);
+  if (!slot) return false;
+  if (slot.firstChild) { slot.replaceChildren(); return true; }
+  const reason = select("reason", Object.entries(REPORT_REASONS), "", WORDS.reportChoose);
+  const note = area("note", "", 1000), email = text("email", "", { type: "email", max: 254, auto: "email", mode: "email" });
+  const out = h("div", { class: "out" });
+  const send = h("button", { class: "btn", type: "submit" }, WORDS.reportSend);
+  const form = h("form", { novalidate: true }, h("h4", {}, WORDS.reportTitle), h("p", { class: "help" }, WORDS.reportLead),
+    field(WORDS.reportWhy, reason), field(WORDS.reportNote, note), field(WORDS.reportEmail, email), out,
+    h("p", { class: "row" }, send, h("button", { class: "link", type: "button", on: { click: () => slot.replaceChildren() } }, "Cancel")));
+  form.addEventListener("submit", async (ev) => {
+    ev.preventDefault(); out.replaceChildren();
+    if (!reason.value) return out.replaceChildren(msg(WORDS.reportNeedWhy));
+    await busy(send, async () => {
+      const r = await post(`/api/posts/${id}/report`, { reason: reason.value, note: note.value, email: email.value });
+      if (!r.ok) return out.replaceChildren(msg(r.data.words || WORDS.tryAgain));
+      /* the server saved it; it says in its words whether the email to the stewards also went */
+      slot.replaceChildren(msg(r.data.words, r.data.emailed ? "ok" : undefined));
+    });
+  });
+  slot.replaceChildren(form);
+  reason.focus();
+  return true;
+}
+for (const a of document.querySelectorAll("a[data-report]")) a.addEventListener("click", (ev) => { ev.preventDefault(); openReport(a); });
+if (location.hash === "#report") { const a = document.querySelector("a[data-report]"); if (a && location.pathname.startsWith("/board/")) openReport(a); }
 
 for (const a of document.querySelectorAll("a[data-answer]")) {
   a.addEventListener("click", (ev) => { ev.preventDefault(); open(a); });

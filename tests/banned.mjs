@@ -1,6 +1,8 @@
 /* tests/banned.mjs — the things no page of this site may carry, in one place, read by the unit test and the API test.
    Founder, 2026-10-18: no CDN, no tracking, no AI, no money, nothing about taxes, no price, no "compliance" talk, no LinkedIn. */
 
+import { NONPROFIT_LINE } from "../server/words.mjs";
+
 /* the words a person reads: tags and scripts and styles are taken off first */
 export function visibleText(html) {
   return String(html).replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<!--[\s\S]*?-->/g, " ")
@@ -18,6 +20,11 @@ export const READ = [
   [/\bpricing\b|\bpackages?\b|\bstarter\b|\benterprise\b|\bsubscribe\b|\bper month\b|\bper year\b|\bbuy now\b|\bcheckout\b/i, "a price or a package"],
   [/builder\s?buy\s?box|\bloxo\b|\bbidvoice\b|cross universal/i, "a name that stays behind the front"],
   [/\b(donate|donation|tithe|tithing|paypal|venmo|zelle|cash app)\b/i, "a way to give money"],
+  /* founder, 2026-10-18: nothing names another company or product, and nothing is set beside one */
+  [/\b(facebook|instagram|tiktok|craigslist|nextdoor|gofundme|eventbrite|mailchimp|whatsapp|slack|zoom|google|indeed|reddit|yelp|amazon|twitter|youtube)\b/i, "another company's name"],
+  [/\b(better than|unlike|compared (to|with)|the only (board|network|place|site)|the best|number one|#1|world'?s (first|largest|best))\b/i, "a comparison or a boast"],
+  /* nothing says the corporation has a status it does not have yet, or that a gift is anything but a gift */
+  [/\b(501\(c\)\(3\)|501c3|nonprofit status|tax-exempt|charitable (status|organization))\b/i, "a claim of nonprofit status (only the footer's own line may say the application is not filed)"],
 ];
 
 /* the source of a page, and of its script and style files */
@@ -34,7 +41,7 @@ export const SOURCE = [
 
 /** every banned thing found in one page's HTML (the words it reads and its source), as a list of short sentences */
 export function checkPage(html) {
-  const out = [], text = visibleText(html);
+  const out = [], text = visibleText(html).split(NONPROFIT_LINE).join(" ");   /* the founder's one line about the corporation is the only place that may name the application */
   for (const [re, why] of READ) if (re.test(text)) out.push("reads " + why + ": " + (text.match(re) || [""])[0]);
   for (const [re, why] of SOURCE) { const body = String(html).replace(/<!--[\s\S]*?-->/g, ""); if (re.test(body)) out.push("carries " + why); }
   return out;

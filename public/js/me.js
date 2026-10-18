@@ -8,6 +8,7 @@ const app = document.getElementById("app");
 let flash = null;          // one message shown at the top, from the last thing the person did
 let composer = null;       // the post form that is open, if any
 let editingProfile = false;
+let confirmingDelete = false;
 
 async function load() {
   const meR = await get("/api/me");
@@ -43,7 +44,7 @@ function render(me, posts, answers, team) {
   if (composer) parts.push(composerForm(me, posts, composer));
 
   /* posts */
-  parts.push(h("h2", {}, WORDS.yourPosts));
+  parts.push(h("div", { class: "sectionhead" }, h("h2", {}, WORDS.yourPosts), posts.length ? h("span", { class: "count-pill" }, posts.length === 1 ? "1 post" : `${posts.length} posts`) : null));
   const groups = [["draft", "Drafts"], ["waiting", "Waiting to be read"], ["public", "On the board"], ["closed", "Closed"]];
   if (!posts.length) parts.push(h("div", { class: "card" }, h("p", {}, WORDS.noPosts)));
   for (const [status, label] of groups) {
@@ -53,18 +54,53 @@ function render(me, posts, answers, team) {
   }
 
   /* answers */
-  parts.push(h("h2", {}, WORDS.answersReceived));
+  parts.push(h("div", { class: "sectionhead" }, h("h2", {}, WORDS.answersReceived), answers.received.length ? h("span", { class: "count-pill" }, String(answers.received.length)) : null));
   parts.push(h("div", { class: "card", "data-answers": "received" }, answers.received.length ? answers.received.map(receivedRow) : h("p", {}, WORDS.noAnswersReceived)));
-  parts.push(h("h2", {}, WORDS.answersSent));
+  parts.push(h("div", { class: "sectionhead" }, h("h2", {}, WORDS.answersSent), answers.sent.length ? h("span", { class: "count-pill" }, String(answers.sent.length)) : null));
   parts.push(h("div", { class: "card", "data-answers": "sent" }, answers.sent.length ? answers.sent.map(sentRow) : h("p", {}, WORDS.noAnswersSent)));
 
-  /* profile and team */
-  parts.push(h("h2", {}, WORDS.mePageTitle));
-  parts.push(editingProfile && me.lead ? profileForm(me) : profileCard(me));
-  parts.push(h("h2", {}, WORDS.teamTitle));
-  parts.push(teamCard(me, team));
+  /* the ministry's own page, its team and the person's account: folded away, so the page is short */
+  parts.push(h("div", { class: "sectionhead" }, h("h2", {}, "Settings")));
+  parts.push(fold("profile", WORDS.mePageTitle, editingProfile && me.lead ? profileForm(me) : profileCard(me)));
+  parts.push(fold("team", WORDS.teamTitle, teamCard(me, team)));
+  parts.push(fold("account", WORDS.accountTitle, accountCard(me, team)));
   parts.push(h("p", { class: "quiet" }, `${WORDS.signedInAs} ${me.user.email}. `, h("button", { class: "link", type: "button", on: { click: async () => { await post("/api/auth/signout"); location.assign("/"); } } }, WORDS.signOut)));
   app.replaceChildren(...parts);
+}
+
+/* a folded section that remembers whether it was open when the page is drawn again */
+const opened = new Set();
+function fold(key, title, content) {
+  const d = h("details", { class: "fold", "data-fold": key }, h("summary", {}, title), h("div", { class: "fold-body" }, content));
+  if (opened.has(key) || (key === "profile" && editingProfile)) d.open = true;
+  d.addEventListener("toggle", () => { d.open ? opened.add(key) : opened.delete(key); });
+  return d;
+}
+
+/* ---- the account: a copy of what we hold, and deleting it ------------------------------------------------------------------------ */
+function accountCard(me, team) {
+  const alone = !team.people || team.people.length <= 1;
+  const card = h("div", { class: "card" },
+    h("p", { class: "help" }, WORDS.accountDownloadHelp),
+    h("p", {}, h("a", { class: "btn ghost", href: "/api/me/export", download: "linked-ministries-my-data.json" }, WORDS.accountDownload)),
+    h("hr"));
+  if (!confirmingDelete) {
+    card.append(h("p", {}, h("button", { class: "btn ghost", type: "button", on: { click: () => { confirmingDelete = true; opened.add("account"); load(); } } }, WORDS.accountDelete)));
+    return card;
+  }
+  const out = h("div", { class: "out" });
+  card.append(h("p", { class: "note" }, alone ? WORDS.accountWarnAlone : WORDS.accountWarnTeam), h("p", { class: "note" }, WORDS.accountWarnSent), out,
+    h("p", { class: "row" },
+      h("button", { class: "btn", type: "button", on: { click: async (ev) => {
+        out.replaceChildren();
+        await busy(ev.currentTarget, async () => {
+          const r = await post("/api/me/delete", { confirm: true });
+          if (!r.ok) return out.replaceChildren(msg(r.data.words || WORDS.tryAgain));
+          app.replaceChildren(h("h1", {}, "Your account is deleted"), msg(WORDS.accountDone, "ok"), h("p", {}, h("a", { class: "btn", href: "/" }, "Go to the first page")));
+        });
+      } } }, WORDS.accountSure),
+      h("button", { class: "btn ghost", type: "button", on: { click: () => { confirmingDelete = false; load(); } } }, WORDS.accountKeep)));
+  return card;
 }
 
 /* ---- posts ---------------------------------------------------------------------------------------------------------------- */
@@ -91,6 +127,7 @@ function postRow(me, p) {
     h("h3", {}, p.status === "public" ? h("a", { href: "/board/" + p.id }, p.title) : p.title),
     h("p", {}, h("span", { class: "status" + (p.status === "public" ? " public" : p.status === "closed" ? " closed" : "") }, POST_STATUS[p.status] + reason)),
     p.status === "draft" && p.review_note ? h("p", { class: "msg" }, h("strong", {}, WORDS.sentBackNote + ": "), p.review_note) : null,
+    p.status === "closed" && p.closed_reason === "removed" && p.review_note ? h("p", { class: "msg" }, h("strong", {}, WORDS.removedNote + ": "), p.review_note) : null,
     h("p", { class: "when" }, `Open until ${dateWords(p.open_until)}`, p.status === "public" ? ` · ${p.answers} ${p.answers === 1 ? "answer" : "answers"}` : ""),
     p.status !== "closed" ? h("div", { class: "row" },
       p.status === "draft" ? h("button", { class: "btn small ghost", type: "button", on: { click: () => { composer = { kind: p.kind, id: p.id }; load().then(() => scrollTo(0, 0)); } } }, "Edit") : null,
