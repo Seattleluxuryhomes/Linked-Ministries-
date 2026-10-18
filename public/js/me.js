@@ -3,6 +3,8 @@
    server says it is public; until then it says it is waiting. */
 import { h, get, post, msg, field, text, busy, ministryForm, postForm, toSignIn } from "/js/common.js";
 import { pageCard, pageForm } from "/js/page.js";
+import { edenPanel } from "/js/eden.js";
+import { values as formValues } from "/js/common.js";
 import { WORDS, KIND, POST_STATUS, MINISTRY_STATUS, CLOSE_REASON, categoryLabel, dateWords } from "/js/pure.js";
 
 const app = document.getElementById("app");
@@ -120,6 +122,10 @@ function composerForm(me, posts, c) {
     done(submit ? WORDS.sentToRead : WORDS.draftSaved);
   };
   const form = postForm({ kind: c.kind, v: editing || {}, ministry: me.ministry, limits, submitLabel: editing ? WORDS.saveChanges : WORDS.saveDraft, onSave: (v) => send(v, false), onSend: (v) => send(v, true) });
+  /* Eden: a draft from a few words. It goes into the two fields only when the person presses "Use these words"; Save and Send are still theirs. */
+  const eden = edenPanel({ job: "ask_give", getFields: () => { const v = formValues(form); return { kind: v.kind, category: v.category, city: v.city, title: v.title, body: v.body }; },
+    onUse: (d) => { form.elements.title.value = d.title; form.elements.body.value = d.body; } });
+  form.insertBefore(eden, form.querySelector(".out"));
   form.append(h("p", {}, h("button", { class: "link", type: "button", on: { click: () => { composer = null; load(); } } }, "Cancel")));
   return form;
 }

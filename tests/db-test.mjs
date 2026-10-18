@@ -410,7 +410,7 @@ ok(authFns.length === 0, "a signed-in person cannot call make_steward, log or a 
 
 /* ===== 15. the migrations are recorded and applied ===== */
 const applied = await admin("select name from public.lm_migrations order by name");
-ok(applied.map((a) => a.name).join() === "0001_base.sql,0002_ministries.sql,0003_board.sql,0004_grants.sql,0005_hardening.sql,0006_reports_and_leaving.sql,0007_ministry_pages.sql,0008_giving_ledger.sql,local-supabase-shim.sql", "every migration and the stand-in are recorded as applied", applied);
+ok(applied.map((a) => a.name).join() === "0001_base.sql,0002_ministries.sql,0003_board.sql,0004_grants.sql,0005_hardening.sql,0006_reports_and_leaving.sql,0007_ministry_pages.sql,0008_giving_ledger.sql,0009_eden_log.sql,local-supabase-shim.sql", "every migration and the stand-in are recorded as applied", applied);
 ok((await admin("select count(*)::int n from pg_policies where schemaname = 'lm'"))[0].n >= 7, "row-level security policies are in place");
 ok((await admin("select count(*)::int n from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'lm' and c.relkind = 'r' and not c.relrowsecurity"))[0].n === 0, "every table in lm has row-level security on");
 

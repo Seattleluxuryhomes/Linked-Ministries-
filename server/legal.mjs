@@ -31,6 +31,10 @@ export const TERMS = {
       "Gifts online open after the state registration is filed. Until then, this site takes no gift.",
       "A ministry may link to its own way of taking gifts. That link is the ministry's own. Linked Ministries does not collect or see those gifts.",
     ]],
+    ["Eden, the writing helper", [
+      "On some pages, a helper named Eden can write a first draft from words you type. A draft is only a draft. Read it, change it, and decide for yourself.",
+      "Eden does not give advice about law, money or health. Eden saves and sends nothing. You press Save or Send, and you answer for what you post.",
+    ]],
     ["Your part", [
       "Post only what is true, and only what you may share. Do not ask for money.",
       "Do not post anything that breaks the law, that tricks people, or that could hurt someone.",
@@ -106,6 +110,12 @@ export const PRIVACY = {
     ["What we do not do", [
       "We do not track you. We do not sell or rent your data. We show no ads. We do not share your data with advertisers.",
       "This site sets one cookie, and only when you sign in. It keeps you signed in. We use no other cookie.",
+    ]],
+    ["Eden, the writing helper", [
+      "When you press Write a draft, the words you typed go to a company that runs a writing model. This means the box and the form around it.",
+      "The company writes the draft and sends it back. We send it no name and no email.",
+      "We do not keep what Eden writes unless you press Save or Send. We keep a short note that you asked, with a number for the size of the request. It holds none of your words.",
+      "If someone writes words about being in danger, nothing is sent. The page shows 911 and 988 instead.",
     ]],
     ["Where it is kept", [
       "We rent a database from a hosting company, and your data is kept there. Email goes out through an email company. They touch your data only to do that work.",

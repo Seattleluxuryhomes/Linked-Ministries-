@@ -27,7 +27,7 @@ Founder, 2026-10-18: "So if a ministry wants something or needs something we nee
    sidebar; the only dark fill is a button (and the 44-pixel ink tile of the mark, which is a logo, drawn as an SVG). Never alarmed: no red. `tests/light-test.mjs` fails on any dark surface and on red.
 6. **Plain words**, grade 8 or under, on every public sentence. `lib/plainwords.mjs` reads them in `tests/plainwords-test.mjs`. The one
    named exception is the founder's own line about the nonprofit corporation, which carries a legal name.
-7. **No AI. No payment processor. No money category. No tracking.** The board moves no money between ministries and says so. Founder,
+7. **No AI except Eden, the writing helper (below). No payment processor. No money category. No tracking.** The board moves no money between ministries and says so. Founder,
    2026-10-18 (D: "We are a safe and transparent place to donate money"): Linked Ministries itself takes gifts and makes grants, through a
    ledger built with the door closed (`migrations/0008_giving_ledger.sql`; the founder ruled this over the old "no payments" line, so the
    rule now reads: no processor and no card number is ever in this repository, and the Give button goes to a page that says no
@@ -38,7 +38,8 @@ Founder, 2026-10-18: "So if a ministry wants something or needs something we nee
 8. **An applied migration is never edited.** The next change is the next numbered file. After adding one, run
    `npm run migrations:freeze` in the same commit. The server keeps each file's hash and refuses to start if one moved.
 9. **No credentials, keys or real personal information** in the repository, the log or a page. `.env.example` has names only. No
-   model names in files.
+   model names in files, except the one that names Eden's model and its company: `server/eden-engine.mjs` (and `package.json` if a
+   package ever names it). `tests/unit-test.mjs` fails if a name is anywhere else.
 10. **Every ministry has a lead**; the last lead cannot be removed, demoted or leave. Every post has a ministry and every act a name.
     A record with nobody's name on it becomes the founder's problem.
 11. **Names.** The product is "Linked Ministries", linkedm.org. The technology under the founder's other products is named nowhere a
@@ -56,7 +57,12 @@ Founder, 2026-10-18: "So if a ministry wants something or needs something we nee
     points at the old one. A grant needs two different named treasurers and the board's vote by name (a CHECK on the table, not a screen).
     No event holds a donor's name, an email, a note or a board member. The public reads sums of the rows, never a donor. A treasurer is a
     steward with one more flag. `tests/db-giving-test.mjs` holds each of these.
-15. **A new database function gets no grant until it needs one.** Postgres lets everyone run a new function: revoke it from public, anon and
+15. **Eden is a writing helper and nothing more.** Founder, 2026-10-18: the orange orb on the signed-in pages only (/me, the page form,
+    /treasury). Its prompt and its key live in the server; a client sends a job name and fields, never a prompt. Danger-to-life words
+    stop the call and show 911 and 988. Nothing Eden writes is saved or sent until the person presses the form's own Save or Send, and
+    every draft says "Eden wrote this; read it before you use it." Scripture is only ever an exact verse from `server/scripture.mjs` by
+    its key. No legal, tax or medical advice. One event per call, with token counts and never a word. `tests/eden-test.mjs` holds each.
+16. **A new database function gets no grant until it needs one.** Postgres lets everyone run a new function: revoke it from public, anon and
     authenticated in the same migration, and grant only what a signed-in person needs (0004's blanket revoke covered only what existed then).
     Whatever reads a contact address, or erases a person, runs on the service connection alone.
 

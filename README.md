@@ -105,6 +105,22 @@ returns and keep the records), a decision about who is paid and how (employee or
 When the board has chosen a provider, the app's part is small: a grant-like record of what was paid, written the same way (two treasurers,
 a named vote, a reference). Do not write payroll arithmetic in this repository.
 
+## Eden, the writing helper (migration 0009, `server/eden.mjs`)
+
+A small orange orb on the signed-in pages (the ask or give form, the ministry page form, `/treasury`) with four jobs: write an ask or a
+give from a few words, write a ministry's one line and about words, and, for a treasurer, a grant request letter or a thank-you to a donor.
+Every rule is on the server, and `tests/eden-test.mjs` holds each one:
+
+| Rule | How it is kept |
+|---|---|
+| The prompt is the server's and no client can reach or change it | The prompt is a constant in `server/eden.mjs`. A request is read for a job name and that job's own fields only: a `system`, `model`, `messages` or `prompt` field is ignored. What a person typed goes to the model only inside `<person_input>` tags, with angle brackets turned into brackets. No script, page or answer holds the prompt |
+| The model is called only from the server, with a key from the environment | `server/eden-engine.mjs` (one plain HTTPS request; `ANTHROPIC_API_KEY`). With no key the orb says "Eden is not set up on this server yet" and offers no box and no button. The key is in no log, answer or page |
+| Danger to life stops the call | `server/crisis.mjs`, the Disciples' Authority list, runs on every field before a key is looked for. The page shows the 911 and 988 line; no model is called |
+| Nothing Eden writes is saved or sent | The page shows the draft marked "Eden wrote this; read it before you use it." It goes into a form field only when the person presses "Use these words"; the form's own Save or Send is the only way anything is kept |
+| Scripture is never generated | A verse is an exact verse from `server/scripture.mjs`, chosen by its key, only when the person asked. A draft that quotes or names Scripture, or talks about taxes, is held back whole |
+| One event per call, never a word | `lm.eden_log`: the person's name, the job, the outcome and the token counts |
+| A limit per person | 8 an hour and 40 a day (`EDEN_LIMIT_HOUR`, `EDEN_LIMIT_DAY`) |
+
 ## Run it on your machine
 
 You need Node 22 and a Postgres 16 you can create databases in.

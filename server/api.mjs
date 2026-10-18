@@ -15,6 +15,8 @@ import { parseCents, receiptCode, methodLabel, GIFT_METHODS } from "../public/js
 import { receiptEmail } from "./emails.mjs";
 import { toCsv, dollars } from "../lib/csv.mjs";
 import { noticeEmail } from "../lib/email.mjs";
+import { runEden, JOBS as EDEN_JOBS } from "./eden.mjs";
+import { keyIsSet } from "./eden-engine.mjs";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const bad = (words, status = 400, code = "bad_request") => Object.assign(new Error(code), { status, words, code });
@@ -119,6 +121,24 @@ export function mount(app, { wrap, publicBase, env = process.env, now = () => Da
     const r = await one(req, "select lm.ministry_update($1,$2,$3,$4,$5,$6,$7) as status", [f.name, f.city, f.state, f.about, f.website || null, f.contact_name, f.contact_email]);
     return { ok: true, status: r.status };
   });
+
+  /* ---- Eden, the writing helper. The rules are in server/eden.mjs; this is the door. Nothing here saves or sends what Eden wrote. ---- */
+  get("/api/eden/status", async () => ({ configured: keyIsSet(env), jobs: Object.keys(EDEN_JOBS) }));
+  app.post("/api/eden", wrap(async (req, res) => {
+    need(req);
+    const b = req.body || {}, job = str(b.job, 20);
+    if (!Object.prototype.hasOwnProperty.call(EDEN_JOBS, job)) throw bad("Eden does not do that.", 400, "no_such_job");
+    const me = await whoami(req.user);
+    const allow = (who) => (who === "treasurer" ? !!me.treasurer : who === "lead" ? !!(me.ministry && me.lead) : !!me.ministry);
+    const perHour = Math.max(1, Number(env.EDEN_LIMIT_HOUR) || 8), perDay = Math.max(1, Number(env.EDEN_LIMIT_DAY) || 40);   /* a person's limit; the defaults are 8 an hour and 40 a day */
+    if (await limited(`eden-h:${req.user.id}`, perHour, 3600 * 1000) || await limited(`eden-d:${req.user.id}`, perDay, 24 * 3600 * 1000)) {
+      await one(req, "select lm.eden_log($1,'too_many',0,0)", [job]);
+      throw bad("You have asked Eden a lot. Try again in a while.", 429, "too_many");
+    }
+    const r = await runEden({ job, body: b, env, allow });
+    if (r.outcome) await one(req, "select lm.eden_log($1,$2,$3,$4)", [job, r.outcome, r.inTokens || 0, r.outTokens || 0]);
+    res.set("cache-control", "no-store").status(r.status).json(r.body);
+  }));
 
   /* ---- the ministry's public page: one form, read by a steward before anyone sees it ---------------------------------------------- */
   get("/api/page", async (req) => ({ ...((await one(req, "select lm.page_mine() as p")).p || { exists: false }), verses: Object.entries(VERSES).map(([key, v]) => ({ key, ref: v.ref, text: v.text })) }));

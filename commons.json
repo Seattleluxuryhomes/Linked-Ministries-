@@ -177,7 +177,7 @@
       "origin_path": "behavioral-health-app/server/api.mjs",
       "origin_sha256": "8ee33e9349c194104e91d85d9ce378f4c820e10d25fc8485156f98c03a40a4e5",
       "local_path": "server/api.mjs",
-      "local_sha256": "e3195ffc57e17df700a608ff4e362ad6f68495b9f7895a351fdd1228cc04f8dd",
+      "local_sha256": "25d271d45bd088a3fd85e9682f809daa42e30168898da8003dbed1920901bc13",
       "note": "Same pattern (asUser, functions decide, early friendly checks). The routes are this product's: ministries, team, posts, answers, stewards."
     },
     {
@@ -188,7 +188,7 @@
       "origin_path": "behavioral-health-app/server/index.mjs",
       "origin_sha256": "b1375df160f0be6f55b551c26472bdeb63eef9c9af918fff8ba44584fd168e21",
       "local_path": "server/index.mjs",
-      "local_sha256": "afda08e62180ef6dac96c110be84299d95369aa95b622443a8862624b8da2d40",
+      "local_sha256": "331f20a049f862c581243e4e62de95234e3cbad923a615918213516a3ba23293",
       "note": "Same boot order and health answer (two words). Public pages are built on the server."
     },
     {
@@ -265,7 +265,7 @@
       "origin_path": "behavioral-health-app/tests/helpers.mjs",
       "origin_sha256": "31bf003a9137efa0be87d6aebaf6887ab66541ca4587610091844d8bcfd1e5ef",
       "local_path": "tests/helpers.mjs",
-      "local_sha256": "2548b313715ae896ffd5fb0a342ab1c3701d737978bc39fc8842df8c68447e41",
+      "local_sha256": "46edd3a5fde42e4a76cd479c1b71b04306a6ea9a0b5d91582a97fe621250ecc1",
       "note": "Database names are linkedm_t_*; adds a stand-in SMTP server (a real mail conversation) and a sign-in helper."
     },
     {
@@ -287,7 +287,7 @@
       "origin_path": "behavioral-health-app/tests/run-all.mjs",
       "origin_sha256": "80f53d81c295c1fdc207a38feffe49b76b305d0106fb5057868e7219cbd201f0",
       "local_path": "tests/run-all.mjs",
-      "local_sha256": "e1952beecc0b1606ef87e165d4dd601fbe03d988e504468615821dcab6ab42f5",
+      "local_sha256": "5e2271dfbafe3df15bd0efe9f0f537cfd39aeb8f9729f527844bb4fd20e0e1ea",
       "note": "This product's test list; drops the image and mutation tests."
     },
     {
@@ -309,7 +309,7 @@
       "origin_path": "behavioral-health-app/tests/light-test.mjs",
       "origin_sha256": "e3e7289a423a030c9427e2617334f909a8f0f8104ccd5466a3be72e8aa063881",
       "local_path": "tests/light-test.mjs",
-      "local_sha256": "b5cb01fafbd95d58d6cf4611f03afb8e50488fb70295d633bec7f31e47bbd0fe",
+      "local_sha256": "8ed7bbd29fd8befc58cc3df244b0ade863f4eb72f1d0fb7980c61b5c1cd372b3",
       "note": "Same method (stylesheet tokens, painted pages, a dark panel is caught); adds a check for red and for contrast."
     },
     {
@@ -320,7 +320,7 @@
       "origin_path": "behavioral-health-app/tests/db-test.mjs",
       "origin_sha256": "e3ed64b0c1321e3ae22fbf7d18c5eb918907b5f1d46a55359eef58061c35b71a",
       "local_path": "tests/db-test.mjs",
-      "local_sha256": "a810350f21b1e2ff30288072cfd5d7e58983438cb38490bf8beface3caf253dd",
+      "local_sha256": "571f50c62d00b9af22fe5c4fae4f667f30772d66078c8ff6f058a365f6f4fa86",
       "note": "Same method; this product's rules."
     },
     {
@@ -331,7 +331,7 @@
       "origin_path": "behavioral-health-app/tests/api-test.mjs",
       "origin_sha256": "b9aed98a7b54da362b31cbf559aa6e2637b2a6d38db924b6335cfdd21d646f7c",
       "local_path": "tests/api-test.mjs",
-      "local_sha256": "c73e3748c3b85fd5baccb6f9a7acf99a2a84b71cb1ff3848a6b180eb78cfd74e",
+      "local_sha256": "cd5b3d37fbdfeca3652cf3b908acfce202bf80f5356de7b54bf090ae4aa1f3fb",
       "note": "Same method; adds the stand-in mail server."
     },
     {
@@ -353,8 +353,19 @@
       "origin_path": "behavioral-health-app/tests/unit-test.mjs",
       "origin_sha256": "6bead93056daa8752e1c7eaca4e74352772b4d62cc6832e2916b8d739b6ab620",
       "local_path": "tests/unit-test.mjs",
-      "local_sha256": "a6a3cbf1438a2889a7b25c297bdbdaf73bf4e779fb263b26bb3d5ce9af8020bf",
+      "local_sha256": "57062c757fef333255217047d2b49e5783a98547b4557dd9c235b1a509a67945",
       "note": "The licence check, the commons check, the no-key scan and the migration checks are the original's."
+    },
+    {
+      "id": "eden-orb",
+      "name": "Eden's orange orb, drawn on a canvas",
+      "mode": "adapted",
+      "origin_repo": "cross-univeral",
+      "origin_path": "lexos/src/edenorb.jsx",
+      "origin_sha256": "cadfc9aa84cb9493e984c85bcfabc267b0c9ef0c260a2535ae82007378d0a0b6",
+      "local_path": "public/js/eden-orb.js",
+      "local_sha256": "9c1430f435f5159b8300cdc3f9da9c738f0c0c175f1b331f461d3e653a230c74",
+      "note": "The drawing (state table, four blobs, seeded mesh, nucleus, vignette, glint, the amber and copper numbers) is copied as it was; only the framework layer changed, a plain mount function instead of a component. Read only at the origin; the origin file is not edited."
     },
     {
       "id": "workflow",
@@ -375,7 +386,7 @@
       "origin_path": "behavioral-health-app/DEPLOY.md",
       "origin_sha256": "8c32d1bf183e7f3db4d657d7cdb5c98ad654564ea99e09d2ab9e784883d95ad9",
       "local_path": "DEPLOY.md",
-      "local_sha256": "ceeb85d88894ebd663d14f0fa5de1f09a77a5809943ad23d8aa8ac1525dff25d",
+      "local_sha256": "12620c94606d9ee917ad7dce8f257ca8620b49e6b1d8ad168cb1d38da2e19fef",
       "note": "Same form; this product's steps and variables."
     },
     {
@@ -386,7 +397,7 @@
       "origin_path": "behavioral-health-app/CLAUDE.md",
       "origin_sha256": "3c403645fae7028168c5ee3e1201d85863a7ebbf30225d2007cef282ce16842e",
       "local_path": "CLAUDE.md",
-      "local_sha256": "192072e4484119269173f8949dc9b681506c0306480645a930d39eb4ed1177bf",
+      "local_sha256": "31030d7a395b51b1c4af48548aba892982ad253d9fc990387448cdabf3097c69",
       "note": "Same form; this product's hard rules."
     },
     {
@@ -397,7 +408,7 @@
       "origin_path": "behavioral-health-app/.env.example",
       "origin_sha256": "4d8e45e2586e944d75608b0fadcbe93dca13931c1825a8fd58ff81faeae6dd60",
       "local_path": ".env.example",
-      "local_sha256": "4f97f392c2f04a999db1f7d9d56018703f3d437520b475c8b6ce528a24255441",
+      "local_sha256": "2abf4996107b28489054533d9634aa383b313b1a9c9c169d9a99a16d4698b0fb",
       "note": "This product's variables."
     },
     {

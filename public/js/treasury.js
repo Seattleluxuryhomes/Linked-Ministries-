@@ -2,6 +2,7 @@
    vote, mark it paid, correct a gift, set the giving door, take the ledger as a spreadsheet. The page mirrors the database's decisions;
    the database refuses anyone who is not a treasurer, a proposer who approves their own grant, and a grant larger than the gifts. */
 import { h, get, post, msg, field, text, area, select, busy, values, toSignIn } from "/js/common.js";
+import { edenPanel } from "/js/eden.js";
 import { WORDS, GIFT_METHODS, GRANT_STATUS, money, methodLabel, receiptCode, dateWords } from "/js/pure.js";
 
 const app = document.getElementById("app");
@@ -28,6 +29,7 @@ function render(v, me) {
     sum(WORDS.sumAvailable, money(t.available_cents), "")));
   if (t.in_kind_count) parts.push(h("p", { class: "quiet" }, `${WORDS.sumInKind}: ${t.in_kind_count}, worth ${money(t.in_kind_cents)}.`));
   parts.push(h("p", { class: "row" }, h("a", { class: "btn ghost small", href: "/api/treasury/export.csv?what=gifts", download: "linked-ministries-gifts.csv" }, WORDS.exportGifts), h("a", { class: "btn ghost small", href: "/api/treasury/export.csv?what=grants", download: "linked-ministries-grants.csv" }, WORDS.exportGrants), h("a", { class: "btn ghost small", href: "/giving" }, "See the public page")));
+  parts.push(h("h2", {}, WORDS.edenTitleTreasury), edenLetters());
   parts.push(h("h2", {}, WORDS.giftTitle), giftForm());
   parts.push(h("h2", {}, WORDS.grantTitle), grantForm(v));
   parts.push(h("h2", {}, "Grants"), grantsCard(v, me));
@@ -52,6 +54,21 @@ function formOf({ cls = "card formcard", children, path, build, onOk, submit }) 
     });
   });
   return form;
+}
+
+/* Eden writes a grant request letter or a thank-you to a donor. The words are shown to copy; nothing is saved or sent from here. */
+function edenLetters() {
+  const kind = select("eden_job", [["grant_letter", WORDS.edenLetterGrant], ["thank_you", WORDS.edenLetterThanks]], "thank_you");
+  const who = text("eden_who", "", { max: 120 }), amount = text("eden_amount", "", { max: 20, mode: "decimal" }), purpose = text("eden_purpose", "", { max: 500 });
+  const holder = h("div", {});
+  const mount = () => {
+    const job = kind.value;
+    holder.replaceChildren(edenPanel({ job, withVerse: true, notesLabel: WORDS.edenLetterNotes, notesHelp: WORDS.edenLetterNotesHelp,
+      getFields: () => (job === "grant_letter" ? { recipient: who.value, amount: amount.value, purpose: purpose.value } : { donor: who.value, amount: amount.value }) }));
+  };
+  kind.addEventListener("change", mount); mount();
+  return h("div", { class: "card formcard", "data-eden-letters": "" }, h("p", { class: "note" }, WORDS.edenLetterLead),
+    h("div", { class: "formgrid" }, field(WORDS.edenLetterKind, kind), field(WORDS.edenLetterWho, who), field(WORDS.edenLetterAmount, amount), field(WORDS.edenLetterPurpose, purpose, WORDS.edenLetterPurposeHelp)), holder);
 }
 
 function giftForm() {

@@ -2,6 +2,7 @@
    when the server says so, and "sent" only when the server took it. A picture is checked on the server: this script only sends bytes. */
 import { h, get, post, upload, msg, field, text, area, select, stateSelect, busy, values } from "/js/common.js";
 import { WORDS, PAGE_STATUS, MEET_DAYS, PAGE_LIMITS } from "/js/pure.js";
+import { edenPanel } from "/js/eden.js";
 
 /** how the page is doing, in words, for the lead */
 export function pageStatusWords(pg) {
@@ -102,6 +103,10 @@ export function pageForm(me, pg, { onDone, onCancel }) {
       h("button", { class: "btn ghost", type: "button", "data-act": "page-save" }, WORDS.pageSave),
       h("button", { class: "btn", type: "submit", "data-act": "page-send" }, WORDS.pageSend),
       h("button", { class: "link", type: "button", on: { click: onCancel } }, "Cancel")));
+  /* Eden: the one line and the about words, from a few words. They go into the form only when the person presses "Use these words"; a verse is only ever one from the list. */
+  const eden = edenPanel({ job: "page_words", withVerse: true, getFields: () => { const v = values(form); return { name: v.name, city: v.city, state: v.state, tagline: v.tagline, about: v.about }; },
+    onUse: (d, verse) => { form.elements.tagline.value = d.tagline; form.elements.about.value = d.about; if (verse && form.elements.verse) form.elements.verse.value = verse.key; } });
+  form.insertBefore(eden, form.querySelector("h4"));
   const run = async (btn, submit) => {
     out.replaceChildren();
     await busy(btn, async () => {

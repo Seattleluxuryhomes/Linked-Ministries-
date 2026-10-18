@@ -52,7 +52,7 @@ ok(sentences >= 120, `${sentences} blocks of words on the public pages were read
 const strings = (src) => [...src.matchAll(/"((?:[^"\\\n]|\\.)*)"|`((?:[^`\\\n$]|\\.)*)`/g)].map((m) => (m[1] != null ? m[1] : m[2]).replace(/\\"/g, '"').replace(/\\'/g, "'")).filter((s) => /^[A-Z]/.test(s) && /\s[a-z]+\s+[a-z]+\s+[a-z]+/i.test(s) && s.split(/\s+/).length >= 5 && !/^(select|insert|update|delete|Mozilla|default-src|Contact:)/i.test(s) && !/[{}<>=;]|function|return |\.mjs|\.js\b/.test(s));
 let spoken = 0;
 for (const file of ["server/words.mjs", "server/api.mjs", "server/index.mjs", "server/auth.mjs"]) for (const s of strings(read(file))) { if (s === IRS_PHRASE) continue; /* the IRS's own sentence, quoted exactly from its letter; shown only once IRS_LETTER_DATE is set (the second named exception) */ spoken++; check(file, s); }
-for (const file of ["public/js/common.js", "public/js/page.js", "public/js/treasury.js", "public/js/join.js", "public/js/me.js", "public/js/steward.js", "public/js/board.js"]) for (const s of strings(read(file))) { spoken++; check(file, s); }
+for (const file of ["public/js/common.js", "public/js/page.js", "public/js/treasury.js", "public/js/eden.js", "public/js/join.js", "public/js/me.js", "public/js/steward.js", "public/js/board.js"]) for (const s of strings(read(file))) { spoken++; check(file, s); }
 ok(spoken >= 40, `${spoken} sentences in the server and the scripts were read`);
 
 /* every email, as the server writes it: each sentence of the words that are ours (what a person typed is theirs) */
@@ -64,6 +64,10 @@ for (const [name, m] of Object.entries({ signIn: signInEmail("123456"), invite: 
   for (const l of ours(m.text)) { mailSentences++; check(`the ${name} email`, l.replace(/https?:\S+/g, "").replace(/\(linkedm\.org\)/g, "")); }
 }
 ok(mailSentences >= 15, `${mailSentences} lines of the four emails were read`);
+
+/* what Eden says to a person (its system prompt is for the model and is not a public sentence; these are) */
+{ const src = read("server/eden.mjs"); let n = 0; for (const m of src.matchAll(/words: (?:why === "scripture" \? )?"((?:[^"\\]|\\.)*)"/g)) { n++; check("Eden's words", m[1]); }
+  check("Eden's mark", "Eden wrote this; read it before you use it."); ok(n >= 8, `${n} of Eden's own sentences were read`); }
 
 /* the email a ministry gets, as written in api.mjs (the lines that are plain text) */
 for (const s of ["answered your ask on the Linked Ministries board.", "This message came from the Linked Ministries board. The board moves no money, and Linked Ministries does not take part in what you agree on.", "If someone is in danger, call 911. If someone is thinking of hurting themselves, call or text 988."]) check("the answer email", s);

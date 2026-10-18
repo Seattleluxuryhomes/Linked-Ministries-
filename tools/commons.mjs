@@ -53,6 +53,7 @@ const PIECES = [
   ["test-api", "The whole thing over HTTP", "shaped-on", BH + "tests/api-test.mjs", "tests/api-test.mjs", "Same method; adds the stand-in mail server."],
   ["test-browser", "Real clicks at 390 and 1440", "shaped-on", BH + "tests/browser-test.mjs", "tests/browser-test.mjs", "Same method; this product's journey."],
   ["test-unit", "Names, claims, licences, commons.json, no key in the repository", "shaped-on", BH + "tests/unit-test.mjs", "tests/unit-test.mjs", "The licence check, the commons check, the no-key scan and the migration checks are the original's."],
+  ["eden-orb", "Eden's orange orb, drawn on a canvas", "adapted", "lexos/src/edenorb.jsx", "public/js/eden-orb.js", "The drawing (state table, four blobs, seeded mesh, nucleus, vignette, glint, the amber and copper numbers) is copied as it was; only the framework layer changed, a plain mount function instead of a component. Read only at the origin; the origin file is not edited."],
   ["workflow", "CI: a fresh Postgres 16 and a real Chromium, every test", "adapted", BH + ".github/workflows/test.yml", ".github/workflows/test.yml", "Names only."],
   ["deploy", "DEPLOY.md written for the founder: one-line commands, spaces marked and counted, step tables, zero versus O, never a password in chat", "shaped-on", BH + "DEPLOY.md", "DEPLOY.md", "Same form; this product's steps and variables."],
   ["claude", "CLAUDE.md: working rules, hard rules, founder communication rules", "shaped-on", BH + "CLAUDE.md", "CLAUDE.md", "Same form; this product's hard rules."],

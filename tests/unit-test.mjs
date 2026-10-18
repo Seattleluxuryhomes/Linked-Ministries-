@@ -259,10 +259,12 @@ ok(/default-src 'none'/.test(csp) && /script-src 'self'(;|$)/.test(csp) && /styl
 
 /* ---- no model name, no technology name, nothing a person should not read ---- */
 const everything = walk(".").filter((p) => /\.(mjs|js|json|sql|md|html|css|yml|yaml|txt|example|svg)$/.test(p) && !/package-lock/.test(p));
-for (const p of everything.filter((x) => x !== path.join("tests", "unit-test.mjs") && x !== path.join("tests", "banned.mjs"))) {
+const MODEL_NAME = /\b(sonnet|opus|haiku|fable|gpt-?[0-9]|gemini|anthropic|openai|llama|mistral)\b/i;
+for (const p of everything.filter((x) => x !== path.join("tests", "unit-test.mjs") && x !== path.join("tests", "banned.mjs") && x !== path.join("tests", "eden-test.mjs") && x !== path.join("server", "eden-engine.mjs"))) {
   const t = read(p);
-  ok(!/\b(sonnet|opus|haiku|fable|gpt-?[0-9]|gemini|anthropic|openai|llama|mistral)\b/i.test(t), `${p}: no model name`);
+  ok(!MODEL_NAME.test(t), `${p}: no model name`);
 }
+ok(MODEL_NAME.test(read("server/eden-engine.mjs")) && !/\b(sonnet|haiku|fable|gpt|gemini|openai|llama|mistral)\b/i.test(read("server/eden-engine.mjs")) && /ANTHROPIC_API_KEY/.test(read("server/eden-engine.mjs")), "the model and its company are named in one server file, and only the one model Eden uses");
 for (const p of walk("public").filter((x) => /\.(js|css|svg)$/.test(x)).concat(["server/pages.mjs", "server/words.mjs", "server/api.mjs", "server/index.mjs", "server/board.mjs", "server/auth.mjs"])) { const t = read(p).replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/.*$/gm, "$1"); ok(!/builder\s?buy\s?box|\bloxo\b|\bbidvoice\b|cross universal/i.test(t), `${p}: the strings a person reads carry no name that stays behind the front`); }
 
 /* ---- the server listens where the host says, and the host knows how to check it ---- */

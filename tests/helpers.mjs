@@ -2,6 +2,7 @@
    client with a cookie jar, and a stand-in mail server (adapted from Behavioral Health's; origin in commons.json). A test never
    touches a database it did not make, and never kills a process it did not start (by PID, never by name). */
 import net from "node:net";
+import http from "node:http";
 import path from "node:path";
 import fs from "node:fs";
 import os from "node:os";
@@ -117,4 +118,26 @@ export async function signIn(c, server, email, { smtp } = {}) {
   const v = await c.post("/api/auth/verify", { to: email, code });
   if (v.status !== 200) throw new Error("verify failed " + v.text);
   return v.json;
+}
+
+/* ---- a stand-in for the model's server (Eden): a real HTTP server on a local port that keeps every request and answers by the job in
+   the system prompt, or as the test tells it to. No test spends money or reaches the internet. */
+export async function modelStandIn() {
+  const seen = []; const state = { next: null, verse: "none" };
+  const server = http.createServer((req, res) => {
+    let b = ""; req.on("data", (d) => { b += d; });
+    req.on("end", () => {
+      let body = null; try { body = JSON.parse(b); } catch (e) { /* not json */ }
+      seen.push({ url: req.url, headers: req.headers, body });
+      const sys = (body && body.system) || "";
+      const dflt = /Task: write the title and the words/.test(sys) ? { title: "Ten folding tables for our meal", body: "We feed about eighty neighbors every Saturday. We need ten folding tables, and we can pick them up near Seattle." }
+        : /Task: write the one line/.test(sys) ? { tagline: "A hot meal every Saturday for our neighbors", about: "We serve a hot meal at noon every Saturday. Everyone is welcome here.\nOn Thursday nights we run a small youth night." }
+        : { letter: "Thank you for your gift. It helps us serve meals to our neighbors." };
+      const out = state.next ? state.next : { text: JSON.stringify({ verse_key: state.verse, ...dflt }) };
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify({ id: "msg_test", type: "message", role: "assistant", model: "stand-in", content: [{ type: "text", text: out.text }], stop_reason: out.stop || "end_turn", stop_sequence: null, usage: { input_tokens: 120, output_tokens: 45 } }));
+    });
+  });
+  await new Promise((r) => server.listen(0, "127.0.0.1", r));
+  return { url: `http://127.0.0.1:${server.address().port}`, seen, state, stop: () => new Promise((r) => server.close(r)) };
 }

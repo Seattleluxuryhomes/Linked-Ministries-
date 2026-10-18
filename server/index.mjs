@@ -9,6 +9,7 @@ import { securityHeaders, sameOriginLock } from "./headers.mjs";
 import { startSignIn, verifyCode, sessionUser, revokeSession, whoami } from "./auth.mjs";
 import { mount, dayLimits } from "./api.mjs";
 import { emailConfigured } from "./mail.mjs";
+import { keyIsSet } from "./eden-engine.mjs";
 import { refusal } from "./words.mjs";
 import { boardQuery, boardPost } from "./board.mjs";
 import { publicPage, publicPageList, photo, myPage, givingPublic, givingDoor } from "./site.mjs";
@@ -54,7 +55,7 @@ export function buildApp({ env = process.env } = {}) {
       posts_waiting: (await c.query("select count(*)::int as n from lm.posts where status = 'waiting'")).rows[0].n,
       stewards: (await c.query("select count(*)::int as n from lm.people where steward")).rows[0].n,
     }));
-    res.set("cache-control", "no-store").json({ ...d, mail: emailConfigured() });
+    res.set("cache-control", "no-store").json({ ...d, mail: emailConfigured(), eden: keyIsSet(env) });
   }));
 
   /* ---- who is signed in -------------------------------------------------------------------------------------------------- */

@@ -149,6 +149,31 @@ The same line with the space marked (1 space): `select␣lm.make_treasurer('EMAI
 A treasurer makes the next one on the treasury page. The last treasurer cannot be removed. A grant always needs two different
 treasurers, so make at least two before the first grant.
 
+## Step 8c. Turn on Eden, the writing helper (optional; a key you add yourself)
+
+Eden writes a first draft of an ask or a give, of a ministry's page words, of a grant request letter or of a thank-you, from what the
+person types. It is off until you add a key. Without one, the page says "Eden is not set up on this server yet" and offers nothing.
+The key is a secret: add it only in Railway's Variables box, never in this chat and never in the repository.
+
+| # | You do | The screen shows |
+|---|---|---|
+| 1 | Make a key in your account with the company that runs the writing model, and copy it | A long line starting `sk-` |
+| 2 | In Railway, click the `Linked-Ministries-` service card, then **Variables**, then **New Variable** | Two boxes: a name and a value |
+| 3 | Type the name `ANTHROPIC_API_KEY` in the first box and paste the key in the second | The new line in the list |
+| 4 | Click **Deploy** | The service builds, then turns green. On /me, **Ask Eden to help** now opens a box |
+
+What each line is, in plain words:
+
+| Line | What it does |
+|---|---|
+| `ANTHROPIC_API_KEY` | The key. Type the name exactly as shown, with two underscores. The `O` in the first word is the capital letter O; there is no zero. The server reads the key from here only. |
+| `EDEN_MODEL` | Optional. Names a different model. Leave it out and the server uses its own choice. |
+| `EDEN_LIMIT_HOUR`, `EDEN_LIMIT_DAY` | Optional. How many times one person may ask Eden in an hour and in a day. Left out, they are 8 and 40. |
+
+Eden's rules are in the server, not on the page: it writes only from what the person typed, never quotes Scripture on its own (a verse is
+only ever one from the server's own list), says nothing about taxes, stops and shows 911 and 988 if the words are about danger to life,
+and saves and sends nothing. Each call is written down with the person's name, the job and the number of tokens, never a word.
+
 ## Step 9. Someone asks you to delete them
 
 A person can do it themselves (My ministry, then Settings, then Your account). If one writes to the notice address instead, make sure it is them, then run this in the Postgres card's Query box. Replace `EMAIL` with their address, in the same place, keeping the quote marks. Nothing is typed twice, and it refuses the last steward.

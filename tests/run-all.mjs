@@ -9,8 +9,8 @@ import path from "node:path";
 import { ROOT } from "./helpers.mjs";
 
 const fast = process.env.LM_FAST === "1" || process.argv.includes("--fast");
-const ALL = [["migrations are recorded", "tools/freeze-migrations.mjs", ["--check"]], ["unit", "tests/unit-test.mjs"], ["plain words", "tests/plainwords-test.mjs"], ["database", "tests/db-test.mjs"], ["database: pages", "tests/db-pages-test.mjs"], ["database: giving", "tests/db-giving-test.mjs"], ["api", "tests/api-test.mjs"], ["api: pages", "tests/api-pages-test.mjs"], ["api: giving", "tests/api-giving-test.mjs"], ["boot", "tests/boot-test.mjs"],
-  ...(fast ? [] : [["light", "tests/light-test.mjs"], ["browser", "tests/browser-test.mjs"], ["browser: pages", "tests/browser-page-test.mjs"], ["browser: giving", "tests/browser-giving-test.mjs"]])];
+const ALL = [["migrations are recorded", "tools/freeze-migrations.mjs", ["--check"]], ["unit", "tests/unit-test.mjs"], ["plain words", "tests/plainwords-test.mjs"], ["database", "tests/db-test.mjs"], ["database: pages", "tests/db-pages-test.mjs"], ["database: giving", "tests/db-giving-test.mjs"], ["api", "tests/api-test.mjs"], ["api: pages", "tests/api-pages-test.mjs"], ["api: giving", "tests/api-giving-test.mjs"], ["eden", "tests/eden-test.mjs"], ["boot", "tests/boot-test.mjs"],
+  ...(fast ? [] : [["light", "tests/light-test.mjs"], ["browser", "tests/browser-test.mjs"], ["browser: pages", "tests/browser-page-test.mjs"], ["browser: giving", "tests/browser-giving-test.mjs"], ["browser: eden", "tests/browser-eden-test.mjs"]])];
 const results = [];
 for (const [name, file, args = []] of ALL) {
   console.log(`\n=== ${name} (${file}) ===`);

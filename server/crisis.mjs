@@ -1,0 +1,11 @@
+/* crisis.mjs — danger to life, found BEFORE anything is sent to a model. Copied from the Disciples' Authority server's list and test
+   (server/index.js: CRISIS_TERMS and isCrisis, which that ministry runs ahead of every model call), with one change: a curly
+   apostrophe (the one a phone types) is read as a straight one, so "don't want to live" is caught either way. The list is only
+   unambiguous danger-to-life phrasings, in English and Spanish; confession of sin never triggers it. When it matches, Eden does not
+   answer: the page shows the 911 and 988 line, and the person decides what to do. A model is never asked what to do about a crisis. */
+export const CRISIS_TERMS = ["kill myself","suicide","end my life","end it all","don't want to live","dont want to live","want to die","hurt myself","harm myself","self-harm","self harm","cutting myself","overdose","kill him","kill her","kill them","hurt someone","hurting someone","being abused","abusing me",
+  "quiero morir","quiero matarme","me quiero matar","matarme","suicidarme","suicidio","quitarme la vida","acabar con mi vida","no quiero vivir","hacerme daño","lastimarme","me estan pegando","me están pegando","abusando de mi","abusando de mí",
+  // 2026-09-21: the passive words a person in crisis more often uses were missing — "I don't want to be here anymore" passed the gate in LOXO's twin list. Danger to life only; confession ("I relapsed") still never triggers (D-8).
+  "don't want to be here anymore","dont want to be here anymore","don't want to be here any more","dont want to be here any more","don't want to be alive","dont want to be alive","don't want to wake up","dont want to wake up","wish i was dead","wish i were dead","better off without me","better off dead","no reason to live","no reason to go on","nothing to live for","not worth living","sleep and not wake up","sleep and never wake up",
+  "no quiero seguir viviendo","no quiero estar vivo","no quiero estar viva","no quiero despertar","ojalá estuviera muerto","ojalá estuviera muerta","ojala estuviera muerto","ojala estuviera muerta","mejor sin mí","mejor sin mi","no vale la pena vivir"];
+export const isCrisis = (t = "") => { const s = String(t == null ? "" : t).toLowerCase().replace(/[\u2018\u2019\u02bc]/g, "'"); return CRISIS_TERMS.some((k) => s.includes(k)); };
