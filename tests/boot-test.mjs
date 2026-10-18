@@ -43,9 +43,10 @@ const log1 = s1.logText();
 ok(/Linked Ministries listening on :\d+/.test(log1), "the log says it is listening");
 ok(!log1.includes(SMTP_PASSWORD) && !log1.includes(a.LEXOS_INTERNAL_KEY) && !log1.includes(a.KPI_READ_TOKEN), "no password and no key is in the log");
 ok(/The database connection is encrypted but the server's identity is not checked \(require\), accepted by BenMorton on 2026-10-18/.test(log1) || /config ok:/.test(log1), "the log says what the database attestation accepts");
+const files0 = fs.readdirSync(path.join(ROOT, "migrations")).filter((f) => f.endsWith(".sql"));
 const det = await c.get("/api/health/detail", { authorization: "Bearer " + a.KPI_READ_TOKEN });
-ok(det.status === 200 && det.json.migrations >= 5 && det.json.stewards === 0 && det.json.mail === true, "the operator's detail, with the key, counts migrations and stewards", det.text);
-ok((await pool.query("select count(*)::int n from public.lm_migrations")).rows[0].n === 5, "the stand-in and the four migrations are recorded");
+ok(det.status === 200 && det.json.migrations >= 6 && det.json.stewards === 0 && det.json.mail === true, "the operator's detail, with the key, counts migrations and stewards", det.text);
+ok((await pool.query("select count(*)::int n from public.lm_migrations")).rows[0].n === files0.length + 1, "the stand-in and every migration are recorded");
 await s1.stop(); await sleep(200);
 
 /* ---- 2. a database left at an older migration state is brought forward ---- */
@@ -63,9 +64,9 @@ const s2 = await startServer({ url: oldUrl, prod: true, env: b });
 ok(s2.up, "the current server boots in production mode against the old database", s2.logText().slice(-500));
 const h2 = await client(s2.base).get("/api/health");
 ok(h2.status === 200 && h2.text === '{"status":"ok","service":"Linked Ministries"}', "and /api/health answers 200 with the two words");
-ok((await oldPool.query("select count(*)::int n from public.lm_migrations")).rows[0].n === 5 && (await oldPool.query("select to_regclass('lm.posts') f")).rows[0].f !== null, "it applied the two newer migrations on the way up");
+ok((await oldPool.query("select count(*)::int n from public.lm_migrations")).rows[0].n === files.length + 1 && (await oldPool.query("select to_regclass('lm.posts') f")).rows[0].f !== null, "it applied the newer migrations on the way up");
 const log2 = s2.logText();
-ok(/migrated 0003_board\.sql/.test(log2) && /migrated 0004_grants\.sql/.test(log2) && !/migrated 0001_base/.test(log2), "and only those two (an applied migration is never run again)");
+ok(/migrated 0003_board\.sql/.test(log2) && /migrated 0004_grants\.sql/.test(log2) && /migrated 0005_hardening\.sql/.test(log2) && !/migrated 0001_base/.test(log2), "and only those (an applied migration is never run again)");
 await s2.stop(); await oldPool.end();
 
 /* ---- 3. the refusals ---- */

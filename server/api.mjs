@@ -2,8 +2,8 @@
    functions in migrations/ decide what comes back and what is refused. Nothing here is a permission; each route is a thin door
    (shaped on Behavioral Health's server/api.mjs; origin in commons.json), and a test calls every one as the wrong person.
    The early, friendly checks below only give a plainer sentence than the database's; the database decides. */
-import { asUser } from "./db.mjs";
-import { whoami, limited } from "./auth.mjs";
+import { asUser, asAdmin } from "./db.mjs";
+import { whoami, limited, validEmail } from "./auth.mjs";
 import { sendEmail, emailConfigured } from "./mail.mjs";
 import { CATEGORY_IDS, STATE_CODES, KINDS } from "../public/js/pure.js";
 
@@ -11,8 +11,9 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const bad = (words, status = 400, code = "bad_request") => Object.assign(new Error(code), { status, words, code });
 const str = (v, n) => String(v == null ? "" : v).trim().slice(0, n);
 const id = (v) => { if (!UUID.test(String(v || ""))) throw bad("That was not found.", 404, "not_found"); return String(v).toLowerCase(); };
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL = { test: (v) => validEmail(String(v)) };   /* one strict shape for every address (auth.mjs); the database holds the same rule */
 const DAY = 86400000;
+const inFlight = new Set();   /* a double click must not send the same answer twice: the second one waits for the first to finish */
 
 const rows = (req, sql, params = []) => asUser(req.user.id, async (c) => (await c.query(sql, params)).rows);
 const one = async (req, sql, params = []) => (await rows(req, sql, params))[0] || null;
@@ -131,10 +132,19 @@ export function mount(app, { wrap, publicBase, now = () => Date.now() }) {
     /* no fake state: with no way to send, nothing is sent and nothing is saved, and the screen says so */
     if (!emailConfigured()) throw bad("The network is not set up to send email yet. Nothing was sent and nothing was saved.", 503, "mail_not_set_up");
     await slow(req, "answer", 10);
+    const flightKey = `${req.user.id}:${pid}`;
+    if (inFlight.has(flightKey)) throw bad("Your answer is already being sent. Please wait a moment.", 409, "already_sending");
+    inFlight.add(flightKey);
+    try {
     const p = (await one(req, "select lm.answer_prepare($1) as v", [pid])).v;
+    /* who the email goes to is read by the service connection, after the person's own check above said yes: no signed-in role can read it */
+    const to = (await asAdmin(async (c) => (await c.query("select lm.answer_contact($1) as v", [pid])).rows[0])).v;
+    if (!to) throw bad("That post is not open any more.", 409, "post_not_open");
+    /* one post, and one ministry's contact, can only be written to so often in a day, however many ministries ask */
+    if (await limited(`answer-post:${pid}`, 25, 24 * 3600 * 1000) || await limited(`answer-to:${p.to_ministry_id}`, 60, 24 * 3600 * 1000)) throw bad("This ministry has had a lot of answers today. Please try again tomorrow.", 429, "too_many");
     const place = `${p.from_city}, ${p.from_state}`;
     const text = [
-      `Hello ${p.to_contact},`, "",
+      `Hello ${to.to_contact},`, "",
       `${p.from_ministry} (${place}) answered your ${p.kind === "ask" ? "ask" : "give"} on the Linked Ministries board:`,
       `"${p.title}"`, "",
       p.kind === "ask" ? "They say they can help:" : "They say they need this:", "",
@@ -145,11 +155,12 @@ export function mount(app, { wrap, publicBase, now = () => Date.now() }) {
       "If someone is in danger, call 911. If someone is thinking of hurting themselves, call or text 988.", "",
     ].join("\n");
     const subject = `${p.from_ministry} ${p.kind === "ask" ? "can help with" : "needs"}: ${p.title}`.replace(/[\r\n]+/g, " ").slice(0, 200);
-    const sent = await sendEmail({ to: p.to_email, subject, text, replyTo: p.from_email });
+    const sent = await sendEmail({ to: to.to_email, subject, text, replyTo: p.from_email });
     if (!sent.sent) throw bad("The email did not go out, so nothing was saved. Try again in a minute.", 502, "mail_failed");
     /* the provider took it: now, and only now, it is a row */
     await one(req, "select lm.answer_record($1, $2, $3, $4) as id", [pid, words, phone || null, sent.id || null]);
     return { ok: true, sent_to: p.to_ministry, words: `Sent to ${p.to_ministry}.` };
+    } finally { inFlight.delete(flightKey); }
   }, 201);
 
   /* ---- stewards -------------------------------------------------------------------------------------------------------- */

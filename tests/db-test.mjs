@@ -3,7 +3,7 @@
    each asked the same questions: what can you read, what can you write, what does the database refuse. Row-level security, the
    steward rule, the last lead, the 90-day rule, the frozen words, the named reader, the answers, the record with a name on every
    row. Shaped on Behavioral Health's tests/db-test.mjs.   LEXOS_DB_NAME=linkedm_t_<mine> node tests/db-test.mjs */
-import { counter, ownDatabase } from "./helpers.mjs";
+import { counter, ownDatabase, sleep } from "./helpers.mjs";
 
 const T = counter("db-test");
 const { ok } = T;
@@ -210,7 +210,10 @@ ok((await refused(q(a2, "select lm.answer_prepare($1)", [open]), /own_post|own m
 ok((await refused(q(nobody, "select lm.answer_prepare($1)", [open]), /ministry_required/)).refused, "a person with no ministry cannot answer");
 ok((await q(b1, "select status from lm.ministries where id = $1", [mB]))[0].status === "sent_back" && (await refused(q(b1, "select lm.answer_prepare($1)", [open]), /ministry_not_public|has not read/)).refused, "a ministry that has not been read cannot answer");
 const prep = (await q(c1, "select lm.answer_prepare($1) as v", [open]))[0].v;
-ok(prep.to_ministry === "Alpha Table Church" && prep.from_ministry === "Charlie Outreach" && /@/.test(prep.to_email) && prep.from_email === "c1@example.org", "preparing an answer returns the two ministries and the addresses the email needs");
+ok(prep.to_ministry === "Alpha Table Church" && prep.from_ministry === "Charlie Outreach" && prep.from_email === "c1@example.org", "preparing an answer returns the two ministries and the answerer's own address");
+ok(!("to_email" in prep) && !("to_contact" in prep) && !JSON.stringify(prep).includes("new-contact"), "and not the posting ministry's contact name or address: a signed-in person's call never returns it");
+ok((await refused(q(c1, "select lm.answer_contact($1)", [open]), /permission denied|42501/)).refused, "nobody signed in can call answer_contact");
+ok((await admin("select lm.answer_contact($1) as v", [open]))[0].v.to_email === "new-contact@example.org", "the service connection can, and gets the address the email goes to");
 ok((await admin("select count(*)::int n from lm.answers"))[0].n === 0, "preparing saves nothing");
 const ans = (await q(c1, "select lm.answer_record($1, 'We have eleven tables and a truck.', '206-555-0100', 'mail-1') as id", [open]))[0].id;
 ok(!!ans && (await admin("select count(*)::int n from lm.answers"))[0].n === 1, "recording an answer writes one row");
@@ -255,9 +258,87 @@ ok(fnRows.map((r) => r.proname).join() === "ministry_is_public", "the public can
 const authFns = await admin(`select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'lm' and has_function_privilege('authenticated', p.oid, 'execute') and p.proname in ('make_steward','log','audit','posts_guard','people_guard')`);
 ok(authFns.length === 0, "a signed-in person cannot call make_steward, log or a trigger function directly", authFns);
 
+/* ===== 14. the hardening of 0005: found by the audit, each one tried before it was closed ===== */
+{
+  const mkWith = (uid, over = {}) => { const v = { name: "Good Name Ministry", city: "Seattle", state: "WA", about: "We feed neighbors every week and more.", website: null, contact_name: "Pat Lead", contact_email: "pat@example.org", ...over };
+    return q(uid, "select lm.ministry_create($1,$2,$3,$4,$5,$6,$7)", [v.name, v.city, v.state, v.about, v.website, v.contact_name, v.contact_email]); };
+  /* an address has one shape: a list, a name in quotes, a missing dot, a line break and a space are all refused, by the database itself */
+  for (const bad of ["a,victim@bank.example", '"x"<y>@z.example', "a@b", "a@-b.example", "a@b..example", "a b@c.example", "a@b.example\n", "<a@b.example>", "a;b@c.example", "a(b)@c.example"]) {
+    const u = await user(`shape-${Math.random().toString(36).slice(2)}@example.org`);
+    ok((await refused(mkWith(u, { contact_email: bad }))).refused, `a contact address of ${JSON.stringify(bad)} is refused by the database`);
+  }
+  { const u = await user("shape-ok@example.org"); ok((await mkWith(u, { contact_email: "first.last+board@sub.example.org" })).length === 1, "and a plain address with a dot and a plus is accepted"); }
+  ok((await refused(q(a1, "select lm.team_invite($1)", ["a,b@c.example"]))).refused, "an invitation to a list of addresses is refused too");
+  ok((await refused(admin("insert into auth.users (email) values ('x,y@z.example')"), /check|23514/)).refused, "and a sign-in address that is a list cannot be made, even by the operator's SQL");
+  /* one line: no break in a name, a city or a title */
+  { const u = await user("oneline@example.org"); ok((await refused(mkWith(u, { name: "Good\nName" }))).refused && (await refused(mkWith(u, { contact_name: "Pat\r\nBcc: x@y.example" }))).refused, "a ministry name or contact name with a line break is refused");
+    ok((await refused(newPost(a1, "ask", "A title\nwith a break", in30, false))).refused, "and so is a post title with one"); }
+  /* the last steward and the last lead are counted under a lock: two at once cannot both go */
+  const s1 = await user("race-s1@example.org", "Race One"), s2 = await user("race-s2@example.org", "Race Two");
+  await admin("select lm.make_steward('race-s1@example.org')"); await admin("select lm.make_steward('race-s2@example.org')");
+  const others = (await admin("select user_id from lm.people where steward and user_id not in ($1, $2)", [s1, s2])).map((r) => r.user_id);
+  for (const uid of others) await admin("update lm.people set steward = false where user_id = $1", [uid]);
+  const conn = async (uid) => { const c = await pool.connect(); await c.query("begin"); await c.query("set local role authenticated"); await c.query("select set_config('request.jwt.claim.sub', $1, true)", [uid]); return c; };
+  const race = async (a, aSql, aP, b, bSql, bP) => {
+    const ca = await conn(a), cb = await conn(b);
+    await ca.query(aSql, aP);                                   /* the first change is made and not yet committed */
+    const second = cb.query(bSql, bP).then(() => ({ ok: true }), (e) => ({ ok: false, e }));
+    await sleep(500);                                           /* the second has to wait for the first: it is queued behind the lock */
+    await ca.query("commit"); const r = await second;
+    try { await cb.query(r.ok ? "commit" : "rollback"); } catch (e) { /* done */ }
+    ca.release(); cb.release(); return r;
+  };
+  { const r = await race(s1, "select lm.steward_set('race-s2@example.org', false)", [], s2, "select lm.steward_set('race-s1@example.org', false)", []);
+    const left = (await admin("select count(*)::int n from lm.people where steward"))[0].n;
+    ok(!r.ok && /last_steward|steward_required/.test(r.e.message) && left === 1, "two stewards who take each other off at the same moment: one goes, and the other is refused, so one steward is always left", { ok: r.ok, left, e: r.e && r.e.message }); }
+  for (const uid of [s2, ...others]) await admin("update lm.people set steward = true where user_id = $1", [uid]);
+  const l1 = await user("race-l1@example.org", "Lead One"), l2 = await user("race-l2@example.org", "Lead Two");
+  const mR = await mk(l1, "Race Ministry"); await q(l1, "select lm.team_invite('race-l2@example.org')");
+  const inv = (await admin("select id from lm.invites where ministry_id = $1", [mR]))[0].id; await q(l2, "select lm.team_accept($1, 'Lead Two')", [inv]); await q(l1, "select lm.team_set_role($1, 'lead')", [l2]);
+  { const r = await race(l1, "select lm.team_set_role($1, 'member')", [l2], l2, "select lm.team_set_role($1, 'member')", [l1]);
+    const leads = (await admin("select count(*)::int n from lm.people where ministry_id = $1 and role = 'lead'", [mR]))[0].n;
+    ok(!r.ok && /last_lead|lead_required/.test(r.e.message) && leads === 1, "two leads who demote each other at the same moment: one goes, and the other is refused, so one lead is always left", { ok: r.ok, leads, e: r.e && r.e.message }); }
+  /* deleting the last steward's row, or the last lead's, is refused too, not only changing it */
+  await admin("update lm.people set steward = false where user_id in ($1, $2, $3)", [s1, s2, st]).catch(() => {});
+  const stewardsNow = (await admin("select user_id from lm.people where steward")).map((r) => r.user_id);
+  for (const uid of stewardsNow.slice(1)) await admin("update lm.people set steward = false where user_id = $1", [uid]);
+  ok((await admin("select count(*)::int n from lm.people where steward"))[0].n === 1, "(one steward is left)");
+  ok((await refused(admin("delete from lm.people where user_id = $1", [stewardsNow[0]]), /last_steward|keeps one steward/)).refused, "the operator's SQL cannot delete the last steward's row");
+  const onlyLead = (await admin("select user_id from lm.people where ministry_id = $1 and role = 'lead'", [mR]))[0].user_id;
+  ok((await refused(admin("delete from lm.people where user_id = $1", [onlyLead]), /last_lead|keeps one lead/)).refused, "or the last lead's row");
+  await admin("update lm.people set steward = true where user_id in ($1, $2)", [s1, st]);
+
+  /* what a ministry says about itself is not read by every signed-in person */
+  for (const col of ["about", "website"]) ok((await refused(q(b1, `select ${col} from lm.ministries`), /permission denied|42501/)).refused, `a signed-in person cannot select ministries.${col}`);
+  ok((await q(a1, "select lm.my_ministry_profile() as m"))[0].m.about.length > 10, "a ministry's own people still read it, through the function that answers for them");
+  ok((await q(st, "select lm.steward_queue() as q"))[0].q.ministries.every((m) => "about" in m), "and a steward reads it in the queue");
+
+  /* a past day cannot be sent to be read */
+  { const d = await newPost(a1, "ask", "A draft that will go stale", in30, false);
+    await admin("alter table lm.posts disable trigger posts_guard"); await admin("update lm.posts set open_until = (now() at time zone 'utc')::date - 2 where id = $1", [d]); await admin("alter table lm.posts enable trigger posts_guard");
+    ok((await refused(q(a1, "select lm.post_submit($1)", [d]), /open_until_past|has passed/)).refused, "a draft whose day has gone cannot be sent to be read"); }
+
+  /* nobody signed in can run what is only the operator's */
+  const priv = await admin(`select p.proname, n.nspname from pg_proc p join pg_namespace n on n.oid = p.pronamespace where p.proname in ('answer_contact','reap') and n.nspname in ('lm','app')
+    and (has_function_privilege('authenticated', p.oid, 'execute') or has_function_privilege('anon', p.oid, 'execute') or has_function_privilege(0, p.oid, 'execute'))`);
+  ok(priv.length === 0, "answer_contact and app.reap are not granted to the public, to anon or to a signed-in person", priv);
+
+  /* old things are swept: an address nobody finished goes; a person with a ministry, a session or a young row stays */
+  const ghost = await user("ghost@example.org"), young = await user("young@example.org"), live = await user("live@example.org");
+  await admin("update auth.users set created_at = now() - interval '5 days' where id = $1 or id = $2", [ghost, live]);
+  await admin("insert into app.sessions (user_id, token_hash) values ($1, decode(md5('t'), 'hex'))", [live]);
+  await admin("insert into app.login_codes (user_id, code_hash, channel, sent_to, expires_at) values ($1, decode(md5('c'), 'hex'), 'email', 'ghost@example.org', now() - interval '3 days')", [ghost]);
+  await admin("insert into app.sessions (user_id, token_hash, expires_at) values ($1, decode(md5('old'), 'hex'), now() - interval '9 days')", [live]);
+  await admin("select app.reap()");
+  const left = (await admin("select email from auth.users where id in ($1,$2,$3) order by email", [ghost, young, live])).map((r) => r.email);
+  ok(left.join() === "live@example.org,young@example.org", "an address nobody finished is swept; a young one and one with a session stay", left);
+  ok((await admin("select count(*)::int n from app.sessions where user_id = $1", [live]))[0].n === 1 && (await admin("select count(*)::int n from app.login_codes where user_id = $1", [ghost]))[0].n === 0, "an old session and an old code are swept; the live session stays");
+  ok((await admin("select count(*)::int n from lm.people where user_id = $1", [a1]))[0].n === 1 && (await admin("select count(*)::int n from auth.users where id = $1", [a1]))[0].n === 1, "and nobody with a ministry is touched");
+}
+
 /* ===== 15. the migrations are recorded and applied ===== */
 const applied = await admin("select name from public.lm_migrations order by name");
-ok(applied.map((a) => a.name).join() === "0001_base.sql,0002_ministries.sql,0003_board.sql,0004_grants.sql,local-supabase-shim.sql", "the four migrations and the stand-in are recorded as applied", applied);
+ok(applied.map((a) => a.name).join() === "0001_base.sql,0002_ministries.sql,0003_board.sql,0004_grants.sql,0005_hardening.sql,local-supabase-shim.sql", "every migration and the stand-in are recorded as applied", applied);
 ok((await admin("select count(*)::int n from pg_policies where schemaname = 'lm'"))[0].n >= 7, "row-level security policies are in place");
 ok((await admin("select count(*)::int n from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'lm' and c.relkind = 'r' and not c.relrowsecurity"))[0].n === 0, "every table in lm has row-level security on");
 

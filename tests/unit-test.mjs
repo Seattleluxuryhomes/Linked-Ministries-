@@ -67,6 +67,7 @@ ok(refusal(pg("something_new")).status === 422 && refusal(Object.assign(new Erro
 { const l = dayLimits(Date.UTC(2026, 9, 18, 23, 59)); ok(l.today === "2026-10-18" && l.max === "2027-01-16", "today and the last day a post may stay open are 90 days apart, in UTC", l); }
 ok(normCode("123 456") === "123456" && normCode("123-456") === "123456" && normCode("１２３４５６") === "123456", "a code typed with spaces, dashes or wide digits is the same six digits");
 ok(normEmail("  Ben@Example.ORG ") === "ben@example.org" && validEmail("a@b.co") && !validEmail("a@b") && !validEmail("a b@c.de"), "an email is read in lower case and checked");
+ok(["a,b@c.example", "a;b@c.example", '"x"<y>@z.example', "<a@b.example>", "a@b..example", "a@-b.example", "a@b.example\n", "a b@c.example", "a@b", "@b.example", "a@@b.example"].every((x) => !validEmail(x)) && ["a@b.co", "first.last+tag@sub.example.org", "o'neil@example.org"].every(validEmail), "an address has one strict shape: a list, a quoted name, an angle bracket and a line break are all refused");
 ok(smtpUrlWithTimeouts("smtps://u:p@h:465").includes("connectionTimeout=15000"), "the mail connection has timeouts, so the truth arrives while someone is reading");
 
 /* ---- the pages, built with sample posts ---- */

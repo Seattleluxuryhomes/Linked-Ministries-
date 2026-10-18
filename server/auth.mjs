@@ -19,7 +19,10 @@ export const LOCKED_WORDS = "Too many wrong codes. Any code you were sent has be
 /* a code typed with spaces or dashes ("123 456", "123-456"), or in wide digits from a phone's keyboard, is the same six digits */
 export const normCode = (c) => String(c == null ? "" : c).normalize("NFKC").replace(/\D/g, "");
 export const normEmail = (e) => String(e || "").trim().toLowerCase();
-export const validEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) && e.length <= 254;
+/* one strict shape (the same as migration 0005's check): letters, digits and the few marks an address may carry. A comma, a quote, an
+   angle bracket, a space or a line break is refused, because the mail library reads those as a list of addresses or a name. */
+export const EMAIL_SHAPE = /^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)+$/;
+export const validEmail = (e) => EMAIL_SHAPE.test(e) && e.length <= 254;
 
 export const findUser = (email) => asAdmin(async (c) => (await c.query("select id, email, full_name from auth.users where lower(email) = $1", [normEmail(email)])).rows[0] || null);
 export async function ensureUser({ email, full_name }) {
@@ -36,7 +39,9 @@ export async function ensureUser({ email, full_name }) {
 export async function startSignIn({ to, ip, env = process.env }) {
   const e = normEmail(to);
   if (!validEmail(e)) return { ok: false, reason: "email_required" };
-  if ((await limited("start:" + e, 6)) || (await limited("ip:" + ip, 30))) return { ok: false, reason: "too_many" };
+  /* a code is an email to a stranger's inbox: three in ten minutes and twelve in a day for one address, and twenty in ten minutes for one
+     machine, so this door cannot be used to bury someone's mailbox or to use up the site's daily mail allowance */
+  if ((await limited("start:" + e, 3)) || (await limited("startday:" + e, 12, 24 * 3600 * 1000)) || (await limited("ip:" + ip, 20))) return { ok: false, reason: "too_many" };
   const dev = env.LEXOS_DEV_CODES === "1";
   const advertised = emailConfigured() ? "email" : dev ? "console" : "none";
   if (advertised === "none") return { ok: true, channel: "none" };
@@ -81,6 +86,8 @@ export async function verifyCode({ to, code, ip, ua }) {
 export async function createSession(userId, ua, ip) {
   const token = crypto.randomBytes(32).toString("base64url");
   await q("insert into app.sessions (user_id, token_hash, user_agent, ip, via) values ($1,$2,$3,$4,'code')", [userId, sha(token), String(ua || "").slice(0, 300), String(ip || "").slice(0, 64)]);
+  /* a person keeps at most ten signed-in browsers: the oldest are signed out, so the table cannot grow without end */
+  await q("update app.sessions set revoked_at = now() where user_id = $1 and revoked_at is null and id not in (select id from app.sessions where user_id = $1 and revoked_at is null order by created_at desc limit 10)", [userId]);
   return token;
 }
 export async function sessionUser(token) {

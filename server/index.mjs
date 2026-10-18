@@ -27,7 +27,8 @@ export function buildApp({ env = process.env } = {}) {
   app.use(sameOriginLock());
 
   const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
-  const cookies = (req) => Object.fromEntries(String(req.headers.cookie || "").split(/;\s*/).filter(Boolean).map((p) => { const i = p.indexOf("="); return [p.slice(0, i), decodeURIComponent(p.slice(i + 1))]; }));
+  /* a cookie that cannot be read (a broken %-sequence, no "=") is ignored, never an error: it is the browser's, and anyone can send one */
+  const cookies = (req) => { const out = {}; for (const p of String(req.headers.cookie || "").split(/;\s*/)) { const i = p.indexOf("="); if (i < 1) continue; try { out[p.slice(0, i)] = decodeURIComponent(p.slice(i + 1)); } catch (e) { /* skip it */ } } return out; };
   const setSession = (res, token) => res.setHeader("Set-Cookie", `${COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${MAX_AGE}${https ? "; Secure" : ""}`);
   const clearSession = (res) => res.setHeader("Set-Cookie", `${COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${https ? "; Secure" : ""}`);
   const publicBase = (req) => String(env.LEXOS_PUBLIC_URL || "").replace(/\/+$/, "") || `${req.protocol}://${req.get("host")}`;
@@ -123,7 +124,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const app = buildApp();
   const port = Number(process.env.PORT) || 8080;
   const srv = app.listen(port, () => console.log(`Linked Ministries listening on :${port}`));
-  const tick = () => pool.query("select rl.reap()").catch((e) => console.error("reaper: " + String(e && e.code || "error")));
+  const tick = () => pool.query("select rl.reap(); select app.reap()").catch((e) => console.error("reaper: " + String(e && e.code || "error")));
   setInterval(tick, 3600 * 1000).unref();
   for (const sig of ["SIGTERM", "SIGINT"]) process.on(sig, () => { srv.close(() => pool.end().finally(() => process.exit(0))); setTimeout(() => process.exit(0), 5000).unref(); });
 }

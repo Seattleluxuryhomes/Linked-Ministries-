@@ -239,6 +239,43 @@ ok((await alex.post(`/api/team/${dme.user.id}/role`, { role: "lead" })).status =
 ok((await alex.post(`/api/team/${me0.json.user.id}/remove`)).status === 200 && (await alex.get("/api/me")).json.ministry === null, "and then can leave");
 ok((await dana.post(`/api/team/${dme.user.id}/remove`)).status === 409, "the one who is now the last lead cannot leave");
 
+/* ---- the audit's fixes, each tried over HTTP ---- */
+{
+  /* a cookie the browser sends that cannot be read is ignored, not a server error */
+  for (const cookie of ["lm_session=%E0%A4%A", "junk; lm_session", "=x", "lm_session=" + "a".repeat(5000)]) { const r = await fetch(s.base + "/api/me", { headers: { cookie } }); ok(r.status === 401, `a broken cookie (${JSON.stringify(cookie.slice(0, 18))}) is a plain sign-in refusal, not a 500`, r.status); }
+  /* an address is one address: a list, a name in quotes, an angle bracket are refused, and no mail goes anywhere */
+  const nMail = smtp.mails.length;
+  for (const bad of ["a,victim@bank.example", '"x"<y>@z.example', "a;b@c.example", "a@b..example", "<a@b.example>", "a b@c.example"]) ok((await client(s.base).post("/api/auth/start", { to: bad })).status === 400, `a sign-in with ${JSON.stringify(bad)} is refused`);
+  await sleep(150); ok(smtp.mails.length === nMail && (await sql("select count(*)::int n from auth.users where email ~ '[,;<> \"]'"))[0].n === 0, "and no email was sent and no such person was made");
+  ok((await client(s.base).post("/api/ministry", {})).status === 401, "(and a stranger cannot make a ministry)");
+  /* a code is an email to someone else's inbox: three in ten minutes, twelve in a day, for one address */
+  { const x = client(s.base), r = []; for (let i = 0; i < 4; i++) r.push((await x.post("/api/auth/start", { to: "bomb@example.org" })).status);
+    ok(r.join() === "200,200,200,429", "a fourth code in ten minutes for one address is refused", r);
+    for (let i = 0; i < 12; i++) await sql("insert into rl.events (bucket, key) values ('lm', 'startday:day@example.org')");
+    ok((await client(s.base).post("/api/auth/start", { to: "day@example.org" })).status === 429, "and a thirteenth in a day is refused even when the ten minutes were quiet"); }
+  /* the posting ministry's contact never reaches the HTTP answer to the answerer */
+  ok(!/answers@alpha|Alex Lead|alex@alpha/.test(ans.text) && !/answers@alpha|Alex Lead/.test(JSON.stringify((await blake.get("/api/answers")).json)), "what the answerer's browser is told holds no address or name of the ministry it wrote to");
+  ok(!/answers@alpha/.test(JSON.stringify((await anon.get("/api/board")).json)) && !/answers@alpha/.test((await anon.get("/board")).text), "nor the public board, as JSON or as a page");
+  /* a double click sends one email, not two, and the screen is not told an error after the email went */
+  { const before = smtp.mails.length;
+    const twice = await Promise.all([gina.post(`/api/posts/${give.json.id}/answer`, { words: "We would take ten cases for our pantry." }), gina.post(`/api/posts/${give.json.id}/answer`, { words: "We would take ten cases for our pantry." })]);
+    const codes = twice.map((r) => r.status).sort().join(); await sleep(100);
+    ok(codes === "201,409" && smtp.mails.length === before + 1, "two answers sent at the same moment: one is sent, the other waits its turn and is told so; one email goes out", { codes, mails: smtp.mails.length - before }); }
+  /* one post and one ministry can only be written to so often in a day */
+  { const bPost = await sql("select id from lm.posts where title = 'Posted by a member'"); const id2 = bPost[0].id;
+    await sam.post(`/api/steward/posts/${id2}/review`, { decision: "approve" });
+    for (let i = 0; i < 25; i++) await sql("insert into rl.events (bucket, key) values ('lm', $1)", [`answer-post:${id2}`]);
+    const before = smtp.mails.length; const capped = await gina.post(`/api/posts/${id2}/answer`, { words: "We could help with this one." });
+    ok(capped.status === 429 && /a lot of answers/.test(capped.json.words) && smtp.mails.length === before && (await sql("select count(*)::int n from lm.answers where post_id = $1", [id2]))[0].n === 0, "a post that has had twenty-five answers today takes no more: nothing is sent and nothing is saved", capped.json); }
+  /* a person keeps at most ten signed-in browsers */
+  { const { createSession, sessionUser } = await import("../server/auth.mjs"); const uid = (await sql("select id from auth.users where email = 'dana@alpha.example'"))[0].id; const toks = [];
+    for (let i = 0; i < 13; i++) toks.push(await createSession(uid, "test", "127.0.0.1"));
+    const live = (await sql("select count(*)::int n from app.sessions where user_id = $1 and revoked_at is null", [uid]))[0].n;
+    ok(live === 10 && !(await sessionUser(toks[0])) && !!(await sessionUser(toks[12])), "a person keeps ten signed-in browsers at most: the oldest are signed out, the newest works", live); }
+  /* a header is one line */
+  { const { oneLine } = await import("../server/mail.mjs"); ok(oneLine("Gamma\r\nBcc: spy@evil.example") === "Gamma Bcc: spy@evil.example" && !/[\r\n]/.test(oneLine("a b\nc\td")), "a subject made from someone's words is one line, whatever they typed"); }
+}
+
 /* ---- sign out ---- */
 const out = await blake.post("/api/auth/signout");
 ok(out.status === 200 && (await blake.get("/api/me")).status === 401, "signing out ends the session");
