@@ -287,7 +287,7 @@
       "origin_path": "behavioral-health-app/tests/run-all.mjs",
       "origin_sha256": "80f53d81c295c1fdc207a38feffe49b76b305d0106fb5057868e7219cbd201f0",
       "local_path": "tests/run-all.mjs",
-      "local_sha256": "b2efc8ca158e90fa246f1b9a58d97c2a6df6ce501c60271f327c28ff2779e34a",
+      "local_sha256": "c7632d6fcaf4263fba3138143e93fbfee732adae958b06eb8893ec602e9cbabf",
       "note": "This product's test list; drops the image and mutation tests."
     },
     {
@@ -309,7 +309,7 @@
       "origin_path": "behavioral-health-app/tests/light-test.mjs",
       "origin_sha256": "e3e7289a423a030c9427e2617334f909a8f0f8104ccd5466a3be72e8aa063881",
       "local_path": "tests/light-test.mjs",
-      "local_sha256": "f0343cace34eac72ace588cb20899f35e8f6d674af2d993e59b69763b6af3c1b",
+      "local_sha256": "21d7f076a7d6077c12f2f0c565991fb8ba7c7f341e374c0014bbe2bea470d5d8",
       "note": "Same method (stylesheet tokens, painted pages, a dark panel is caught); adds a check for red and for contrast."
     },
     {
@@ -364,8 +364,8 @@
       "origin_path": "lexos/src/edenorb.jsx",
       "origin_sha256": "cadfc9aa84cb9493e984c85bcfabc267b0c9ef0c260a2535ae82007378d0a0b6",
       "local_path": "public/js/eden-orb.js",
-      "local_sha256": "9c1430f435f5159b8300cdc3f9da9c738f0c0c175f1b331f461d3e653a230c74",
-      "note": "The drawing (state table, four blobs, seeded mesh, nucleus, vignette, glint, the amber and copper numbers) is copied as it was; only the framework layer changed, a plain mount function instead of a component. Read only at the origin; the origin file is not edited."
+      "local_sha256": "8ef7e2b80fd2c5eeb97d6c7f1e6330fbd8ad15703680b9438aeb7763c2d8d3fb",
+      "note": "The drawing (state table, four blobs, seeded mesh, nucleus, vignette, glint, the amber and copper numbers) is copied as it was; only the framework layer changed, a plain mount function instead of a component. Read only at the origin; the origin file is not edited. This site floats the orb at the side of every page (public/js/eden.js, public/js/eden-place.js, public/js/orb.js; founder, 2026-10-18): the drawing is untouched except one added state, off (not set up), which is the same drawing turned low and slow and made grey by the style sheet, the glow element is passed in and breathed with the orb as the origin does, and setState does nothing when the state has not changed. The slow wander at rest copies BidVoice's edenRoam (acquisition-analyzer, public/index.html): 9 seconds quiet, one move in 24, a 2.4 second glide, never while the page is in use, and the 19 second drift of a few pixels (bbdrift); here its four resting places are widened to twelve around the whole edge."
     },
     {
       "id": "pwa-worker",
@@ -441,7 +441,7 @@
       "origin_path": "behavioral-health-app/CLAUDE.md",
       "origin_sha256": "3c403645fae7028168c5ee3e1201d85863a7ebbf30225d2007cef282ce16842e",
       "local_path": "CLAUDE.md",
-      "local_sha256": "a8f572fdaeec1d2fb91bc8bc1e0539b1ff710a938d298616ed14c5125aeab742",
+      "local_sha256": "d82c0b1655c7ca50fc6bd1b0b40d0c308f03ca2ac3151acc2bedd675d7b93102",
       "note": "Same form; this product's hard rules."
     },
     {

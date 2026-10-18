@@ -56,8 +56,13 @@ Founder, 2026-10-18: "So if a ministry wants something or needs something we nee
 14. **Money is a record, and a person approves it.** Gifts, board votes and receipts are only ever added to; a mistake is a new row that
     points at the old one. A grant needs two different named people on the money team and the board's vote by name (a CHECK on the table, not a screen).
     No event holds a donor's name, an email, a note or a board member. The public reads sums of the rows, never a donor. The money team (the `treasurer` flag, page Money at `/money`; `/treasury` redirects to it) is the Linked Ministries team with one more flag. `tests/db-giving-test.mjs` holds each of these.
-15. **Eden is a writing helper and nothing more.** Founder, 2026-10-18: the orange orb on the signed-in pages only (/me, the page form,
-    /money). Its prompt and its key live in the server; a client sends a job name and fields, never a prompt. Danger-to-life words
+15. **Eden is a writing helper and nothing more.** Founder, 2026-10-18: "needs to be a glowing orb on the side that can move around", and then, on
+    whether it belongs on every page, "Let's try it". Eden is a glowing orange orb fixed to the side of **every page, public ones included**
+    (it was the signed-in pages only: /me, the page form, /money). A person can drag it, it slides to the nearest edge, it wanders slowly on
+    its own and holds still for a person, and it never moves for less motion (`public/js/eden.js`, `eden-place.js`, `eden-orb.js`, `orb.js`;
+    `tests/browser-orb-test.mjs`). Before sign-in the orb makes no call to Eden or to anyone for it: tapping it shows words only (who Eden is,
+    what she never does, the 911 and 988 line) and a "Join the network" button. After sign-in the panel is the writing helper, and the writing
+    forms (/me, the page form, /money) are where it writes. Its prompt and its key live in the server; a client sends a job name and fields, never a prompt. Danger-to-life words
     stop the call and show 911 and 988. Nothing Eden writes is saved or sent until the person presses the form's own Save or Send, and
     every draft says "Eden wrote this; read it before you use it." Scripture is only ever an exact verse from `server/scripture.mjs` by
     its key. No legal, tax or medical advice. One event per call, with token counts and never a word. `tests/eden-test.mjs` holds each.
