@@ -194,10 +194,11 @@ for (const kind of ["desk", "phone"]) {
   }
   ok(calls.length === 0, `${kind}: a visitor who has not signed in made ${calls.length} requests to /api/eden (none, even after tapping the orb)`, calls);
   ok(P.errors.length === 0, `${kind}: zero page errors for a visitor`, P.errors); await P.close();
-  /* signed in, with no form open: Eden says it writes inside a form, and a form brings the writing helper back */
+  /* signed in, with no form open: the free box (tests/browser-eden-free-test.mjs holds what it writes) */
   const M = await open(browser, s.base, kind); await M.ctx.addCookies([asCookie(lead, s.base)]);
   await M.page.goto("/me"); await M.page.waitForSelector("[data-eden-float]:not([hidden])"); await M.page.locator("[data-eden-orb-button]").click();
-  await M.page.waitForSelector("text=Eden helps inside a form");
+  await M.page.waitForSelector("[data-eden-free] textarea[name=words]");
+  { const t = await M.page.locator("[data-eden-panel]").innerText(); ok(!/\bnull\b|\bundefined\b/i.test(t) && /Say what to draft/.test(t), `${kind}: signed in with no form open, the panel is the free box and holds no stray "null" or "undefined"`, t.slice(-120)); }
   ok((await M.page.locator("[data-eden-panel] [data-act=eden-join]").count()) === 0, `${kind}: signed in, the panel has no Join button`);
   ok(M.errors.length === 0, `${kind}: zero page errors signed in`, M.errors); await M.close();
 }

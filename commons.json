@@ -177,7 +177,7 @@
       "origin_path": "behavioral-health-app/server/api.mjs",
       "origin_sha256": "8ee33e9349c194104e91d85d9ce378f4c820e10d25fc8485156f98c03a40a4e5",
       "local_path": "server/api.mjs",
-      "local_sha256": "0c2005c1cecf043dd6fc4bbe0903ee6a8ec37bb79911a4c0c41ff7d546b1c910",
+      "local_sha256": "7bbc5ec3b13434b626d4f8e222463436dd9e58e968a2c30dcb50572bea63b6d7",
       "note": "Same pattern (asUser, functions decide, early friendly checks). The routes are this product's: ministries, team, posts, answers, stewards."
     },
     {
@@ -265,7 +265,7 @@
       "origin_path": "behavioral-health-app/tests/helpers.mjs",
       "origin_sha256": "31bf003a9137efa0be87d6aebaf6887ab66541ca4587610091844d8bcfd1e5ef",
       "local_path": "tests/helpers.mjs",
-      "local_sha256": "46edd3a5fde42e4a76cd479c1b71b04306a6ea9a0b5d91582a97fe621250ecc1",
+      "local_sha256": "a8294539f9ce1cde82fd8287dfe6f0762f65caba33126c887de674c73a31d7c9",
       "note": "Database names are linkedm_t_*; adds a stand-in SMTP server (a real mail conversation) and a sign-in helper."
     },
     {
@@ -276,7 +276,7 @@
       "origin_path": "behavioral-health-app/tests/browser-lib.mjs",
       "origin_sha256": "f8349705310d661e406ec61f15982fddb9f1803f1936771c90362ed1e18ec8b9",
       "local_path": "tests/browser-lib.mjs",
-      "local_sha256": "1e3eaed448114289f20de81d626bde55621690f28a37021e10ccbdbfdd071996",
+      "local_sha256": "991e8bd59702106dd65cc2ef26d6cd4f4b48914221848168929d8b6589821d28",
       "note": "Only the screenshot environment name changes."
     },
     {
@@ -287,7 +287,7 @@
       "origin_path": "behavioral-health-app/tests/run-all.mjs",
       "origin_sha256": "80f53d81c295c1fdc207a38feffe49b76b305d0106fb5057868e7219cbd201f0",
       "local_path": "tests/run-all.mjs",
-      "local_sha256": "c7632d6fcaf4263fba3138143e93fbfee732adae958b06eb8893ec602e9cbabf",
+      "local_sha256": "d6b60565e79bc62fc9c508274cbe97f850ee846dbb62100850318085b943e975",
       "note": "This product's test list; drops the image and mutation tests."
     },
     {
@@ -309,7 +309,7 @@
       "origin_path": "behavioral-health-app/tests/light-test.mjs",
       "origin_sha256": "e3e7289a423a030c9427e2617334f909a8f0f8104ccd5466a3be72e8aa063881",
       "local_path": "tests/light-test.mjs",
-      "local_sha256": "21d7f076a7d6077c12f2f0c565991fb8ba7c7f341e374c0014bbe2bea470d5d8",
+      "local_sha256": "9c731438123df707cbb1d0b8b1365f80f64df2bed2846e00973ca6f1981f4f47",
       "note": "Same method (stylesheet tokens, painted pages, a dark panel is caught); adds a check for red and for contrast."
     },
     {
@@ -320,7 +320,7 @@
       "origin_path": "behavioral-health-app/tests/db-test.mjs",
       "origin_sha256": "e3ed64b0c1321e3ae22fbf7d18c5eb918907b5f1d46a55359eef58061c35b71a",
       "local_path": "tests/db-test.mjs",
-      "local_sha256": "571f50c62d00b9af22fe5c4fae4f667f30772d66078c8ff6f058a365f6f4fa86",
+      "local_sha256": "9da40b5a58563502f09bbf3713939259cc671447c22a1bc1bd2871da3eb5f11f",
       "note": "Same method; this product's rules."
     },
     {
@@ -353,7 +353,7 @@
       "origin_path": "behavioral-health-app/tests/unit-test.mjs",
       "origin_sha256": "6bead93056daa8752e1c7eaca4e74352772b4d62cc6832e2916b8d739b6ab620",
       "local_path": "tests/unit-test.mjs",
-      "local_sha256": "265409bff3b6975e820b2cc819a29656c735da49e6c9d9c03148c373fba605b0",
+      "local_sha256": "4f67c39d6c07898a8627351ac9dcd09098410a057f7a32a83f7f039949ce43bd",
       "note": "The licence check, the commons check, the no-key scan and the migration checks are the original's."
     },
     {
@@ -441,7 +441,7 @@
       "origin_path": "behavioral-health-app/CLAUDE.md",
       "origin_sha256": "3c403645fae7028168c5ee3e1201d85863a7ebbf30225d2007cef282ce16842e",
       "local_path": "CLAUDE.md",
-      "local_sha256": "d82c0b1655c7ca50fc6bd1b0b40d0c308f03ca2ac3151acc2bedd675d7b93102",
+      "local_sha256": "89715760e0cee76d180d490719495abbd162e04fc227dcb1a264b26ec098a1e7",
       "note": "Same form; this product's hard rules."
     },
     {

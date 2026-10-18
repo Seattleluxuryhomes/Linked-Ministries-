@@ -51,3 +51,20 @@ export async function drawPhoto(browser) {
   await t.setContent(`<body style="margin:0;width:900px;height:600px;background:linear-gradient(160deg,#f6d9a8,#e9a23b 55%,#b86a12)"><div style="position:absolute;left:120px;top:300px;width:660px;height:34px;background:#fff7e8;border-radius:6px"></div><div style="position:absolute;left:170px;top:334px;width:20px;height:150px;background:#7a4a14"></div><div style="position:absolute;left:710px;top:334px;width:20px;height:150px;background:#7a4a14"></div>${[200, 330, 460, 590].map((x) => `<div style="position:absolute;left:${x}px;top:250px;width:70px;height:50px;border-radius:50%;background:#fff3dc"></div>`).join("")}</body>`);
   const jpg = await t.screenshot({ type: "jpeg", quality: 82 }); await t.close(); return jpg;
 }
+
+/** every pale-ground, no-dark-panel, no-red rule (CLAUDE.md rule 5), read from what the browser really painted: a list of what is wrong */
+export const lightCheck = (page) => page.evaluate(() => {
+  const lum = (r, g, b) => { const c = [r, g, b].map((v) => v / 255).map((x) => (x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4))); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+  const parse = (s) => { const m = /rgba?\(([^)]+)\)/.exec(s); if (!m) return null; const p = m[1].split(/[ ,\/]+/).filter(Boolean).map(Number); return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 }; };
+  const bad = [];
+  for (const el of [document.documentElement, document.body, ...document.querySelectorAll("body *")]) {
+    const cs = getComputedStyle(el); if (cs.display === "none" || cs.visibility === "hidden") continue;
+    const c = parse(cs.backgroundColor);
+    if (c && c.a >= 0.3 && lum(c.r, c.g, c.b) < 0.5 && !el.closest("button, .btn")) bad.push(`${el.tagName.toLowerCase()}.${String(el.className && el.className.baseVal !== undefined ? el.className.baseVal : el.className).slice(0, 30)} ${cs.backgroundColor}`);
+    for (const prop of ["color", "borderTopColor", "borderBottomColor", "borderLeftColor"]) { const f = parse(cs[prop]); if (f && f.a > 0.3 && f.r > 150 && f.g < 90 && f.b < 90) bad.push(`${el.tagName.toLowerCase()} is red in ${prop}: ${cs[prop]}`); }
+  }
+  const body = parse(getComputedStyle(document.body).backgroundColor), html = parse(getComputedStyle(document.documentElement).backgroundColor);
+  if (!body || lum(body.r, body.g, body.b) < 0.85) bad.push("body is not pale: " + getComputedStyle(document.body).backgroundColor);
+  if (!html || lum(html.r, html.g, html.b) < 0.85) bad.push("html is not pale: " + getComputedStyle(document.documentElement).backgroundColor);
+  return bad;
+});

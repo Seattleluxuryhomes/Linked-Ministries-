@@ -354,4 +354,20 @@ await unitPool.end();
   const r1 = READ.filter(([re]) => re.test("A steward and a treasurer in the treasury"));
   ok(r1.length >= 1, "and the banned list can catch the old names (it can fail)"); }
 
+/* A missing word and a missing piece are the same bug: the page writes the text "undefined" or "null". Every WORDS.key a script reads exists, no
+   string in WORDS is empty or reads "null" or "undefined", and no script appends a bare `null` or `undefined` to a panel. (Founder saw "null" as
+   the last line of Eden's panel on /me, 2026-10-18: body.append(a, cond ? null : b) writes the word "null".) */
+{
+  const used = new Set(); const bareNull = [];
+  for (const f of fs.readdirSync(path.join(ROOT, "public/js")).filter((x) => x.endsWith(".js"))) {
+    const src = fs.readFileSync(path.join(ROOT, "public/js", f), "utf8");
+    for (const m of src.matchAll(/\bWORDS\.([A-Za-z0-9_]+)/g)) used.add(m[1]);
+    for (const m of src.matchAll(/\b\w+\.(?:append|prepend)\([^;\n]*(?:\? null :|: null\b|, null\)|\(null\))/g)) bareNull.push(f + ": " + m[0].slice(0, 70));
+  }
+  const missingKeys = [...used].filter((k) => !(k in WORDS));
+  ok(missingKeys.length === 0, `every WORDS.key the scripts read exists (${used.size} keys)`, missingKeys);
+  ok(Object.entries(WORDS).every(([, v]) => typeof v !== "string" || (v.trim() !== "" && !/^(null|undefined)$/i.test(v.trim()) && !/\bundefined\b/.test(v))), "and no word list entry is empty or reads null or undefined");
+  ok(bareNull.length === 0, "and no script appends a possible null to a page with append(): it would be written as the word null (use h(), or filter first)", bareNull);
+}
+
 process.exit(T.done());

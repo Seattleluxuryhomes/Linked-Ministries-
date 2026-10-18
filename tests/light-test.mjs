@@ -7,7 +7,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { counter, ownDatabase, startServer, client, ROOT } from "./helpers.mjs";
-import { launch, open, SHOTS, shots } from "./browser-lib.mjs";
+import { launch, open, SHOTS, shots, lightCheck } from "./browser-lib.mjs";
 import { smtpStandIn } from "./helpers.mjs";
 import { seedWorld, seedAlexExtras, seedAlexPage } from "./seed.mjs";
 
@@ -58,21 +58,6 @@ const alexPage = await seedAlexPage({ world });
   await tara.post(`/api/treasury/grants/${g1.json.id}/approve`, { voted_on: day0, yes: "Ann Board\nBob Board", abstain: "", no: "", doc_ref: "Minutes of the board, item 4" });
   await world.sam.post("/api/treasury/grants", { recipient_kind: "outside", recipient_name: "Neighbor Care Clinic", amount: "100", purpose: "Winter coats for the people we serve" }); }
 const browser = await launch(); const snap = shots(SHOTS);
-const lightCheck = (page) => page.evaluate(() => {
-  const lum = (r, g, b) => { const c = [r, g, b].map((v) => v / 255).map((x) => (x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4))); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
-  const parse = (s) => { const m = /rgba?\(([^)]+)\)/.exec(s); if (!m) return null; const p = m[1].split(/[ ,\/]+/).filter(Boolean).map(Number); return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 }; };
-  const bad = [];
-  for (const el of [document.documentElement, document.body, ...document.querySelectorAll("body *")]) {
-    const cs = getComputedStyle(el); if (cs.display === "none" || cs.visibility === "hidden") continue;
-    const c = parse(cs.backgroundColor);
-    if (c && c.a >= 0.3 && lum(c.r, c.g, c.b) < 0.5 && !el.closest("button, .btn")) bad.push(`${el.tagName.toLowerCase()}.${String(el.className && el.className.baseVal !== undefined ? el.className.baseVal : el.className).slice(0, 30)} ${cs.backgroundColor}`);
-    for (const prop of ["color", "borderTopColor", "borderBottomColor", "borderLeftColor"]) { const f = parse(cs[prop]); if (f && f.a > 0.3 && f.r > 150 && f.g < 90 && f.b < 90) bad.push(`${el.tagName.toLowerCase()} is red in ${prop}: ${cs[prop]}`); }
-  }
-  const body = parse(getComputedStyle(document.body).backgroundColor), html = parse(getComputedStyle(document.documentElement).backgroundColor);
-  if (!body || lum(body.r, body.g, body.b) < 0.85) bad.push("body is not pale: " + getComputedStyle(document.body).backgroundColor);
-  if (!html || lum(html.r, html.g, html.b) < 0.85) bad.push("html is not pale: " + getComputedStyle(document.documentElement).backgroundColor);
-  return bad;
-});
 const cookieOf = (cl) => cl.jar().split("=").slice(1).join("=");
 const firstPost = world.ids["Ten folding tables for our Saturday meal"];
 const anyId = (extras.erin, firstPost);
