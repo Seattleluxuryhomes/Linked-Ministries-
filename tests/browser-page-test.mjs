@@ -8,7 +8,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { counter, ownDatabase, startServer, client, signIn, sleep } from "./helpers.mjs";
-import { launch, open, noSideways, SHOTS, shots } from "./browser-lib.mjs";
+import { launch, open, noSideways, SHOTS, shots, drawPhoto } from "./browser-lib.mjs";
 import { makeJpeg } from "./fixtures.mjs";
 
 const T = counter("browser-page-test"); const { ok } = T;
@@ -23,11 +23,7 @@ const big = async (page, label) => {
   ok(small.length === 0, `${label}: every button and field is at least 44 pixels tall`, small.slice(0, 5));
 };
 const calm = async (page, label) => ok(await noSideways(page), `${label}: nothing scrolls sideways`);
-/* a real picture, drawn by the browser itself (a JPEG with a JFIF header, as a camera's would be), so the page shows a picture and not a blank */
-const photoFile = path.join(os.tmpdir(), `lm-photo-${process.pid}.jpg`);
-{ const t = await browser.newPage({ viewport: { width: 900, height: 600 } });
-  await t.setContent(`<body style="margin:0;width:900px;height:600px;background:linear-gradient(160deg,#f6d9a8,#e9a23b 55%,#b86a12)"><div style="position:absolute;left:120px;top:300px;width:660px;height:34px;background:#fff7e8;border-radius:6px"></div><div style="position:absolute;left:170px;top:334px;width:20px;height:150px;background:#7a4a14"></div><div style="position:absolute;left:710px;top:334px;width:20px;height:150px;background:#7a4a14"></div>${[200, 330, 460, 590].map((x) => `<div style="position:absolute;left:${x}px;top:250px;width:70px;height:50px;border-radius:50%;background:#fff3dc"></div>`).join("")}</body>`);
-  fs.writeFileSync(photoFile, await t.screenshot({ type: "jpeg", quality: 82 })); await t.close(); }
+const photoFile = path.join(os.tmpdir(), `lm-photo-${process.pid}.jpg`); fs.writeFileSync(photoFile, await drawPhoto(browser));
 const asCookie = (c) => { const kv = c.jar().split("=", 2); return { name: kv[0], value: c.jar().slice(kv[0].length + 1), url: s.base }; };
 
 for (const kind of ["phone", "desk"]) {

@@ -31,7 +31,8 @@ copied are listed in `commons.json`, each with where it came from.
 
 | Route | What it is |
 |---|---|
-| `/`, `/board`, `/board/<id>`, `/terms`, `/privacy` | Public pages, built whole on the server from the database's public view. The terms and the privacy page are drafts a lawyer has not read, and say so at the top |
+| `/` | The front: the two phones (real screenshots of this site, with a sample ministry), who we are, how it works, what we run, giving, the directors (only once the founder gives their names, in `server/board-members.mjs`), the latest posts, six questions, contact. The two pictures are made by `node tools/make-front-shots.mjs` from the running app |
+| `/board`, `/board/<id>`, `/terms`, `/privacy` | Public pages, built whole on the server from the database's public view. The terms and the privacy page are drafts a lawyer has not read, and say so at the top |
 | `/giving`, `/give`, `/api/giving` | Where the money went: every approved and paid grant, totals added up from the rows (no donor is ever named), the last twelve months as an inline SVG chart, the status line, the Form 990 link once set. `/give` is the Give button's page: no payment service is connected, so it says so and has no form |
 | `/treasury`, `/api/treasury/...` | Treasurers only: record a gift, correct one, send a receipt, propose a grant, approve it (a different treasurer), mark it paid, set the giving door, download the ledger as a CSV |
 | `/m/<slug>`, `/photos/<id>` | A ministry's own public page and its pictures. Built whole on the server from the copy a steward read; a picture is served only while that copy names it. The ministry's own people see a private preview of the draft at the same address |

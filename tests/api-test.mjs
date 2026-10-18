@@ -30,7 +30,7 @@ ok(hr.headers.get("x-content-type-options") === "nosniff" && hr.headers.get("ref
 const pages = {};
 for (const p of ["/", "/board", "/join", "/me", "/steward", "/robots.txt", "/sitemap.xml"]) { const r = await anon.get(p); pages[p] = r.text; ok(r.status === 200, `${p} answers 200`); }
 ok((await anon.get("/nope")).status === 404 && (await anon.get("/board/not-a-real-id")).status === 404 && (await anon.get("/board/00000000-0000-4000-8000-000000000000")).status === 404, "an unknown page and an unknown post answer 404, with a page");
-for (const p of ["/", "/board", "/join", "/me", "/steward"]) { const bad = checkPage(pages[p]); ok(bad.length === 0, `${p}: no script inline, no style attribute, no banned thing`, bad); }
+for (const p of ["/", "/board", "/join", "/me", "/steward"]) { const bad = checkPage(pages[p], { money: p === "/" }); ok(bad.length === 0, `${p}: no script inline, no style attribute, no banned thing`, bad); }
 ok(/Disallow: \/me/.test(pages["/robots.txt"]) && /\/board<\/loc>/.test(pages["/sitemap.xml"]), "robots keeps the private pages out, the sitemap lists the board");
 ok((await anon.get("/join")).headers.get("x-robots-tag") === "noindex, nofollow" && /no-store/.test((await anon.get("/me")).headers.get("cache-control")), "the private pages are noindex and not cached");
 ok(/not yet filed/.test(pages["/"]) && /Washington nonprofit corporation/.test(pages["/"]) && /911/.test(pages["/"]) && /988/.test(pages["/"]), "the front says the nonprofit line and the emergency line");

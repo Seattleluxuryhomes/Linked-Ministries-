@@ -5,7 +5,8 @@
    picture is drawn here as inline SVG). */
 import { verse } from "./scripture.mjs";
 import { PRODUCT, CATEGORIES, KIND, KINDS, STATES, categoryLabel, dateWords, CRISIS, NO_MONEY, STAY_SAFE, WORDS, money, methodLabel, receiptCode, GRANT_STATUS } from "../public/js/pure.js";
-import { NONPROFIT_LINE, FLAGS, statusLine } from "./words.mjs";
+import { NONPROFIT_LINE, FLAGS, statusLine, deductibleAnswer, FOUNDER } from "./words.mjs";
+import { BOARD } from "./board-members.mjs";
 import { TERMS, PRIVACY, DRAFT_LINE, LAST_CHANGED } from "./legal.mjs";
 
 const AMP = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
@@ -111,8 +112,21 @@ function emptyBoard({ filtered, compact = false }) {
 }
 
 /* ---- the front ------------------------------------------------------------------------------------------------------------------ */
-export function frontPage({ latest, base = "", notice = "", giving = { open: false } }) {
+/* the two pictures in the hero are screenshots of this site, taken by tools/make-front-shots.mjs from the running app (a sample ministry) */
+export const FRONT_IMG = { ministry: { src: "/img/front-ministry.png", w: 780, h: 1400 }, post: { src: "/img/front-post.png", w: 716, h: 944 } };
+
+export function frontPage({ latest, base = "", notice = "", giving = { open: false }, board = BOARD, flags = FLAGS }) {
   const cards = latest.length ? latest.map((p) => postCard(p, { button: false })).join("\n") : emptyBoard({ filtered: false, compact: true });
+  const f = FRONT_IMG;
+  const people = (board || []).length ? `<section class="band alt" id="directors"><div class="wrap wide"><h2>Our board of directors</h2><p class="lead">The board votes on every grant. The vote is written down, by name.</p><ul class="people-list">${board.map((m) => `<li class="card"><strong>${e(m.name)}</strong>${m.role ? `<span class="quiet">${e(m.role)}</span>` : ""}</li>`).join("")}</ul></div></section>` : "";
+  const faq = [
+    ["Is it free?", ["Yes. Joining, posting and answering are free. Nothing is sold here."]],
+    ["Who reads my post?", ["A steward at Linked Ministries reads it. A steward is a real person. Nothing goes up until a steward has read it."]],
+    ["Does money change hands?", ["On the board, no. The board moves no money between ministries.", "Linked Ministries may take gifts. Its board may use them to fund an ask. Every grant is shown on the giving page."]],
+    ["Can my ministry get a page?", ["Yes. After a steward reads your ministry, you fill in one form. You get a page at linkedm.org with your own address. A steward reads the page before it goes up."]],
+    ["How do gifts work?", ["A treasurer writes each gift down and gives it a numbered receipt. Two treasurers handle each grant, and the board votes by name.", "Gifts online open after the state registration is filed. Until then, no gift is taken here."]],
+    ["Is my gift deductible?", deductibleAnswer(flags)],
+  ];
   const body = `<section class="hero"><div class="wrap wide hero-grid">
 <div class="hero-words">
 <p class="eyebrow rise">A free network</p>
@@ -126,9 +140,19 @@ ${verse("gal_6_2","rise")}
 <li>${ICO_NOMONEY}<span>No money on the board</span></li>
 </ul>
 </div>
-<div class="hero-art rise" aria-hidden="true">${ART}</div>
+<div class="hero-art phones rise">
+<figure class="phone"><div class="frame"><img src="${f.ministry.src}" width="${f.ministry.w}" height="${f.ministry.h}" alt="A ministry's own page, on a phone: its name, one line about it, and a picture of tables set for a meal." decoding="async"></div><figcaption>A ministry's own page</figcaption></figure>
+<figure class="phone"><div class="frame"><img src="${f.post.src}" width="${f.post.w}" height="${f.post.h}" alt="A post on the board, on a phone: an ask for ten folding tables, with a button to answer it." decoding="async"></div><figcaption>A post on the board</figcaption></figure>
+<p class="sample">Screenshots of this site, with a sample ministry.</p>
+</div>
 </div></section>
-<section class="band"><div class="wrap wide">
+<section class="band" id="who"><div class="wrap wide">
+<h2>Who we are</h2>
+<div class="who-grid"><div><p class="lead">${e(statusLine(flags))}</p><p>It was started by ${e(FOUNDER)}.</p></div>
+<div class="card"><p class="label">Its three works</p><ul class="plain"><li><strong>The network.</strong> A free board where ministries ask and give.</li><li><strong>${e(PRODUCT.da.name)}.</strong> A free 24-week program for faith and recovery.</li><li><strong>Housing.</strong> Sober-living housing for people in recovery. It is planned, and it is not open yet.</li></ul></div></div>
+${verse("prov_19_17")}
+</div></section>
+<section class="band alt"><div class="wrap wide">
 <h2>How it works</h2>
 ${verse("acts_2_44_45")}
 <ol class="three steps">
@@ -138,16 +162,16 @@ ${verse("acts_2_44_45")}
 </ol>
 <p class="note">${e(NO_MONEY)}</p>
 </div></section>
-<section class="band alt"><div class="wrap wide">
+<section class="band"><div class="wrap wide">
 <h2>What we run</h2>
 ${verse("ps_68_5_6")}
 <div class="three">
 <div class="card lift"><p class="label">Now</p><h3>${e(PRODUCT.da.name)}</h3><p>A free, 24-week program of discipleship and recovery.</p><p><a href="${e(PRODUCT.da.url)}" rel="noopener">${e(PRODUCT.da.url.replace("https://", ""))}</a></p></div>
-<div class="card lift"><p class="label">Now</p><h3>Help getting online</h3><p>We help a ministry get a simple website, an email address and a way to take gifts. It is free. A ministry gives what it can. Ask on the board.</p></div>
+<div class="card lift"><p class="label">Now</p><h3>Help getting online</h3><p>A ministry can make its own page at linkedm.org from one form. It is free. A person at Linked Ministries reads it before it goes up. We also help with an email address and a way to take gifts. A ministry gives what it can.</p></div>
 <div class="card lift"><p class="label">Planned</p><h3>Sober-living housing</h3><p>We plan to open housing for people in recovery. It is not open yet, and nothing is taking applications.</p>${verse("isa_58_7","tight")}</div>
 </div>
 </div></section>
-<section class="band"><div class="wrap wide">
+<section class="band alt"><div class="wrap wide">
 <h2>Giving</h2>
 ${verse("cor2_9_7")}
 <div class="three">
@@ -156,6 +180,7 @@ ${verse("cor2_9_7")}
 <div class="card"><p class="label">Today</p>${giving && giving.open ? `<h3>Gifts online are open.</h3><p>The board says the registration is filed. A gift gets a numbered receipt, and every grant is shown on the giving page.</p>` : `<h3>Not taking gifts online yet.</h3><p>Linked Ministries is forming as a Washington nonprofit. Online giving opens after the state registration is filed. <a href="/giving">We will say there when it does.</a></p>`}<p><a class="btn ghost small" href="/giving">Where the money went</a></p></div>
 </div>
 </div></section>
+${people}
 <section class="band"><div class="wrap wide">
 <div class="row between head"><h2>Latest on the board</h2><a href="/board">See the whole board</a></div>
 ${verse("matt_25_40")}
@@ -164,7 +189,12 @@ ${cards}
 </div>
 ${latest.length ? `<p class="note">${e("To answer a post, open the board.")}</p>` : ""}
 </div></section>
-<section class="band alt"><div class="wrap wide">
+<section class="band alt" id="questions"><div class="wrap wide">
+<h2>Questions</h2>
+<div class="faq">${faq.map(([q, a]) => `<div class="card"><h3>${e(q)}</h3>${a.map((t) => `<p>${e(t)}</p>`).join("")}</div>`).join("\n")}</div>
+</div></section>
+${notice ? `<section class="band" id="contact"><div class="wrap wide"><div class="card cta-card"><div><h2>Contact</h2><p>Write to us. A person at Linked Ministries reads every message.</p></div><p class="row"><a class="btn ghost" href="mailto:${e(notice)}">${e(notice)}</a></p></div></div></section>` : ""}
+<section class="band${notice ? " alt" : ""}"><div class="wrap wide">
 <div class="card cta-card"><div><h2>Join the network</h2><p>It is free. Sign in with your email, tell us about your ministry, and post your first ask or give.</p></div><p class="row"><a class="btn" href="/join">Join the network</a><a class="btn ghost" href="/board">See the board</a></p></div>
 </div></section>`;
   return layout({ body, description: "Linked Ministries is a free network where ministries post what they need or what they can give, and other ministries answer.", nav: "", base, path: "/", notice });

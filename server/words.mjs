@@ -37,6 +37,17 @@ export function receiptStatusLine(flags = FLAGS) {
   return "Linked Ministries has not applied for 501(c)(3) status yet; this receipt is a record of your gift.";
 }
 
+/** the founder's name, the only person named on the front page; no biography is claimed */
+export const FOUNDER = "Ben Morton";
+
+/** the answer to "Is my gift deductible?": honest in each of the three states, and never advice. */
+export function deductibleAnswer(flags = FLAGS) {
+  const adviser = "We cannot give tax advice. Ask your own tax adviser.";
+  if (flags.IRS_LETTER_DATE && letterDay(flags.IRS_LETTER_DATE)) return [`Linked Ministries is recognized under 501(c)(3), letter dated ${letterDay(flags.IRS_LETTER_DATE)}.`, IRS_PHRASE, adviser];
+  if (flags.APPLIED_501C3) return ["Not yet. Linked Ministries has applied for 501(c)(3) status. The IRS has not answered.", "Until it does, do not count a gift as deductible. We will say here when that changes.", adviser];
+  return ["Not yet. Linked Ministries has not applied for 501(c)(3) status yet.", "Until the IRS recognizes it, do not count a gift as deductible. We will say here when that changes.", adviser];
+}
+
 /** The IRS's own sentence from its determination letter. Shown only when IRS_LETTER_DATE is set. A lawyer checks it against the letter. */
 export const IRS_PHRASE = "Donors may deduct contributions to you as provided in section 170 of the Code.";
 

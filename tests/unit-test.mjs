@@ -12,11 +12,13 @@ import { CATEGORIES, CATEGORY_IDS, KIND, KINDS, STATES, STATE_CODES, WORDS, date
 import { checkConfig } from "../server/config.mjs";
 import { refusal, NONPROFIT_LINE, FILING_STATUS, FORMED, FLAGS, statusLine, receiptStatusLine, IRS_PHRASE, APPLIED_501C3, IRS_LETTER_DATE } from "../server/words.mjs";
 import { receiptEmail } from "../server/emails.mjs";
+import { deductibleAnswer, FOUNDER } from "../server/words.mjs";
+import { BOARD } from "../server/board-members.mjs";
 import { toCsv, cell, dollars } from "../lib/csv.mjs";
 import { money, parseCents, receiptCode } from "../public/js/pure.js";
 import { cleanFilters } from "../server/board.mjs";
 import { dayLimits } from "../server/api.mjs";
-import { frontPage, boardPage, postPage, missingPostPage, shellPage, notFoundPage, termsPage, privacyPage, e, postCard, MARK, ministryPage, givingPage, givePage, givingChart } from "../server/pages.mjs";
+import { frontPage, boardPage, postPage, missingPostPage, shellPage, notFoundPage, termsPage, privacyPage, e, postCard, MARK, ministryPage, givingPage, givePage, givingChart, FRONT_IMG } from "../server/pages.mjs";
 import { noticeEmail } from "../lib/email.mjs";
 import { signInEmail, answerEmail, inviteEmail, reportEmail } from "../server/emails.mjs";
 import { TERMS, PRIVACY, DRAFT_LINE } from "../server/legal.mjs";
@@ -94,7 +96,7 @@ const built = {
   join: shellPage({ title: "Join the network", script: "/js/join.js", nav: "join" }), me: shellPage({ title: "Your ministry", script: "/js/me.js", nav: "me" }), steward: shellPage({ title: "Waiting to be read", script: "/js/steward.js" }),
 };
 for (const [name, html] of Object.entries(built)) {
-  const bad = checkPage(html, { money: /^(giving|give|ministryOpen)/.test(name) }); ok(bad.length === 0, `page ${name}: nothing banned, no inline script, no style attribute, no other host, never tax-deductible or write-off`, bad);
+  const bad = checkPage(html, { money: /^(giving|give|ministryOpen|front)/.test(name) }); ok(bad.length === 0, `page ${name}: nothing banned, no inline script, no style attribute, no other host, never tax-deductible or write-off`, bad);
   ok(html.includes(NONPROFIT_LINE) && html.includes("If someone is in danger, call 911. If someone is thinking of hurting themselves, call or text 988."), `page ${name}: the nonprofit line and the emergency line are in the footer`);
   ok(/<title>[^<]{3,}<\/title>/.test(html) && /<meta name="viewport"/.test(html) && /<html lang="en">/.test(html) && /<meta name="color-scheme" content="light">/.test(html), `page ${name}: a title, a viewport, a language and a light colour scheme`);
   ok(/Linked Ministries/.test(html) && /<svg class="mark"/.test(html), `page ${name}: the name and the mark`);
@@ -157,12 +159,32 @@ ok(!/<script(?![^>]*src)/.test(built.me) && /<script type="module" src="\/js\/me
   ok(cell("=SUM(A1)") === '"\'=SUM(A1)"' && cell("+1+2") === '"\'+1+2"' && cell("@cmd") === '"\'@cmd"' && cell("-5+cmd") === '"\'-5+cmd"' && cell("-25.50") === '"-25.50"' && cell('say "hi"') === '"say ""hi"""' && cell(null) === '""', "a cell that a spreadsheet would run as a formula gets a quote mark; a plain negative number does not; quotes are doubled");
   ok(toCsv(["a", "b"], [["x", "=y"]]) === '"a","b"\r\n"x","\'=y"\r\n' && dollars(102550) === "1025.50" && dollars(-5) === "-0.05" && dollars(0) === "0.00" && dollars(100000000000) === "1000000000.00", "a CSV has a header, quoted cells and exact dollars from whole cents"); }
 
+/* ---- the front page, complete (founder, 2026-10-18: "couldn't this be more complete") ---- */
+{ const f = built.front, t = (h) => visibleText(h).split(NONPROFIT_LINE).join(" ");
+  const withBoard = frontPage({ latest: sample, notice: "notices@linkedm.example", board: [{ name: "Ada Example", role: "Chair" }, { name: "Ben Example", role: "" }] }), withNotice = frontPage({ latest: sample, notice: "notices@linkedm.example" });
+  for (const id of ["who", "questions"]) ok(new RegExp(`<section class="band[^"]*" id="${id}">`).test(f), `the front has its "${id}" section`);
+  ok(/<h2>Who we are<\/h2>/.test(f) && t(f).includes(`It was started by ${FOUNDER}.`) && FOUNDER === "Ben Morton" && /forming as a nonprofit in Washington/.test(f) && /The network\.<\/strong>/.test(f) && /Disciples(&#39;|') Authority\.<\/strong>/.test(f) && /Housing\.<\/strong>/.test(f) && /planned, and it is not open yet/.test(f), "Who we are: a Washington nonprofit forming, started by Ben Morton, with its three works: the network, Disciples' Authority, and housing that is planned");
+  ok(!/\b(born|raised|years of experience|decades|pastor|minister of|ordained|served as|graduated|degree)\b/i.test(t(f)), "and claims no biography about the founder");
+  ok((f.match(/<div class="faq">[\s\S]*?<\/div>\n?<\/div><\/section>/) || [""])[0].split("<h3>").length - 1 === 6 && ["Is it free?", "Who reads my post?", "Does money change hands?", "Can my ministry get a page?", "How do gifts work?", "Is my gift deductible?"].every((q) => f.includes(`<h3>${q}</h3>`)), "Questions: the six real ones, in order");
+  ok(/A steward is a real person\. Nothing goes up until a steward has read it/.test(f) && /The board moves no money between ministries/.test(f) && /Every grant is shown on the giving page/.test(f) && /Gifts online open after the state registration is filed/.test(f), "and each answer says what is true");
+  ok(deductibleAnswer(FLAGS)[0] === "Not yet. Linked Ministries has not applied for 501(c)(3) status yet." && /do not count a gift as deductible/.test(deductibleAnswer(FLAGS)[1]) && deductibleAnswer(FLAGS).at(-1) === "We cannot give tax advice. Ask your own tax adviser.", "'Is my gift deductible?' answers 'Not yet' today, says not to count it, and gives no tax advice");
+  ok(/has applied for 501\(c\)\(3\) status\. The IRS has not answered/.test(deductibleAnswer({ FORMED: true, APPLIED_501C3: true, IRS_LETTER_DATE: "" })[0]) && !deductibleAnswer({ FORMED: true, APPLIED_501C3: true, IRS_LETTER_DATE: "" }).join(" ").includes(IRS_PHRASE) && deductibleAnswer({ FORMED: true, APPLIED_501C3: true, IRS_LETTER_DATE: "2027-03-02" }).includes(IRS_PHRASE), "with the application filed it says the IRS has not answered; the IRS's sentence appears only when the letter is dated");
+  ok(!/tax-deductible|write-off/i.test(f + frontPage({ latest: [], flags: { FORMED: true, APPLIED_501C3: true, IRS_LETTER_DATE: "" } })), "the front never says 'tax-deductible' or 'write-off'");
+  ok(BOARD.length === 0 && !/Our board of directors/.test(f) && !/id="directors"/.test(f), "no directors have been given, so there is no board section and no placeholder");
+  ok(/<h2>Our board of directors<\/h2>/.test(withBoard) && /<strong>Ada Example<\/strong><span class="quiet">Chair<\/span>/.test(withBoard) && /<strong>Ben Example<\/strong><\/li>/.test(withBoard), "when the founder gives names, the section lists each by name and role");
+  ok(!/id="contact"/.test(f) && /id="contact"/.test(withNotice) && /href="mailto:notices@linkedm\.example"/.test(withNotice), "Contact shows the notice address when there is one, and nothing when there is none");
+  const verses = (f.match(/<blockquote class="scripture/g) || []).length; ok(verses >= 7 && (f.match(/<cite>[^<]+ \(KJV\)<\/cite>/g) || []).length === verses, `every verse on the front carries its chapter and verse (${verses} of them)`);
+  ok(/Giving<\/h2>/.test(f) && /href="\/giving"/.test(f) && /Latest on the board/.test(f) && /What we run<\/h2>/.test(f), "Giving (linking to /giving), What we run and the latest posts stay");
+  for (const [k, im] of Object.entries(FRONT_IMG)) { const b = fs.readFileSync(path.join(ROOT, "public", im.src)); ok(b.subarray(0, 8).toString("hex") === "89504e470d0a1a0a" && b.readUInt32BE(16) === im.w && b.readUInt32BE(20) === im.h && b.length < 300 * 1024, `the front's ${k} picture is a real PNG of the stated size, under 300 KB (${b.length} bytes), made by tools/make-front-shots.mjs`); }
+  ok(f.includes(`src="${FRONT_IMG.ministry.src}"`) && f.includes(`src="${FRONT_IMG.post.src}"`) && /Screenshots of this site, with a sample ministry\./.test(f) && !/<svg class="art"/.test(f), "the hero shows the two screenshots, says they are samples, and the line drawing is gone");
+  ok(/alt="A ministry's own page, on a phone/.test(f) && /alt="A post on the board, on a phone/.test(f), "each picture has words that describe it"); }
+
 /* ---- what a lawyer will ask about, answered in code (founder, 2026-10-18: nothing we can be sued for) ---- */
 {
   const all = { ...built }; const text = (h) => visibleText(h).split(NONPROFIT_LINE).join(" ");
   for (const [name, html] of Object.entries(all)) {
     ok(/href="\/terms"/.test(html) && /href="\/privacy"/.test(html), `page ${name}: the footer links the terms and the privacy page`);
-    if (/^(giving|give)/.test(name)) continue;   /* the giving pages are about money; the rule for them is below */
+    if (/^(giving|give|front)/.test(name)) continue;   /* the giving pages are about money; the rule for them is below */
     ok(!/501\(c\)|tax|deduct|exempt|charitable|donat|tithe/i.test(text(html)), `page ${name}: no claim of nonprofit status, no word about taxes, no talk of donations`, text(html).match(/501\(c\)|tax\w*|deduct\w*|exempt|charitable|donat\w*|tithe/i));
   }
   ok(built.front.includes("forming as a Washington nonprofit corporation") && built.front.includes("not yet filed"), "the footer says the corporation is forming and the application is not filed, as the founder wrote it");

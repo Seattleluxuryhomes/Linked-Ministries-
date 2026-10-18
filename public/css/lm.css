@@ -341,3 +341,21 @@ section[aria-labelledby] h2{margin-bottom:.6em}
 .summary .big{font:600 26px/1.1 var(--display);margin:0}
 .names{min-height:110px}
 .eden-note{font-size:14.5px;color:var(--muted)}
+
+/* the front's first screen: two phones, each a real screenshot of this site (a sample ministry), in a light frame */
+.hero-art.phones{background:none;border:0;box-shadow:none;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+@media (min-width:900px){.hero-art.phones{padding:0;gap:20px;max-width:560px;margin-left:auto}.phone:nth-child(2){margin-top:44px}}
+.phone{margin:0}
+.frame{background:var(--card);border:2px solid var(--line-strong);border-radius:24px;padding:6px;box-shadow:var(--shadow-up)}
+.frame img{display:block;width:100%;height:auto;border-radius:18px;border:1px solid var(--line)}
+.phone figcaption{font-size:14px;color:var(--muted);text-align:center;margin-top:8px}
+.phones .sample{grid-column:1/-1;text-align:center;font-size:14px;color:var(--quiet);margin:0}
+.who-grid{display:grid;gap:var(--gap);margin-bottom:var(--gap)}
+@media (min-width:800px){.who-grid{grid-template-columns:1.1fr .9fr;gap:32px;align-items:start}}
+.who-grid .card{margin:0}
+.faq{display:grid;gap:var(--gap)}
+@media (min-width:800px){.faq{grid-template-columns:1fr 1fr;gap:20px}}
+.faq .card{margin:0}
+.faq h3{font-size:20px}
+.people-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:var(--gap)}
+.people-list .card{margin:0;display:flex;flex-direction:column;gap:2px}

@@ -43,3 +43,11 @@ export function shots(dir) {
 export const noSideways = (page) => page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1);
 export const SHOTS = process.env.LM_SHOTS || "";
 export { ROOT };
+
+/** a real picture, drawn by the browser itself and kept as a JPEG with a JFIF header, as a camera's would be: tables set for a meal.
+    Used where a test needs a picture that shows (the page builder test, the front page's screenshots). Not a stock photograph. */
+export async function drawPhoto(browser) {
+  const t = await browser.newPage({ viewport: { width: 900, height: 600 } });
+  await t.setContent(`<body style="margin:0;width:900px;height:600px;background:linear-gradient(160deg,#f6d9a8,#e9a23b 55%,#b86a12)"><div style="position:absolute;left:120px;top:300px;width:660px;height:34px;background:#fff7e8;border-radius:6px"></div><div style="position:absolute;left:170px;top:334px;width:20px;height:150px;background:#7a4a14"></div><div style="position:absolute;left:710px;top:334px;width:20px;height:150px;background:#7a4a14"></div>${[200, 330, 460, 590].map((x) => `<div style="position:absolute;left:${x}px;top:250px;width:70px;height:50px;border-radius:50%;background:#fff3dc"></div>`).join("")}</body>`);
+  const jpg = await t.screenshot({ type: "jpeg", quality: 82 }); await t.close(); return jpg;
+}

@@ -199,7 +199,7 @@
       "origin_path": "behavioral-health-app/server/words.mjs",
       "origin_sha256": "7d66d59b2ffd109e7ba740ea0f66090185974bb339207889072108b8262c41e8",
       "local_path": "server/words.mjs",
-      "local_sha256": "63097a888205c3a1633f198c2cdf4b8959357086e7e1a42eba01245e711098a5",
+      "local_sha256": "55df6b9f20a28fc0f5e3e4ece78ccf04c84609820630a7d7b8d5d8ca35c82be7",
       "note": "Same refusal mapping (a code and a hint); the codes are this product's. The founder's one editable line lives here."
     },
     {
@@ -276,7 +276,7 @@
       "origin_path": "behavioral-health-app/tests/browser-lib.mjs",
       "origin_sha256": "f8349705310d661e406ec61f15982fddb9f1803f1936771c90362ed1e18ec8b9",
       "local_path": "tests/browser-lib.mjs",
-      "local_sha256": "5e1cd35bbcfdc57fb2700ec513e61b3a32ab7cbdbfbed2520280ec7ff33768f5",
+      "local_sha256": "1e3eaed448114289f20de81d626bde55621690f28a37021e10ccbdbfdd071996",
       "note": "Only the screenshot environment name changes."
     },
     {
@@ -353,7 +353,7 @@
       "origin_path": "behavioral-health-app/tests/unit-test.mjs",
       "origin_sha256": "6bead93056daa8752e1c7eaca4e74352772b4d62cc6832e2916b8d739b6ab620",
       "local_path": "tests/unit-test.mjs",
-      "local_sha256": "89d41353f2b288e5d7c5e7af0e21ca76beb3a99d4e8dfad8c7948cc9829c4762",
+      "local_sha256": "a6a3cbf1438a2889a7b25c297bdbdaf73bf4e779fb263b26bb3d5ce9af8020bf",
       "note": "The licence check, the commons check, the no-key scan and the migration checks are the original's."
     },
     {
