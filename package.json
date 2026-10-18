@@ -1,0 +1,26 @@
+{
+  "name": "linked-ministries",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Linked Ministries: a free board where a ministry posts what it needs or what it can give, and another ministry answers. A person reads every post first.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node server/index.mjs",
+    "db:local": "node tools/db-local.mjs",
+    "test": "node tests/run-all.mjs",
+    "test:fast": "node tests/run-all.mjs --fast",
+    "test:mutation": "node tests/mutation-test.mjs",
+    "migrations:freeze": "node tools/freeze-migrations.mjs"
+  },
+  "dependencies": {
+    "express": "4.21.2",
+    "nodemailer": "10.0.9",
+    "pg": "8.23.0"
+  },
+  "devDependencies": {
+    "playwright-core": "1.56.1"
+  }
+}
