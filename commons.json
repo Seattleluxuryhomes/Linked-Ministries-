@@ -2,7 +2,7 @@
   "version": 1,
   "about": "Pieces this repository copied from another of the founder's products (Cross Universal), the sharing map. origin_sha256 is the origin file's SHA-256 at origin_commit; local_sha256 is this file's. A verbatim piece equals its origin; an adapted piece says what changed; a shaped-on piece is written new on the same model, rulings and defaults. 'Do not rebuild what has been built: copy it.' Regenerate with: node tools/commons.mjs",
   "origin_repo": "cross-univeral",
-  "origin_commit": "a5cb2f3cf76c20251127848e2ee113f422ca8fdc",
+  "origin_commit": "1668f87383d3cc7c7c04b248663a65d01a5dc851",
   "pieces": [
     {
       "id": "plainwords",
@@ -199,7 +199,7 @@
       "origin_path": "behavioral-health-app/server/words.mjs",
       "origin_sha256": "7d66d59b2ffd109e7ba740ea0f66090185974bb339207889072108b8262c41e8",
       "local_path": "server/words.mjs",
-      "local_sha256": "161fca21057f669e26da47800779a185b0a69bee27436f85140b1a70b4fbe3b7",
+      "local_sha256": "584536d6c0fc425d22370a6f33601f52b2324b65045fa8c5a1cfe6b1a021a618",
       "note": "Same refusal mapping (a code and a hint); the codes are this product's. The founder's one editable line lives here."
     },
     {
@@ -353,7 +353,7 @@
       "origin_path": "behavioral-health-app/tests/unit-test.mjs",
       "origin_sha256": "6bead93056daa8752e1c7eaca4e74352772b4d62cc6832e2916b8d739b6ab620",
       "local_path": "tests/unit-test.mjs",
-      "local_sha256": "5ad659dda9cda3409a6c59bfb018eafc4c75f881b0c0113b72a276e237e72eb0",
+      "local_sha256": "e5ef0ca71b3323c39938c87f153aeddc0c90131a708a014be400f27dd96c65fe",
       "note": "The licence check, the commons check, the no-key scan and the migration checks are the original's."
     },
     {
@@ -406,7 +406,7 @@
       "mode": "shaped-on",
       "origin_repo": "cross-univeral",
       "origin_path": "lexos/src/app.jsx",
-      "origin_sha256": "9270f08cd1dd84169fe05fd89bfbd5d805434b4762e0b174f04e0d29b357276a",
+      "origin_sha256": "a960a3260fcb448151534780906d1cdee01625942ffc37b48711c63d223b991f",
       "local_path": "public/js/pwa.js",
       "local_sha256": "73ce0ebd527541a6f9d8709b9190d7709815c8e0273ebf514619f718febb2f37",
       "note": "The same one line, navigator.serviceWorker.register('/sw.js', { scope: '/' }) with the failure ignored, in its own external file because this site's policy allows no inline script."
