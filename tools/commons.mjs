@@ -57,7 +57,7 @@ const PIECES = [
   ["deploy", "DEPLOY.md written for the founder: one-line commands, spaces marked and counted, step tables, zero versus O, never a password in chat", "shaped-on", BH + "DEPLOY.md", "DEPLOY.md", "Same form; this product's steps and variables."],
   ["claude", "CLAUDE.md: working rules, hard rules, founder communication rules", "shaped-on", BH + "CLAUDE.md", "CLAUDE.md", "Same form; this product's hard rules."],
   ["env-example", ".env.example: names only, no values", "adapted", BH + ".env.example", ".env.example", "This product's variables."],
-  ["package", "package.json and package-lock.json: express, nodemailer, pg", "adapted", BH + "package.json", "package.json", "Name and description; same three dependencies and the same pinned versions; the lockfile is the original's with the name changed."],
+  ["package", "package.json and package-lock.json: express, nodemailer, pg", "adapted", BH + "package.json", "package.json", "Name and description; the same three dependencies. Express is pinned at 4.22.3, the first release past the 2026 advisories on body-parser, path-to-regexp and qs, so the lockfile is no longer the original's."],
   ...["fraunces-latin-500-normal", "fraunces-latin-600-normal", "plus-jakarta-sans-latin-400-normal", "plus-jakarta-sans-latin-500-normal", "plus-jakarta-sans-latin-600-normal", "plus-jakarta-sans-latin-700-normal"].map(FONT),
 ];
 

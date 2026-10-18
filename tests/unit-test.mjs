@@ -139,7 +139,7 @@ ok(mig.every((m) => !/\bdrop (table|schema|column)\b[^;]*;/i.test(read("migratio
 
 /* ---- never open our code: every package that ships is under a licence that asks only for credit ---- */
 {
-  const ALLOWED = ["MIT", "MIT-0", "ISC", "BSD-2-Clause", "BSD-3-Clause", "0BSD", "Apache-2.0", "Unlicense", "CC0-1.0", "Zlib", "BlueOak-1.0.0"];
+  const ALLOWED = ["MIT", "MIT-0", "ISC", "BSD-2-Clause", "BSD-3-Clause", "Apache-2.0"];   /* the founder's four families, and no wider */
   const okLicense = (x0) => { const x = String(x0 || "").replace(/[()]/g, " ").trim(); if (!x) return false; if (/\sOR\s/i.test(x)) return x.split(/\s+OR\s+/i).some(okLicense); if (/\sAND\s/i.test(x)) return x.split(/\s+AND\s+/i).every(okLicense); return ALLOWED.includes(x); };
   const lock = JSON.parse(read("package-lock.json")); let n = 0; const badLic = [];
   for (const [k, v] of Object.entries(lock.packages || {})) {
@@ -147,7 +147,11 @@ ok(mig.every((m) => !/\bdrop (table|schema|column)\b[^;]*;/i.test(read("migratio
     const j = JSON.parse(fs.readFileSync(pj, "utf8")); const lic = typeof j.license === "string" ? j.license : j.license && j.license.type; n++;
     if (!okLicense(lic)) badLic.push(`${j.name}: ${lic}`);
   }
-  ok(n > 30 && badLic.length === 0, `${n} packages that ship are all under a credit-only licence (MIT, ISC, BSD, Apache and kin)`, badLic);
+  ok(n > 30 && badLic.length === 0, `${n} packages that ship are all under MIT, ISC, BSD or Apache-2.0`, badLic);
+  /* the advisories of 2026 (npm audit, found by the 2026-10-18 audit): nothing that ships may be older than the release that fixed them */
+  const atLeast = (have, want) => { const a = String(have).split(".").map(Number), b = want.split(".").map(Number); for (let i = 0; i < 3; i++) { if ((a[i] || 0) !== b[i]) return (a[i] || 0) > b[i]; } return true; };
+  const locked = (name) => (lock.packages["node_modules/" + name] || {}).version || "0";
+  ok(atLeast(locked("express"), "4.22.3") && atLeast(locked("body-parser"), "1.20.7") && atLeast(locked("path-to-regexp"), "0.1.13") && atLeast(locked("qs"), "6.15.4"), "the locked express, body-parser, path-to-regexp and qs are past their known advisories", ["express", "body-parser", "path-to-regexp", "qs"].map((n) => n + " " + locked(n)));
   ok(Object.keys(JSON.parse(read("package.json")).dependencies).sort().join() === "express,nodemailer,pg", "the server's own dependencies are express, nodemailer and pg and nothing else");
   ok(JSON.parse(read("package.json")).engines.node === ">=22", "Node 22 or later");
   const fonts = fs.readdirSync(path.join(ROOT, "public/fonts")); ok(fonts.length === 6 && fonts.every((f) => /^(fraunces|plus-jakarta-sans)-latin-\d+-normal\.woff2$/.test(f)), "the six faces are Fraunces and Plus Jakarta Sans, both under the SIL Open Font Licence", fonts);

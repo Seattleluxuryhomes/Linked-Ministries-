@@ -2,7 +2,7 @@
   "version": 1,
   "about": "Pieces this repository copied from another of the founder's products (Cross Universal), the sharing map. origin_sha256 is the origin file's SHA-256 at origin_commit; local_sha256 is this file's. A verbatim piece equals its origin; an adapted piece says what changed; a shaped-on piece is written new on the same model, rulings and defaults. 'Do not rebuild what has been built: copy it.' Regenerate with: node tools/commons.mjs",
   "origin_repo": "cross-univeral",
-  "origin_commit": "05f29bd96641f92450cd19c5ed5e00e5e626f847",
+  "origin_commit": "91b4f56ff2853dad44b79f19450cbc1a09c21c30",
   "pieces": [
     {
       "id": "plainwords",
@@ -353,7 +353,7 @@
       "origin_path": "behavioral-health-app/tests/unit-test.mjs",
       "origin_sha256": "6bead93056daa8752e1c7eaca4e74352772b4d62cc6832e2916b8d739b6ab620",
       "local_path": "tests/unit-test.mjs",
-      "local_sha256": "df4f171dae47e9d9b1c55210dc958cf6a3470f512205a68573934646baf523b5",
+      "local_sha256": "34698167f0598153915a665365347078c473640936e30481125d9c540d4f28b7",
       "note": "The licence check, the commons check, the no-key scan and the migration checks are the original's."
     },
     {
@@ -408,8 +408,8 @@
       "origin_path": "behavioral-health-app/package.json",
       "origin_sha256": "099423c22b41699a673993f5bf26be8d2aeda55046e0b1f3bf3dd024abeb9fb7",
       "local_path": "package.json",
-      "local_sha256": "787241fbd58c8b129d2d383509c25ddabef1438d154c17cb509da38c932b4be2",
-      "note": "Name and description; same three dependencies and the same pinned versions; the lockfile is the original's with the name changed."
+      "local_sha256": "a334c48f8407800a704ca500d844e4699639847a847468becbb98e5ec30d04c5",
+      "note": "Name and description; the same three dependencies. Express is pinned at 4.22.3, the first release past the 2026 advisories on body-parser, path-to-regexp and qs, so the lockfile is no longer the original's."
     },
     {
       "id": "font-fraunces-latin-500-normal",
