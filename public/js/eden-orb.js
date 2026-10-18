@@ -1,15 +1,18 @@
-/* eden-orb.js — Eden's orange orb, drawn on a canvas. The drawing is copied from the family's orb (lexos/src/edenorb.jsx in the other
+/* eden-orb.js — Eden's orange orb, drawn on a canvas. (It floats at the side of the signed-in pages: public/js/eden-float.js moves it and
+   opens the panel; this file only draws it.) The drawing is copied from the family's orb (lexos/src/edenorb.jsx in the other
    repository; recorded in commons.json): the same state table, the four breathing blobs, the seeded mesh of nodes and signals, the hot
    nucleus, the vignette and the glint, with the same amber and copper numbers. Only the framework layer is changed: it is a plain
    function that mounts a canvas into an element, instead of a component. Nothing is loaded from outside: it is a canvas and arithmetic.
    Motion: under prefers-reduced-motion the orb draws one still frame per state and stops; it never loops then.
    The orb is the one warm accent on the signed-in pages. It is small and never alarmed. It carries no words: the words are beside it. */
-const EDEN_ORB_STATES = ["ready", "listening", "thinking", "speaking"];
+const EDEN_ORB_STATES = ["ready", "listening", "thinking", "speaking", "off"];
 const EDEN_ORB_P = {
   ready: { speed: 0.04, energy: 0.55, pulse: 0.045, pulseHz: 0.22, filament: 0.10 },
   listening: { speed: 0.09, energy: 0.80, pulse: 0.02, pulseHz: 0.6, filament: 0.14 },
   thinking: { speed: 0.26, energy: 0.88, pulse: 0.03, pulseHz: 1.3, filament: 0.24 },
   speaking: { speed: 0.09, energy: 0.78, pulse: 0.09, pulseHz: 1.5, filament: 0.16 },
+  /* not set up: this site's own fifth state, the same drawing turned low and slow (the style sheet takes the colour out) */
+  off: { speed: 0.02, energy: 0.34, pulse: 0.01, pulseHz: 0.12, filament: 0.04 },
 };
 const EDEN_ORB_BLOBS = [
   { r: 0.34, ax: 0.30, ay: 0.22, w1: 0.31, w2: 0.23, ph: 0.0, hue: "255,214,188" },
@@ -178,8 +181,10 @@ function edenOrbDraw(s, ctx, W, reduced, glowEl) {
   ctx.restore();
 }
 
-/** mount an orb into `host`. Returns { setState(state), destroy() }. state: ready | listening | thinking | speaking. */
-export function mountEdenOrb(host, { state = "ready", size = 56, small = true, seed = 7 } = {}) {
+/** mount an orb into `host`. Returns { setState(state), destroy() }.
+    state: ready | listening | thinking | speaking | off. size: the canvas's drawing size in CSS pixels (the style sheet sets how large it shows).
+    small: the dock orb (two blobs, three sparks) or the full orb with its mesh. glowEl: the bloom behind the glass, breathed with the orb. */
+export function mountEdenOrb(host, { state = "ready", size = 56, small = true, seed = 7, glowEl = null } = {}) {
   const logical = small ? 128 : 176;
   const s = { logical, small, state: EDEN_ORB_STATES.includes(state) ? state : "ready", t: 0, thinkAmt: 0, coreFlare: 0, cur: { ...EDEN_ORB_P.ready }, mesh: edenOrbMesh(small, edenOrbRng(seed * 7919 + logical)), frames: 0, redraw: null };
   const c = document.createElement("canvas");
@@ -192,15 +197,17 @@ export function mountEdenOrb(host, { state = "ready", size = 56, small = true, s
   const mq = typeof window.matchMedia === "function" ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
   let reduced = !!(mq && mq.matches), raf = 0, alive = true;
   ctx.setTransform(c.width / s.logical, 0, 0, c.width / s.logical, 0, 0);
-  const draw = () => { edenOrbDraw(s, ctx, s.logical, reduced, null); s.frames++; c.dataset.frames = String(s.frames); c.dataset.state = s.state; };
-  const loop = () => { if (!alive) return; if (c.isConnected) draw(); raf = requestAnimationFrame(loop); };
+  c.dataset.state = s.state;
+  const draw = () => { edenOrbDraw(s, ctx, s.logical, reduced, glowEl); s.frames++; c.dataset.frames = String(s.frames); c.dataset.state = s.state; };
+  /* it draws only while it can be seen: a hidden orb (no form on the page) costs nothing */
+  const loop = () => { if (!alive) return; if (c.isConnected && c.getClientRects().length) draw(); raf = requestAnimationFrame(loop); };
   const start = () => { cancelAnimationFrame(raf); if (reduced) { s.redraw = draw; draw(); draw(); } else { s.redraw = null; raf = requestAnimationFrame(loop); } };
   const onMotion = () => { reduced = !!(mq && mq.matches); c.dataset.motion = reduced ? "still" : "moving"; start(); };
   c.dataset.motion = reduced ? "still" : "moving";
   if (mq && mq.addEventListener) mq.addEventListener("change", onMotion);
   start();
   return {
-    setState(next) { s.state = EDEN_ORB_STATES.includes(next) ? next : "ready"; c.dataset.state = s.state; if (s.redraw) { s.redraw(); s.redraw(); } },
+    setState(next) { const n = EDEN_ORB_STATES.includes(next) ? next : "ready"; if (n === s.state) return; s.state = n; c.dataset.state = s.state; if (s.redraw) { s.redraw(); s.redraw(); } },
     destroy() { alive = false; cancelAnimationFrame(raf); if (mq && mq.removeEventListener) mq.removeEventListener("change", onMotion); c.remove(); },
   };
 }
