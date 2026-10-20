@@ -2,7 +2,7 @@
   "version": 1,
   "about": "Pieces this repository copied from another of the founder's products (Cross Universal), the sharing map. origin_sha256 is the origin file's SHA-256 at origin_commit; local_sha256 is this file's. A verbatim piece equals its origin; an adapted piece says what changed; a shaped-on piece is written new on the same model, rulings and defaults. 'Do not rebuild what has been built: copy it.' Regenerate with: node tools/commons.mjs",
   "origin_repo": "cross-univeral",
-  "origin_commit": "1668f87383d3cc7c7c04b248663a65d01a5dc851",
+  "origin_commit": "0c3ffbca8d44926ae4df7d6acdafc1f456daa780",
   "pieces": [
     {
       "id": "plainwords",
@@ -188,7 +188,7 @@
       "origin_path": "behavioral-health-app/server/index.mjs",
       "origin_sha256": "b1375df160f0be6f55b551c26472bdeb63eef9c9af918fff8ba44584fd168e21",
       "local_path": "server/index.mjs",
-      "local_sha256": "6c805b2f13097b49237ae8b45b9725eff0a5b83ad33d4a5a9dbe2a27aeefb2bc",
+      "local_sha256": "a92d3ece328f83d5f294fbdf0a29a0bfcf89c37a80d4cad48777fb84a4f5c02f",
       "note": "Same boot order and health answer (two words). Public pages are built on the server."
     },
     {
@@ -331,7 +331,7 @@
       "origin_path": "behavioral-health-app/tests/api-test.mjs",
       "origin_sha256": "b9aed98a7b54da362b31cbf559aa6e2637b2a6d38db924b6335cfdd21d646f7c",
       "local_path": "tests/api-test.mjs",
-      "local_sha256": "711b5dc2accd82f30a2747c7410c2ef1e2f700a649bcdcc61ed3bba4a33ad5c4",
+      "local_sha256": "6be65565c4bd2b9e83ae8692a4f3bdaab53526b6d2d70ff38299b72975681e20",
       "note": "Same method; adds the stand-in mail server."
     },
     {
@@ -395,7 +395,7 @@
       "mode": "adapted",
       "origin_repo": "cross-univeral",
       "origin_path": "lexos/pwa/make.mjs",
-      "origin_sha256": "3cf3378bc9037136e32f89c8024de7a91b719a0c92c087ba57dc921635c911f6",
+      "origin_sha256": "36ee102a5db5b884cf22b999814b449626d1f16e0ddf8d2d9bb9945c5c293472",
       "local_path": "tools/make-pwa.mjs",
       "local_sha256": "59c24f8f93e4b137d2c5dad3aad82e1971dc01d43ef8d0c88ab499b781890e64",
       "note": "Same outputs (manifest, 192 and 512 icons, a maskable icon, an apple-touch icon, all drawn from the existing mark) with Linked Ministries' own mark, name and light palette. The original renders with a package this repository does not have; here the Chromium the tests use draws them, as tools/make-images.mjs does. One manifest, not three."
@@ -406,7 +406,7 @@
       "mode": "shaped-on",
       "origin_repo": "cross-univeral",
       "origin_path": "lexos/src/app.jsx",
-      "origin_sha256": "a960a3260fcb448151534780906d1cdee01625942ffc37b48711c63d223b991f",
+      "origin_sha256": "723ef435a710d15a1415d2aebae6b38e1f929da27675d83c45b62d8bbb2bcbe1",
       "local_path": "public/js/pwa.js",
       "local_sha256": "73ce0ebd527541a6f9d8709b9190d7709815c8e0273ebf514619f718febb2f37",
       "note": "The same one line, navigator.serviceWorker.register('/sw.js', { scope: '/' }) with the failure ignored, in its own external file because this site's policy allows no inline script."

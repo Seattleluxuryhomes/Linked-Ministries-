@@ -24,6 +24,11 @@ ok(hr.status === 200 && hr.text === '{"status":"ok","service":"Linked Ministries
 ok((await anon.get("/api/health/detail")).status === 401 && (await anon.get("/api/health/detail", { authorization: "Bearer wrong-wrong-wrong-wrong" })).status === 401, "the detail refuses a stranger and a wrong key");
 const det = await anon.get("/api/health/detail", { authorization: "Bearer " + KPI });
 ok(det.status === 200 && det.json.ministries === 0 && det.json.mail === true && det.json.migrations >= 4, "the detail, with the operator's key, counts ministries and says mail is set up", det.json);
+const kw = await anon.get("/api/kpi", { authorization: "Bearer wrong-wrong-wrong-wrong" });
+const kp = await anon.get("/api/kpi", { authorization: "Bearer " + KPI });
+ok(kw.status === 401 && (await anon.get("/api/kpi")).status === 401, "the counts Eden reads refuse a stranger and a wrong key");
+ok(kp.status === 200 && kp.json.product === "linked-ministries" && kp.json.funnel.every((x) => x.grade === "Known" && x.source) && kp.json.revenue.grade === "Known" && kp.json.revenue.recorded_cents === 0 && kp.headers.get("cache-control") === "no-store", "with the key: the shared shape, Known counts with sources, gifts from the ledger", kp.json);
+ok(!/@/.test(kp.text), "no email in the counts");
 const csp = hr.headers.get("content-security-policy") || "";
 ok(/default-src 'none'/.test(csp) && /script-src 'self'(;|$)/.test(csp) && !/unsafe-inline|unsafe-eval/.test(csp) && /frame-ancestors 'none'/.test(csp), "the content-security policy is enforced, with no inline script and no eval", csp);
 ok(hr.headers.get("x-content-type-options") === "nosniff" && hr.headers.get("referrer-policy") === "no-referrer" && /camera=\(\)/.test(hr.headers.get("permissions-policy") || ""), "the other security headers are on");

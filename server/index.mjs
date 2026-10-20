@@ -59,6 +59,43 @@ export function buildApp({ env = process.env } = {}) {
     res.set("cache-control", "no-store").json({ ...d, mail: emailConfigured(), eden: keyIsSet(env) });
   }));
 
+  /* ---- the counts Eden reads (the founder's console): counts only, the operator's key or a 404 ------------------------------- */
+  app.get("/api/kpi", wrap(async (req, res) => {
+    res.set("cache-control", "no-store");
+    const want = String(env.KPI_READ_TOKEN || "").trim();
+    if (want.length < 16) return res.status(404).json({ error: "not_found" });
+    const m = /^Bearer[ ]+(\S+)$/i.exec(String(req.get("authorization") || "").trim()), got = m ? m[1] : "";
+    if (!crypto.timingSafeEqual(crypto.createHash("sha256").update(want).digest(), crypto.createHash("sha256").update(got).digest()) || !got) return res.status(401).json({ error: "unauthorized" });
+    const D = /^\d{4}-\d{2}-\d{2}$/, one = (v, end) => { const t = String(v || "").trim(); if (!t) return null; const x = D.test(t) ? Date.parse(t + "T00:00:00Z") + (end ? 86400000 : 0) : Date.parse(t); return Number.isFinite(x) ? x : NaN; };
+    const to0 = one(req.query.to, true), from0 = one(req.query.from, false);
+    if (Number.isNaN(to0) || Number.isNaN(from0)) return res.status(400).json({ error: "bad_period" });
+    const to = new Date(to0 ?? Date.now()), from = new Date(from0 ?? to.getTime() - 30 * 86400000);
+    if (from >= to) return res.status(400).json({ error: "bad_period" });
+    const d = await asAdmin(async (c) => {
+      const n = async (q, p = []) => Number((await c.query(q, p)).rows[0].n) || 0;
+      return {
+        joined: await n("select count(*)::int as n from lm.ministries where created_at >= $1 and created_at < $2", [from, to]),
+        approved: await n("select count(*)::int as n from lm.ministries where status = 'public' and reviewed_at >= $1 and reviewed_at < $2", [from, to]),
+        posts: await n("select count(*)::int as n from lm.posts where created_at >= $1 and created_at < $2", [from, to]),
+        answers: await n("select count(*)::int as n from lm.answers where sent_at >= $1 and sent_at < $2", [from, to]),
+        public_now: await n("select count(*)::int as n from lm.ministries where status = 'public'"),
+        waiting_now: await n("select count(*)::int as n from lm.ministries where status = 'waiting'"),
+        people_now: await n("select count(*)::int as n from lm.people"),
+        gifts: await n("select count(*)::int as n from lm.gifts where corrects_id is null and received_on >= $1::date and received_on < $2::date", [from, to]),
+        gift_cents: await n("select coalesce(sum(amount_cents), 0)::bigint as n from lm.gifts where received_on >= $1::date and received_on < $2::date", [from, to]),
+      };
+    });
+    const f = (step, count, source) => ({ step, count, source, grade: "Known" });
+    const k = (id, label, value, source, unit = "count") => ({ id, label, value, unit, source, grade: "Known", note: "" });
+    res.json({
+      product: "linked-ministries", at: new Date().toISOString(), period: { from: from.toISOString(), to: to.toISOString() },
+      funnel: [f("leads", d.joined, "ministries that joined in the period (lm.ministries.created_at)"), f("booked", d.approved, "ministries a steward made public in the period (reviewed_at)"), f("posts", d.posts, "posts written in the period"), f("answers", d.answers, "answers given in the period")],
+      kpis: [k("ministries_public", "Ministries on the board", d.public_now, "public ministries now"), k("ministries_waiting", "Waiting for review", d.waiting_now, "ministries waiting for a steward now"), k("people", "People", d.people_now, "people on the board now"), k("gifts", "Gifts received", d.gifts, "gifts in the ledger received in the period, corrections not counted twice")],
+      revenue: { recorded_cents: Math.max(0, d.gift_cents), source: "the giving ledger: gifts received in the period, corrections included, recorded by a person", grade: "Known" },
+      notes: ["Revenue here is gifts to Linked Ministries recorded in its ledger; the board moves no money between ministries.", "No visit counter, no tracking."],
+    });
+  }));
+
   /* ---- who is signed in -------------------------------------------------------------------------------------------------- */
   app.use("/api", wrap(async (req, res, next) => {
     const t = cookies(req)[COOKIE];
