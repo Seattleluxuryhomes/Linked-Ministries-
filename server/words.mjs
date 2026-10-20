@@ -10,7 +10,7 @@
      IRS_LETTER_DATE the date on the IRS letter, as YYYY-MM-DD, and only when a letter has come ("" until then)
    Until IRS_LETTER_DATE is set, no page and no email says a gift is deductible, and the two banned phrases (tests/banned.mjs names
    them) appear nowhere. Once it is set, only the IRS's own sentence (IRS_PHRASE) says so, and a lawyer checks it against the letter. */
-export const FORMED = false; // articles filed 2026-10-17; the Secretary of State shows "pending review" (2026-10-18). Flip to true the day it is approved.
+export const FORMED = true; // articles filed 2026-10-17; the founder confirmed on 2026-10-20 that the Secretary of State shows the corporation Active.
 export const APPLIED_501C3 = false;
 export const IRS_LETTER_DATE = "";
 export const FLAGS = Object.freeze({ FORMED, APPLIED_501C3, IRS_LETTER_DATE });

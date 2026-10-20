@@ -2,7 +2,7 @@
   "version": 1,
   "about": "Pieces this repository copied from another of the founder's products (Cross Universal), the sharing map. origin_sha256 is the origin file's SHA-256 at origin_commit; local_sha256 is this file's. A verbatim piece equals its origin; an adapted piece says what changed; a shaped-on piece is written new on the same model, rulings and defaults. 'Do not rebuild what has been built: copy it.' Regenerate with: node tools/commons.mjs",
   "origin_repo": "cross-univeral",
-  "origin_commit": "0c3ffbca8d44926ae4df7d6acdafc1f456daa780",
+  "origin_commit": "7d0d1fb8685535f094d29f9e2678dab9cb76c4b3",
   "pieces": [
     {
       "id": "plainwords",
@@ -175,7 +175,7 @@
       "mode": "shaped-on",
       "origin_repo": "cross-univeral",
       "origin_path": "behavioral-health-app/server/api.mjs",
-      "origin_sha256": "8ee33e9349c194104e91d85d9ce378f4c820e10d25fc8485156f98c03a40a4e5",
+      "origin_sha256": "d181a933847ec6245881206eea307ad9c4a818e936ac05d2e14fc98ca7822c55",
       "local_path": "server/api.mjs",
       "local_sha256": "2da57803776ede30980221020b1a35b6593f2d6f66e8deeed46b55f1e864a192",
       "note": "Same pattern (asUser, functions decide, early friendly checks). The routes are this product's: ministries, team, posts, answers, stewards."
@@ -197,9 +197,9 @@
       "mode": "shaped-on",
       "origin_repo": "cross-univeral",
       "origin_path": "behavioral-health-app/server/words.mjs",
-      "origin_sha256": "7d66d59b2ffd109e7ba740ea0f66090185974bb339207889072108b8262c41e8",
+      "origin_sha256": "e0464c7097a23c9af63dd39733defc8407928a2c1e8837c3a33e89189d847a63",
       "local_path": "server/words.mjs",
-      "local_sha256": "584536d6c0fc425d22370a6f33601f52b2324b65045fa8c5a1cfe6b1a021a618",
+      "local_sha256": "9a1b456cbb831abd6d84d44936c7ac747b78880fbad3ea8d11c6975a420c39f1",
       "note": "Same refusal mapping (a code and a hint); the codes are this product's. The founder's one editable line lives here."
     },
     {
@@ -285,7 +285,7 @@
       "mode": "adapted",
       "origin_repo": "cross-univeral",
       "origin_path": "behavioral-health-app/tests/run-all.mjs",
-      "origin_sha256": "80f53d81c295c1fdc207a38feffe49b76b305d0106fb5057868e7219cbd201f0",
+      "origin_sha256": "0393056d1af1ba679912560390363c6ba835cb69b64eab959c7f4b5eb9ae6145",
       "local_path": "tests/run-all.mjs",
       "local_sha256": "d6b60565e79bc62fc9c508274cbe97f850ee846dbb62100850318085b943e975",
       "note": "This product's test list; drops the image and mutation tests."
@@ -296,7 +296,7 @@
       "mode": "shaped-on",
       "origin_repo": "cross-univeral",
       "origin_path": "behavioral-health-app/tests/boot-test.mjs",
-      "origin_sha256": "00edd27e50cc8a14e9d07272c316f3b33e0ddaabf6dfb92e42a2b42de6cdb399",
+      "origin_sha256": "19930f824c8052a9e734eec0ab17bcb827b60d1bb8167988184e6a1bb9c0911e",
       "local_path": "tests/boot-test.mjs",
       "local_sha256": "4ae949c1ef4a25b32ae493725e85a4b17ebfa08f64d34f9530478038d5359dbe",
       "note": "Same structure; this product's settings, health answer and refusals."
@@ -307,7 +307,7 @@
       "mode": "shaped-on",
       "origin_repo": "cross-univeral",
       "origin_path": "behavioral-health-app/tests/light-test.mjs",
-      "origin_sha256": "e3e7289a423a030c9427e2617334f909a8f0f8104ccd5466a3be72e8aa063881",
+      "origin_sha256": "0333b6adabeac2ee58328e7426ee6b56dd8555adae26091442ebf2581079ee8d",
       "local_path": "tests/light-test.mjs",
       "local_sha256": "9c731438123df707cbb1d0b8b1365f80f64df2bed2846e00973ca6f1981f4f47",
       "note": "Same method (stylesheet tokens, painted pages, a dark panel is caught); adds a check for red and for contrast."
@@ -318,7 +318,7 @@
       "mode": "shaped-on",
       "origin_repo": "cross-univeral",
       "origin_path": "behavioral-health-app/tests/db-test.mjs",
-      "origin_sha256": "e3ed64b0c1321e3ae22fbf7d18c5eb918907b5f1d46a55359eef58061c35b71a",
+      "origin_sha256": "42b82181b4c1199b22a4548c76c1ec937413ecb684b367356721995cac3c5cfd",
       "local_path": "tests/db-test.mjs",
       "local_sha256": "344cc126ab0681731f14b8905ba1df1c0331ab2ce4cf384f0dc579071525fdc1",
       "note": "Same method; this product's rules."
@@ -340,7 +340,7 @@
       "mode": "shaped-on",
       "origin_repo": "cross-univeral",
       "origin_path": "behavioral-health-app/tests/browser-test.mjs",
-      "origin_sha256": "ea133f994d92eafd8f78efa5e805a95ae402d27a7c1bf5ed0d47e60233f156e0",
+      "origin_sha256": "f432081a7f8f60f4fae6d4d270ea95091bfde2344d6245e0a0684dc87b49b4e3",
       "local_path": "tests/browser-test.mjs",
       "local_sha256": "0171b036c2ad2fa1482aea234f1d1f6e6219204fd784feb9e34b2610e16da5f0",
       "note": "Same method; this product's journey."
@@ -353,7 +353,7 @@
       "origin_path": "behavioral-health-app/tests/unit-test.mjs",
       "origin_sha256": "6bead93056daa8752e1c7eaca4e74352772b4d62cc6832e2916b8d739b6ab620",
       "local_path": "tests/unit-test.mjs",
-      "local_sha256": "e5ef0ca71b3323c39938c87f153aeddc0c90131a708a014be400f27dd96c65fe",
+      "local_sha256": "41ff7f07e6ecb1d5a9b1e8432f857e74f8067c9250b4b5fa328efb201995233a",
       "note": "The licence check, the commons check, the no-key scan and the migration checks are the original's."
     },
     {
@@ -406,7 +406,7 @@
       "mode": "shaped-on",
       "origin_repo": "cross-univeral",
       "origin_path": "lexos/src/app.jsx",
-      "origin_sha256": "723ef435a710d15a1415d2aebae6b38e1f929da27675d83c45b62d8bbb2bcbe1",
+      "origin_sha256": "969eb96884bb235bebd25d5ad3d009e7d50fe2097180300ec09565e6d21f9c67",
       "local_path": "public/js/pwa.js",
       "local_sha256": "73ce0ebd527541a6f9d8709b9190d7709815c8e0273ebf514619f718febb2f37",
       "note": "The same one line, navigator.serviceWorker.register('/sw.js', { scope: '/' }) with the failure ignored, in its own external file because this site's policy allows no inline script."
