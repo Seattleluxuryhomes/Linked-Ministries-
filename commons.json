@@ -133,7 +133,7 @@
       "origin_path": "behavioral-health-app/server/headers.mjs",
       "origin_sha256": "c79f7055ae97ebabb0a679717d188451d557f1f3dae2c0aec331f2385972923c",
       "local_path": "server/headers.mjs",
-      "local_sha256": "e1e9995bd9d83097417dc468bfaf504c339f034bd6d9799054ca01a90b9abdb3",
+      "local_sha256": "35f37d0aa7637cc0a2eed5733bded06d94217fa95a8f3566eaa69f373ecb004f",
       "note": "The no-index and no-store paths are this site's. The policy is the original's: script-src 'self', no inline script, no nonce to forget; one line added, worker-src 'self', for the service worker (this site's own file, no blob)."
     },
     {
@@ -188,7 +188,7 @@
       "origin_path": "behavioral-health-app/server/index.mjs",
       "origin_sha256": "b1375df160f0be6f55b551c26472bdeb63eef9c9af918fff8ba44584fd168e21",
       "local_path": "server/index.mjs",
-      "local_sha256": "d8078f47c42bf425948cf2d6dc5b15d9c608a02632d26e7f478028a40409aff5",
+      "local_sha256": "6eba5f3c3b6f924f714f06291929a092ce0df5e6d47fe807c5cb3bd60e699a66",
       "note": "Same boot order and health answer (two words). Public pages are built on the server."
     },
     {
@@ -309,7 +309,7 @@
       "origin_path": "behavioral-health-app/tests/light-test.mjs",
       "origin_sha256": "0333b6adabeac2ee58328e7426ee6b56dd8555adae26091442ebf2581079ee8d",
       "local_path": "tests/light-test.mjs",
-      "local_sha256": "9c731438123df707cbb1d0b8b1365f80f64df2bed2846e00973ca6f1981f4f47",
+      "local_sha256": "4e6b26a16e70d4942dc4e54780d56cca2e081ca5fe3c854fdffad594dae4bbef",
       "note": "Same method (stylesheet tokens, painted pages, a dark panel is caught); adds a check for red and for contrast."
     },
     {
@@ -342,7 +342,7 @@
       "origin_path": "behavioral-health-app/tests/browser-test.mjs",
       "origin_sha256": "f432081a7f8f60f4fae6d4d270ea95091bfde2344d6245e0a0684dc87b49b4e3",
       "local_path": "tests/browser-test.mjs",
-      "local_sha256": "0171b036c2ad2fa1482aea234f1d1f6e6219204fd784feb9e34b2610e16da5f0",
+      "local_sha256": "7b8b4b3ff208a691515587808311ca5c2b0525387e4ee9d8eb53c26ddd7e3da3",
       "note": "Same method; this product's journey."
     },
     {
@@ -353,7 +353,7 @@
       "origin_path": "behavioral-health-app/tests/unit-test.mjs",
       "origin_sha256": "55ada112cd322258580d70583c104cec99970d3166a8f4546e785919812d4cb5",
       "local_path": "tests/unit-test.mjs",
-      "local_sha256": "82e1d5c9180d05c2ba4df359c076ed5bfb3d2383d1e16a9996db174c6c58fd7d",
+      "local_sha256": "a5ce10685e623d2e32b71b9a91f14317722c9da0ffee02be23060ad839c6c839",
       "note": "The licence check, the commons check, the no-key scan and the migration checks are the original's."
     },
     {

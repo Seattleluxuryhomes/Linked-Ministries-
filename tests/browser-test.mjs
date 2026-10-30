@@ -135,7 +135,7 @@ for (const kind of ["phone", "desk"]) {
   await sql("select lm.make_steward($1)", [STEW]);
   const st = await open(browser, s.base, kind);
   await signInByUi(st.page, STEW, smtp);
-  await st.page.waitForSelector("a:has-text('Open Review')");
+  await st.page.waitForSelector("a:has-text('Review new posts')");
   ok(/You are on the Linked Ministries team/.test(await textOf(st.page)) && !(await st.page.locator("input[name=name]").count()), `${kind}: a steward who has no ministry is not asked to make one; the page offers the steward's page`);
   await st.page.goto("/review"); await st.page.waitForSelector("[data-ministry]");
   { const n = await st.page.locator("[data-waiting]").innerText(); ok(/^\d+ waiting for review$/.test(n) && (await st.page.locator("main h1").innerText()) === "Review" && !/steward|treasur/i.test((await st.page.locator("main h1, main h2, main h3, main button, main label, main .lead, main .help, main .msg, main .count").allInnerTexts()).join(" ")), `${kind}: the team's page is titled Review and counts in plain words ("${n}"); its headings, buttons, labels and notes say steward nowhere (a person's own name or email is theirs)`); }

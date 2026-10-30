@@ -10,7 +10,7 @@ let flash = null, openForm = null;     // one message from the last thing done; 
 
 async function load() {
   const me = await get("/api/me");
-  if (!me.ok || !me.data.signed_in) return toSignIn("/money");
+  if (!me.ok || !me.data.signed_in) return toSignIn("/donations");
   if (!me.data.treasurer) return app.replaceChildren(h("h1", {}, WORDS.treasuryTitle), msg(WORDS.treasuryOnly));
   const v = await get("/api/treasury");
   if (!v.ok) return app.replaceChildren(h("h1", {}, WORDS.treasuryTitle), msg(v.data.words || WORDS.tryAgain));

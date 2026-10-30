@@ -18,7 +18,7 @@ import { toCsv, cell, dollars } from "../lib/csv.mjs";
 import { money, parseCents, receiptCode } from "../public/js/pure.js";
 import { cleanFilters } from "../server/board.mjs";
 import { dayLimits } from "../server/api.mjs";
-import { frontPage, boardPage, postPage, missingPostPage, shellPage, notFoundPage, termsPage, privacyPage, e, postCard, MARK, ministryPage, givingPage, givePage, givingChart, FRONT_IMG } from "../server/pages.mjs";
+import { frontPage, boardPage, postPage, missingPostPage, shellPage, notFoundPage, termsPage, privacyPage, e, postCard, MARK, ministryPage, givingPage, givePage, takeDonationsPage, givingChart, FRONT_IMG } from "../server/pages.mjs";
 import { noticeEmail } from "../lib/email.mjs";
 import { signInEmail, answerEmail, inviteEmail, reportEmail } from "../server/emails.mjs";
 import { TERMS, PRIVACY, DRAFT_LINE } from "../server/legal.mjs";
@@ -92,11 +92,11 @@ const result = (posts, filters = {}) => ({ posts, total: posts.length, page: 1, 
 const built = {
   front: frontPage({ latest: sample }), frontEmpty: frontPage({ latest: [] }), board: boardPage({ result: result(sample) }), boardEmpty: boardPage({ result: result([]) }),
   boardFiltered: boardPage({ result: result([], { kind: "ask", q: "zebra" }) }), post: postPage({ post: sample[0] }), missing: missingPostPage(), notFound: notFoundPage(),
-  giving: givingPage({ giving: sampleGiving }), givingOpen: givingPage({ giving: { ...sampleGiving, door_open: true, registration_number: "WA-123456", registration_date: "2026-10-01", form990_url: "https://example.org/990.pdf" } }), givingEmpty: givingPage({ giving: { ...sampleGiving, money_cents: 0, money_count: 0, in_kind_count: 0, granted_cents: 0, granted_count: 0, paid_cents: 0, grants: [], months: months.map((m) => ({ ...m, gifts_cents: 0, grants_cents: 0 })) } }), give: givePage({ open: false }), giveOpen: givePage({ open: true, notice: "notices@linkedm.example" }), ministry: ministryPage({ page: samplePage, notice: "notices@linkedm.example" }), ministryOpen: ministryPage({ page: samplePage, giving: { open: true } }), ministryPreview: ministryPage({ page: samplePage, preview: true }), terms: termsPage({ notice: "notices@linkedm.example" }), privacy: privacyPage({ notice: "notices@linkedm.example" }), termsNoAddress: termsPage({}),
+  giving: givingPage({ giving: sampleGiving }), givingOpen: givingPage({ giving: { ...sampleGiving, door_open: true, registration_number: "WA-123456", registration_date: "2026-10-01", form990_url: "https://example.org/990.pdf" } }), givingEmpty: givingPage({ giving: { ...sampleGiving, money_cents: 0, money_count: 0, in_kind_count: 0, granted_cents: 0, granted_count: 0, paid_cents: 0, grants: [], months: months.map((m) => ({ ...m, gifts_cents: 0, grants_cents: 0 })) } }), give: givePage({ open: false }), takeDonations: takeDonationsPage({ notice: "notices@linkedm.example" }), giveOpen: givePage({ open: true, notice: "notices@linkedm.example" }), ministry: ministryPage({ page: samplePage, notice: "notices@linkedm.example" }), ministryOpen: ministryPage({ page: samplePage, giving: { open: true } }), ministryPreview: ministryPage({ page: samplePage, preview: true }), terms: termsPage({ notice: "notices@linkedm.example" }), privacy: privacyPage({ notice: "notices@linkedm.example" }), termsNoAddress: termsPage({}),
   join: shellPage({ title: "Join the network", script: "/js/join.js", nav: "join" }), me: shellPage({ title: "Your ministry", script: "/js/me.js", nav: "me" }), steward: shellPage({ title: "Waiting to be read", script: "/js/steward.js" }),
 };
 for (const [name, html] of Object.entries(built)) {
-  const bad = checkPage(html, { money: /^(giving|give|ministryOpen|front)/.test(name) }); ok(bad.length === 0, `page ${name}: nothing banned, no inline script, no style attribute, no other host, never tax-deductible or write-off`, bad);
+  const bad = checkPage(html, { money: /^(giving|give|takeDonations|ministryOpen|front)/.test(name) }); ok(bad.length === 0, `page ${name}: nothing banned, no inline script, no style attribute, no other host, never tax-deductible or write-off`, bad);
   ok(html.includes(NONPROFIT_LINE) && html.includes("If someone is in danger, call 911. If someone is thinking of hurting themselves, call or text 988."), `page ${name}: the nonprofit line and the emergency line are in the footer`);
   ok(/<title>[^<]{3,}<\/title>/.test(html) && /<meta name="viewport"/.test(html) && /<html lang="en">/.test(html) && /<meta name="color-scheme" content="light">/.test(html), `page ${name}: a title, a viewport, a language and a light colour scheme`);
   ok(/Linked Ministries/.test(html) && /<svg class="mark"/.test(html), `page ${name}: the name and the mark`);
@@ -118,7 +118,7 @@ ok(!/<script(?![^>]*src)/.test(built.me) && /<script type="module" src="\/js\/me
 /* ---- a ministry's own page: built whole on the server, escaped, honest about the giving door ---- */
 { const m = built.ministry, o = built.ministryOpen, pv = built.ministryPreview;
   ok(/<h1>Alpha Table Ministry<\/h1>/.test(m) && /A hot meal every Saturday/.test(m) && /Grace Hall/.test(m) && /mailto:hello@alpha\.example/.test(m) && /tel:2065550100/.test(m) && /Hebrews 13:2/.test(m), "a ministry page shows the name, the line, where it meets, how to reach it and the verse the ministry chose");
-  ok(!/Give to Alpha/.test(m) && !/pay\.alpha\.example/.test(m) && /Give to Alpha Table Ministry/.test(o) && /href="https:\/\/pay\.alpha\.example\/give"/.test(o) && /This link is Alpha Table Ministry's own/.test(o) && /does not collect or see a gift/.test(o), "the Give button is there only when the giving door is open, goes to the ministry's own link, and says whose link it is");
+  ok(!/Make a donation to Alpha/.test(m) && !/pay\.alpha\.example/.test(m) && /Make a donation to Alpha Table Ministry/.test(o) && /href="https:\/\/pay\.alpha\.example\/give"/.test(o) && /This link is Alpha Table Ministry's own/.test(o) && /does not collect or see a donation/.test(o), "the Give button is there only when the giving door is open, goes to the ministry's own link, and says whose link it is");
   ok(/Only your ministry can see this/.test(pv) && /noindex/.test(pv) && !/noindex/.test(m) && /read this page on October 18, 2026/.test(m) && /does not check or vouch/.test(m), "a preview is marked private and not indexed; a public page says a person read it and that Linked Ministries does not vouch");
   ok(/og:type" content="profile"/.test(m) && /og:image" content="\/photos\/33333333-3333-4333-8333-333333333333"/.test(m) && /<title>Alpha Table Ministry · Linked Ministries<\/title>/.test(m), "its share card is its own: its title and its first picture");
   const evil = ministryPage({ page: { ...samplePage, name: "<b>X</b> & Co", live: { ...samplePage.live, about: '<script>alert(1)</script>"><img src=x onerror=alert(1)>', website: 'https://a.example/"><script>x</script>', verse: "not_a_key" } } });
@@ -184,7 +184,7 @@ ok(!/<script(?![^>]*src)/.test(built.me) && /<script type="module" src="\/js\/me
   const all = { ...built }; const text = (h) => visibleText(h).split(NONPROFIT_LINE).join(" ");
   for (const [name, html] of Object.entries(all)) {
     ok(/href="\/terms"/.test(html) && /href="\/privacy"/.test(html), `page ${name}: the footer links the terms and the privacy page`);
-    if (/^(giving|give|front)/.test(name)) continue;   /* the giving pages are about money; the rule for them is below */
+    if (/^(giving|give|takeDonations|front)/.test(name)) continue;   /* the giving pages are about money; the rule for them is below */
     /* "donation" is allowed since 2026-10-30: the Make a donation button sits in the top bar while the giving door is open (tests/banned.mjs) */
     ok(!/501\(c\)|tax|deduct|exempt|charitable|tithe/i.test(text(html)), `page ${name}: no claim of nonprofit status, no word about taxes, no tithe`, text(html).match(/501\(c\)|tax\w*|deduct\w*|exempt|charitable|tithe/i));
   }
