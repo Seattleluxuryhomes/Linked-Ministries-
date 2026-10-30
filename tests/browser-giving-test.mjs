@@ -95,7 +95,7 @@ for (const kind of ["phone", "desk"]) {
   ok(txt.includes(money(rowsMoney)) && txt.includes(money(grantedRows)), `${kind}: signed out, /giving shows ${money(rowsMoney)} received and ${money(grantedRows)} granted: the sums of the rows in the database`);
   ok(txt.includes(purpose) && /Alpha Table Ministry/.test(txt) && /\$400\.00/.test(txt) && /2 yes, 1 abstained/.test(txt) && /Paid on /.test(txt), `${kind}: the grant is there, with the ministry, the amount, what for, the vote counts and that it was paid`);
   ok(!/Jordan|Donor|Ann Board|Bob Board|Cy Abstain|Tess|Stan|Check 1042|Check 2201|donor\.example/.test(txt), `${kind}: no donor, no board member, no treasurer, no payment reference and no email on the public page`);
-  ok(/Linked Ministries is not taking gifts online yet/.test(txt) && (await V.page.locator("a:has-text('Give')").count()) === 0, `${kind}: the door is closed: it says so, and there is no Give button`);
+  ok(/Linked Ministries is not taking gifts online yet/.test(txt) && (await V.page.locator("a:has-text('Give')").count()) === 0 && (await V.page.locator("a:has-text('Make a donation')").count()) === 0, `${kind}: the door is closed: it says so, and there is no Give or Make a donation button`);
   ok((await V.page.locator("svg.chart rect").count()) === 24 && (await V.page.locator("svg.chart").getAttribute("role")) === "img", `${kind}: the chart is inline SVG, drawn from the rows`);
   ok(/Linked Ministries has not applied for 501\(c\)\(3\) status yet/.test(txt) && !/deduct/i.test(txt), `${kind}: the status line says what is true, and nothing about deductions`);
   await calm(V.page, `${kind}: /giving`); await big(V.page, `${kind}: /giving`);
@@ -112,10 +112,10 @@ for (const kind of ["phone", "desk"]) {
   await A.page.click("button:has-text('Save')");
   await A.page.waitForSelector("text=Saved.");
   await V.page.goto("/giving");
-  ok((await V.page.locator("a.btn:has-text('Give')").count()) === 1 && /WA-123456/.test(await V.page.locator("main").innerText()) && !/not taking gifts online yet/i.test(await V.page.locator("main").innerText()) && (await V.page.locator("a:has-text('Read the Form 990')").count()) === 1, `${kind}: with the registration filled in, /giving has the Give button, the registration and the Form 990 link`);
+  ok((await V.page.locator("main a.btn:has-text('Make a donation')").count()) === 1 && (await V.page.locator("header a.btn.donate:has-text('Make a donation')").count()) === 1 && /WA-123456/.test(await V.page.locator("main").innerText()) && !/not taking gifts online yet/i.test(await V.page.locator("main").innerText()) && (await V.page.locator("a:has-text('Read the Form 990')").count()) === 1, `${kind}: with the registration filled in, /giving has the Make a donation button on the page and in the top bar, the registration and the Form 990 link`);
   await calm(V.page, `${kind}: /giving with the door open`);
   await snap(V.page, `giving-door-open-${px}`);
-  await V.page.click("a.btn:has-text('Give')"); await V.page.waitForSelector("h1");
+  await V.page.click("main a.btn:has-text('Make a donation')"); await V.page.waitForSelector("h1");
   ok(/not connected yet/.test(await V.page.locator("main").innerText()) && (await V.page.locator("main form, main input").count()) === 0, `${kind}: the Give button goes to a page that says the payment service is not connected, with no form`);
   await snap(V.page, `give-${px}`);
   await V.page.goto("/m/alpha-table-ministry");

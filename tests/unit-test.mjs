@@ -185,7 +185,8 @@ ok(!/<script(?![^>]*src)/.test(built.me) && /<script type="module" src="\/js\/me
   for (const [name, html] of Object.entries(all)) {
     ok(/href="\/terms"/.test(html) && /href="\/privacy"/.test(html), `page ${name}: the footer links the terms and the privacy page`);
     if (/^(giving|give|front)/.test(name)) continue;   /* the giving pages are about money; the rule for them is below */
-    ok(!/501\(c\)|tax|deduct|exempt|charitable|donat|tithe/i.test(text(html)), `page ${name}: no claim of nonprofit status, no word about taxes, no talk of donations`, text(html).match(/501\(c\)|tax\w*|deduct\w*|exempt|charitable|donat\w*|tithe/i));
+    /* "donation" is allowed since 2026-10-30: the Make a donation button sits in the top bar while the giving door is open (tests/banned.mjs) */
+    ok(!/501\(c\)|tax|deduct|exempt|charitable|tithe/i.test(text(html)), `page ${name}: no claim of nonprofit status, no word about taxes, no tithe`, text(html).match(/501\(c\)|tax\w*|deduct\w*|exempt|charitable|tithe/i));
   }
   ok(built.front.includes("is a Washington nonprofit corporation") && !built.front.includes("forming as a Washington nonprofit corporation") && built.front.includes("not yet filed"), "the footer says the corporation is formed and the application is not filed");
   for (const name of ["terms", "privacy"]) { const main = built[name].match(/<main[\s\S]*?<\/main>/)[0]; ok(main.startsWith(`<main id="main" tabindex="-1">\n<div class="wrap prose">\n<p class="draft">${DRAFT_LINE}</p>\n<h1>`), `/${name} begins with the line: ${DRAFT_LINE}`); }

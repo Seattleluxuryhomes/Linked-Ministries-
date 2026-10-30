@@ -188,7 +188,7 @@
       "origin_path": "behavioral-health-app/server/index.mjs",
       "origin_sha256": "b1375df160f0be6f55b551c26472bdeb63eef9c9af918fff8ba44584fd168e21",
       "local_path": "server/index.mjs",
-      "local_sha256": "a92d3ece328f83d5f294fbdf0a29a0bfcf89c37a80d4cad48777fb84a4f5c02f",
+      "local_sha256": "d8078f47c42bf425948cf2d6dc5b15d9c608a02632d26e7f478028a40409aff5",
       "note": "Same boot order and health answer (two words). Public pages are built on the server."
     },
     {
@@ -353,7 +353,7 @@
       "origin_path": "behavioral-health-app/tests/unit-test.mjs",
       "origin_sha256": "55ada112cd322258580d70583c104cec99970d3166a8f4546e785919812d4cb5",
       "local_path": "tests/unit-test.mjs",
-      "local_sha256": "41ff7f07e6ecb1d5a9b1e8432f857e74f8067c9250b4b5fa328efb201995233a",
+      "local_sha256": "82e1d5c9180d05c2ba4df359c076ed5bfb3d2383d1e16a9996db174c6c58fd7d",
       "note": "The licence check, the commons check, the no-key scan and the migration checks are the original's."
     },
     {
@@ -430,7 +430,7 @@
       "origin_path": "behavioral-health-app/DEPLOY.md",
       "origin_sha256": "8c32d1bf183e7f3db4d657d7cdb5c98ad654564ea99e09d2ab9e784883d95ad9",
       "local_path": "DEPLOY.md",
-      "local_sha256": "e5abb8161d4f7c38b188ace08ecf8af7aa9dd81c3b270e6848261ab78221f1db",
+      "local_sha256": "cc6c2dca00431398f817d763e00dc648a2c7710622914594e9d238f0d24be6ca",
       "note": "Same form; this product's steps and variables."
     },
     {
@@ -441,7 +441,7 @@
       "origin_path": "behavioral-health-app/CLAUDE.md",
       "origin_sha256": "3c403645fae7028168c5ee3e1201d85863a7ebbf30225d2007cef282ce16842e",
       "local_path": "CLAUDE.md",
-      "local_sha256": "204401e1bea3ada8bac3ebfd420900ec996d7f1adb0f5a94a19d0d3797e00326",
+      "local_sha256": "b4cbfe81f645670b63eafdce51811144ddd62d7eac533ad332c482d20da20a14",
       "note": "Same form; this product's hard rules."
     },
     {

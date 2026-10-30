@@ -57,7 +57,7 @@ a:hover{text-decoration-thickness:3px}
 .nav{display:flex;align-items:center;gap:4px 20px;flex-wrap:wrap;font-size:16px}
 .nav a:not(.btn){display:inline-flex;align-items:center;min-height:44px;color:var(--ink);font-weight:500;text-decoration:none;border-bottom:2px solid transparent}
 .nav a:not(.btn):hover,.nav a[aria-current="page"]:not(.btn){border-bottom-color:var(--gold)}
-@media (max-width:640px){.nav{width:100%;border-top:1px solid var(--line);padding-top:2px}.nav .btn{margin-left:auto}}
+@media (max-width:640px){.nav{width:100%;border-top:1px solid var(--line);padding-top:2px}.nav .btn{margin-left:auto}.nav .btn.donate+.btn{margin-left:0}}
 
 main{flex:1;padding:28px 0 56px}
 main:focus{outline:none}
@@ -79,6 +79,10 @@ main:focus{outline:none}
 .btn.ghost{background:var(--card);color:var(--ink)}
 .btn.ghost:hover{background:var(--gold-soft);border-color:var(--ink)}
 .btn.small{min-height:44px;padding:8px 16px;font-size:15px}
+/* the Make a donation button: the gold of the site, so it is the one thing on the bar a person sees first */
+.btn.donate{background:var(--gold);border-color:var(--gold);color:#1b1b1b}
+.btn.donate:hover{background:var(--gold-ink);border-color:var(--gold-ink);color:#ffffff}
+.nav .btn.donate+.btn{margin-left:0}
 .btn[disabled]{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none}
 .link{background:none;border:0;padding:0 2px;min-height:44px;color:var(--ink);font:500 16px var(--face);text-decoration:underline;text-decoration-color:var(--gold);text-decoration-thickness:2px;text-underline-offset:3px;cursor:pointer}
 

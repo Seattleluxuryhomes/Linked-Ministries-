@@ -148,11 +148,11 @@ ok(gv1.status === 200 && /not connected yet/.test(gv1.text) && !/<form|<input/.t
 /* the door open with a Zeffy form set: the Give page sends a person to Zeffy and says what happens there */
 { const sz = await startServer({ url: db.url, env: { ZEFFY_GIVE_URL: "https://www.zeffy.com/en-US/donation-form/linked-ministries" } });
   const gz = await client(sz.base).get("/give");
-  ok(gz.status === 200 && /href="https:\/\/www\.zeffy\.com\/en-US\/donation-form\/linked-ministries"/.test(gz.text) && /Give through Zeffy/.test(gz.text) && /Zeffy takes the gift and emails your receipt/.test(gz.text) && /set it to \$0/.test(gz.text) && !/<form|<input/.test(gz.text), "with a Zeffy form set, the Give page links to it, says Zeffy sends the receipt and that the tip can be $0", gz.status);
+  ok(gz.status === 200 && /href="https:\/\/www\.zeffy\.com\/en-US\/donation-form\/linked-ministries"/.test(gz.text) && /Make a donation/.test(gz.text) && /Zeffy takes the gift and emails your receipt/.test(gz.text) && /set it to \$0/.test(gz.text) && !/<form|<input/.test(gz.text), "with a Zeffy form set, the Give page links to it, says Zeffy sends the receipt and that the tip can be $0", gz.status);
   { const bz = checkPage(gz.text, { money: true }); ok(bz.length === 0, "and is clean", bz); }
   await sz.stop?.(); }
 { const sb = await startServer({ url: db.url, env: { ZEFFY_GIVE_URL: "https://evil-zeffy.com.example/x" } });
-  ok(!/Give through Zeffy/.test((await client(sb.base).get("/give")).text), "an address that is not zeffy.com itself is never linked"); await sb.stop?.(); }
+  ok(!/href="https:\/\/[^"]*zeffy/.test((await client(sb.base).get("/give")).text) && !/wrong\.example/.test((await client(sb.base).get("/give")).text), "an address that is not zeffy.com itself is never linked"); await sb.stop?.(); }
 const mp2 = await anon.get("/m/alpha-table-ministry");
 ok(/Give to Alpha Table Ministry/.test(mp2.text) && /href="https:\/\/pay\.alpha\.example\/give"/.test(mp2.text) && /This link is Alpha Table Ministry's own/.test(mp2.text), "the ministry's page now shows its own Give button, labelled as theirs");
 ok(/Gifts online are open/.test((await anon.get("/")).text), "the front says the gifts are open");
