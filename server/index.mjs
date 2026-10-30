@@ -13,7 +13,7 @@ import { keyIsSet } from "./eden-engine.mjs";
 import { refusal } from "./words.mjs";
 import { boardQuery, boardPost } from "./board.mjs";
 import { publicPage, publicPageList, photo, myPage, givingPublic, givingDoor } from "./site.mjs";
-import { frontPage, boardPage, postPage, missingPostPage, shellPage, notFoundPage, termsPage, privacyPage, ministryPage, givingPage, givePage } from "./pages.mjs";
+import { frontPage, boardPage, postPage, missingPostPage, shellPage, notFoundPage, termsPage, privacyPage, ministryPage, givingPage, givePage, takeDonationsPage } from "./pages.mjs";
 import { noticeEmail } from "../lib/email.mjs";
 import { zeffyGiveUrl } from "../public/js/pure.js";
 import { PRODUCT, CATEGORIES, STATES } from "../public/js/pure.js";
@@ -192,17 +192,19 @@ export function buildApp({ env = process.env } = {}) {
   app.get("/join", wrap(async (req, res) => html(res, 200, shellPage({ title: "Join the network", script: "/js/join.js", nav: "join", ...(await where(req)) }))));
   app.get("/me", wrap(async (req, res) => html(res, 200, shellPage({ title: "Your ministry", script: "/js/me.js", nav: "me", ...(await where(req)) }))));
   /* Review and Money are the team's two pages. /steward and /treasury were their first names: they answer with a permanent redirect so no link, bookmark or installed shortcut breaks. */
-  app.get("/money", wrap(async (req, res) => html(res, 200, shellPage({ title: "Money", script: "/js/treasury.js", nav: "", width: "mid", ...(await where(req)) }))));
+  app.get(["/donations", "/money"], wrap(async (req, res) => html(res, 200, shellPage({ title: "Donations", script: "/js/treasury.js", nav: "", width: "mid", ...(await where(req)) }))));
+  /* how a ministry on the network takes donations of its own: a guide, nothing taken here */
+  app.get("/take-donations", wrap(async (req, res) => { res.set("cache-control", "public, max-age=300"); html(res, 200, takeDonationsPage(await where(req))); }));
   app.get("/review", wrap(async (req, res) => html(res, 200, shellPage({ title: "Review", script: "/js/steward.js", nav: "", width: "mid", ...(await where(req)) }))));
   app.get("/treasury", (req, res) => res.redirect(301, "/money"));
   app.get("/steward", (req, res) => res.redirect(301, "/review"));
   /* the front, the board, the terms and the privacy page are the public pages; the signed-in pages and the API are kept out of search */
-  app.get("/robots.txt", (req, res) => res.type("text/plain").send(["User-agent: *", "Disallow: /me", "Disallow: /review", "Disallow: /money", "Disallow: /steward", "Disallow: /treasury", "Disallow: /join", "Disallow: /api", "Allow: /", "", `Sitemap: ${publicBase(req)}/sitemap.xml`, ""].join("\n")));
+  app.get("/robots.txt", (req, res) => res.type("text/plain").send(["User-agent: *", "Disallow: /me", "Disallow: /review", "Disallow: /money", "Disallow: /donations", "Disallow: /steward", "Disallow: /treasury", "Disallow: /join", "Disallow: /api", "Allow: /", "", `Sitemap: ${publicBase(req)}/sitemap.xml`, ""].join("\n")));
   /* only what the public may read: the front, the board, the two legal pages, and each open post that a person read. Never a draft, a waiting post, a closed one or a post of a ministry nobody has read. */
   app.get("/sitemap.xml", wrap(async (req, res) => {
     const b = publicBase(req), r = await boardQuery({}, { limit: 500 });
     const pg = await publicPageList();
-    const urls = [["/", null], ["/board", null], ["/giving", null], ["/terms", null], ["/privacy", null], ...pg.map((p) => ["/m/" + p.slug, p.live_at]), ...r.posts.map((p) => ["/board/" + p.id, p.posted_at])];
+    const urls = [["/", null], ["/board", null], ["/giving", null], ["/take-donations", null], ["/terms", null], ["/privacy", null], ...pg.map((p) => ["/m/" + p.slug, p.live_at]), ...r.posts.map((p) => ["/board/" + p.id, p.posted_at])];
     res.type("application/xml").set("cache-control", "public, max-age=300").send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(([u, d]) => `<url><loc>${b}${u}</loc>${d ? `<lastmod>${d}</lastmod>` : ""}</url>`).join("\n")}\n</urlset>\n`);
   }));
   app.get("/favicon.ico", (req, res) => res.type("image/x-icon").set("cache-control", "public, max-age=86400").sendFile(path.join(PUBLIC, "favicon.ico")));

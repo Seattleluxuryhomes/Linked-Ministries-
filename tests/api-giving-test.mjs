@@ -30,7 +30,7 @@ ok(/When Linked Ministries files a Form 990, the link is here\./.test(g0.text), 
 const gv0 = await anon.get("/give");
 ok(gv0.status === 200 && /Not taking gifts online yet/.test(gv0.text) && !/<form/.test(gv0.text), "/give with the door closed says so and has no form");
 ok(/Giving/.test((await anon.get("/")).text) && /href="\/giving"/.test((await anon.get("/")).text) && (await anon.get("/sitemap.xml")).text.includes("/giving</loc>") && /Disallow: \/treasury/.test((await anon.get("/robots.txt")).text), "the front links /giving, the sitemap lists it, robots keeps /treasury out");
-ok((await anon.get("/money")).headers.get("x-robots-tag") === "noindex, nofollow" && (await anon.get("/money")).status === 200 && /<title>Money · /.test((await anon.get("/money")).text), "/money is a noindex shell titled Money");
+ok((await anon.get("/money")).headers.get("x-robots-tag") === "noindex, nofollow" && (await anon.get("/money")).status === 200 && /<title>Donations · /.test((await anon.get("/money")).text) && (await anon.get("/donations")).headers.get("x-robots-tag") === "noindex, nofollow" && /<title>Donations · /.test((await anon.get("/donations")).text), "/donations (and its old name /money) is a noindex shell titled Donations");
 { const old = await anon.get("/treasury"); ok(old.status === 301 && old.headers.get("location") === "/money", "and /treasury, its first name, is a permanent redirect to it", [old.status, old.headers.get("location")]); }
 ok((await anon.get("/api/giving")).json.money_cents === 0 || Number((await anon.get("/api/giving")).json.money_cents) === 0, "the public JSON is the same record");
 
@@ -138,7 +138,7 @@ ok(nodoor.status === 409 && /registration number and its date/.test(nodoor.json.
 ok((await tess.post("/api/treasury/settings", { registration_number: "WA-123456", door_open: true })).status === 409, "nor with a number and no date");
 ok((await tess.post("/api/treasury/settings", { registration_number: "WA-123456", registration_date: today, form990_url: "http://x.example", door_open: false })).status === 422, "a Form 990 link must be https");
 const mp = await anon.get("/m/alpha-table-ministry");
-ok(!/Give to Alpha/.test(mp.text), "the ministry's page has no Give button while the door is closed");
+ok(!/Make a donation to Alpha/.test(mp.text), "the ministry's page has no Give button while the door is closed");
 ok((await tess.post("/api/treasury/settings", { registration_number: "WA-123456", registration_date: today, form990_url: "https://example.org/990.pdf", door_open: true })).status === 200, "with the registration filled in, the door opens");
 const g2 = await anon.get("/giving");
 ok(/href="\/give"/.test(g2.text) && !/not taking gifts online yet/i.test(g2.text) && /WA-123456/.test(g2.text) && /href="https:\/\/example\.org\/990\.pdf"/.test(g2.text), "the page now has a Give button, the registration and the Form 990 link");
@@ -154,10 +154,10 @@ ok(gv1.status === 200 && /not connected yet/.test(gv1.text) && !/<form|<input/.t
 { const sb = await startServer({ url: db.url, env: { ZEFFY_GIVE_URL: "https://evil-zeffy.com.example/x" } });
   ok(!/href="https:\/\/[^"]*zeffy/.test((await client(sb.base).get("/give")).text) && !/wrong\.example/.test((await client(sb.base).get("/give")).text), "an address that is not zeffy.com itself is never linked"); await sb.stop?.(); }
 const mp2 = await anon.get("/m/alpha-table-ministry");
-ok(/Give to Alpha Table Ministry/.test(mp2.text) && /href="https:\/\/pay\.alpha\.example\/give"/.test(mp2.text) && /This link is Alpha Table Ministry's own/.test(mp2.text), "the ministry's page now shows its own Give button, labelled as theirs");
+ok(/Make a donation to Alpha Table Ministry/.test(mp2.text) && /href="https:\/\/pay\.alpha\.example\/give"/.test(mp2.text) && /This link is Alpha Table Ministry's own/.test(mp2.text), "the ministry's page now shows its own Give button, labelled as theirs");
 ok(/Gifts online are open/.test((await anon.get("/")).text), "the front says the gifts are open");
 await tess.post("/api/treasury/settings", { registration_number: "WA-123456", registration_date: today, form990_url: "https://example.org/990.pdf", door_open: false });
-ok(!/Give to Alpha/.test((await anon.get("/m/alpha-table-ministry")).text), "closing the door takes the button off every page");
+ok(!/Make a donation to Alpha/.test((await anon.get("/m/alpha-table-ministry")).text), "closing the door takes the button off every page");
 
 /* ---- the spreadsheet ---- */
 const csv = await tess.get("/api/treasury/export.csv?what=gifts");

@@ -40,7 +40,7 @@ for (const kind of ["phone", "desk"]) {
   /* ---- treasurer one: two gifts and a grant ---- */
   const A = await open(browser, s.base, kind); await A.ctx.addCookies([asCookie(tessC)]);
   await A.page.goto("/money"); await A.page.waitForSelector("[data-summary]");
-  ok(/Gifts received/i.test(await A.page.locator("[data-summary]").innerText()) && (await A.page.locator("main h1").innerText()) === "Money" && !/steward|treasur/i.test((await A.page.locator("main h1, main h2, main h3, main button, main label, main .lead, main .help, main .msg").allInnerTexts()).join(" ")), `${kind}: a person on the money team opens Money; its headings, buttons, labels and notes say treasurer and treasury nowhere (a person's own name is theirs)`);
+  ok(/Gifts received/i.test(await A.page.locator("[data-summary]").innerText()) && (await A.page.locator("main h1").innerText()) === "Donations" && !/steward|treasur/i.test((await A.page.locator("main h1, main h2, main h3, main button, main label, main .lead, main .help, main .msg").allInnerTexts()).join(" ")), `${kind}: a person on the money team opens Donations; its headings, buttons, labels and notes say treasurer and treasury nowhere (a person's own name is theirs)`);
   await A.page.fill("input[name=donor_name]", donor); await A.page.fill("input[name=donor_email]", `jordan.${tag}@donor.example`); await A.page.fill("input[name=amount]", "1500.00");
   await A.page.selectOption("select[name=method]", "check"); await A.page.fill("input[name=note]", "Check 1042");
   await calm(A.page, `${kind}: the treasury with a gift filled in`); await big(A.page, `${kind}: the treasury`);
@@ -100,7 +100,7 @@ for (const kind of ["phone", "desk"]) {
   ok(/Linked Ministries has not applied for 501\(c\)\(3\) status yet/.test(txt) && !/deduct/i.test(txt), `${kind}: the status line says what is true, and nothing about deductions`);
   await calm(V.page, `${kind}: /giving`); await big(V.page, `${kind}: /giving`);
   await snap(V.page, `giving-door-closed-${px}`);
-  ok(!(await (await V.ctx.newPage().then(async (p) => { await p.goto("/m/alpha-table-ministry"); return p.locator("main").innerText().finally(() => p.close()); })).includes("Give to Alpha")), `${kind}: and the ministry's own page has no Give button`);
+  ok(!(await (await V.ctx.newPage().then(async (p) => { await p.goto("/m/alpha-table-ministry"); return p.locator("main").innerText().finally(() => p.close()); })).includes("Make a donation to Alpha")), `${kind}: and the ministry's own page has no Give button`);
 
   /* ---- the treasurer opens the door, with the registration ---- */
   await A.page.goto("/money"); await A.page.waitForSelector("input[name=registration_number]");
@@ -119,7 +119,7 @@ for (const kind of ["phone", "desk"]) {
   ok(/not connected yet/.test(await V.page.locator("main").innerText()) && (await V.page.locator("main form, main input").count()) === 0, `${kind}: the Give button goes to a page that says the payment service is not connected, with no form`);
   await snap(V.page, `give-${px}`);
   await V.page.goto("/m/alpha-table-ministry");
-  ok(/Give to Alpha Table Ministry/.test(await V.page.locator("main").innerText()) && /This link is Alpha Table Ministry's own/.test(await V.page.locator("main").innerText()), `${kind}: the ministry's own page now has its Give button, labelled as the ministry's own`);
+  ok(/Make a donation to Alpha Table Ministry/.test(await V.page.locator("main").innerText()) && /This link is Alpha Table Ministry's own/.test(await V.page.locator("main").innerText()), `${kind}: the ministry's own page now has its Give button, labelled as the ministry's own`);
   await snap(V.page, `ministry-page-give-${px}`);
 
   for (const [who, h] of [["first treasurer", A], ["second treasurer", B], ["visitor", V]]) { ok(h.errors.length === 0, `${kind}: zero page errors for the ${who}`, h.errors); await h.close(); }

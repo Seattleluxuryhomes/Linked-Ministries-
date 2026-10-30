@@ -40,7 +40,7 @@ const cookie = (c) => ({ name: "lm_session", value: c.jar().split("=").slice(1).
 
 /* ---- every page carries the head ---- */
 { const post = Object.values(world.ids)[0];
-  for (const p of ["/", "/board", "/board/" + post, "/giving", "/give", "/terms", "/privacy", "/join", "/me", "/review", "/money", "/steward", "/treasury", "/m/" + pg.slug, "/nothing-here"]) {
+  for (const p of ["/", "/board", "/board/" + post, "/giving", "/give", "/take-donations", "/terms", "/privacy", "/join", "/me", "/review", "/money", "/steward", "/treasury", "/m/" + pg.slug, "/nothing-here"]) {
     const r = await fetch(s.base + p), t = await r.text(), head = t.slice(0, t.indexOf("</head>"));
     ok(/<link rel="manifest" href="\/manifest\.webmanifest">/.test(head) && /name="theme-color" content="#fbf8f3"/.test(head) && /apple-mobile-web-app-capable/.test(head) && /apple-touch-icon/.test(head) && t.includes('<script type="module" src="/js/pwa.js">'), `${p} (${r.status}): manifest link, theme colour, Apple tags and the registration script`); } }
 

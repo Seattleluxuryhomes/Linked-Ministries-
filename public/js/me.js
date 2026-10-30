@@ -53,7 +53,7 @@ function render(me, posts, answers, team, pg) {
   parts.push(msg(MINISTRY_STATUS[m.status], m.status === "public" ? "ok" : undefined));
   if (m.status === "sent_back" && m.review_note) parts.push(h("p", { class: "msg" }, h("strong", {}, "Their note: "), m.review_note));
   if (flash) { parts.push(msg(flash.words, flash.ok ? "ok" : undefined)); flash = null; }
-  if (me.steward) parts.push(h("p", { class: "row" }, h("a", { class: "btn ghost", href: "/review" }, WORDS.stewardOpen), me.treasurer ? h("a", { class: "btn ghost", href: "/money", "data-act": "treasury" }, WORDS.treasuryOpen) : null));
+  if (me.steward) parts.push(h("p", { class: "row" }, h("a", { class: "btn ghost", href: "/review" }, WORDS.stewardOpen), me.treasurer ? h("a", { class: "btn ghost", href: "/donations", "data-act": "treasury" }, WORDS.treasuryOpen) : null));
 
   /* the one calm card that asks to put the site on a phone (only on a phone, never when it is already an app; it asks on every page until the site is installed) */
   const installHere = h("div", { class: "install-slot" }); parts.push(installHere);

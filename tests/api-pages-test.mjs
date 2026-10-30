@@ -101,7 +101,7 @@ ok(!/alex@alpha\.example|Alex Rivera/.test(pub.text), "and not the private conta
 ok(!/<script>alert/.test(pub.text) && /&lt;script&gt;alert\(1\)&lt;\/script&gt;/.test(pub.text), "words a person typed are text, never markup");
 ok(/<img src="\/photos\/[0-9a-f-]{36}" alt="The hall set for supper"/.test(pub.text) && /alt="A picture from Alpha Table Ministry"/.test(pub.text), "the pictures are there, with the words that describe them (or a plain default)");
 ok(/Isaiah 58:7/.test(pub.text) && /class="scripture"/.test(pub.text), "the verse the ministry chose is shown with its chapter and verse");
-ok(!/Give to Alpha/.test(pub.text) && !/pay\.alpha\.example/.test(pub.text), "there is no Give button while the giving door is closed, and the ministry's link is not on the page");
+ok(!/Make a donation to Alpha/.test(pub.text) && !/pay\.alpha\.example/.test(pub.text), "there is no Give button while the giving door is closed, and the ministry's link is not on the page");
 ok(/<title>Alpha Table Ministry · Linked Ministries<\/title>/.test(pub.text) && /<meta name="description" content="A hot meal every Saturday for our neighbors Seattle, WA\.">/.test(pub.text), "it has its own title and description");
 ok(/og:title" content="Alpha Table Ministry · Seattle, WA"/.test(pub.text) && /og:image" content="[^"]*\/photos\/[0-9a-f-]{36}"/.test(pub.text) && /og:type" content="profile"/.test(pub.text) && !/noindex/.test(pub.text), "it has its own share card, with the ministry's first picture, and may be indexed");
 ok(/A person at Linked Ministries read this page on/.test(pub.text) && /does not check or vouch/.test(pub.text) && /911/.test(pub.text), "it says a person read it, that Linked Ministries does not vouch, and the emergency line");

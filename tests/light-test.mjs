@@ -61,7 +61,7 @@ const browser = await launch(); const snap = shots(SHOTS);
 const cookieOf = (cl) => cl.jar().split("=").slice(1).join("=");
 const firstPost = world.ids["Ten folding tables for our Saturday meal"];
 const anyId = (extras.erin, firstPost);
-const PUBLIC = ["/", "/board", "/board?kind=ask&state=WA", "/board?q=zebra", "/board/" + firstPost, "/terms", "/privacy", "/join", "/me", "/review", "/nope", "/board/00000000-0000-4000-8000-000000000000", "/m/" + alexPage.slug, "/m/not-a-page", "/giving", "/give"];
+const PUBLIC = ["/", "/board", "/board?kind=ask&state=WA", "/board?q=zebra", "/board/" + firstPost, "/terms", "/privacy", "/join", "/me", "/review", "/nope", "/board/00000000-0000-4000-8000-000000000000", "/m/" + alexPage.slug, "/m/not-a-page", "/giving", "/give", "/take-donations"];
 await pool.query("select lm.report_create($1, 'scam', 'This looks wrong to me.', 'reporter@example.org')", [firstPost]);   /* so the steward's page has a report to paint */
 let pages = 0;
 for (const kind of ["phone", "desk"]) {

@@ -27,7 +27,7 @@ export function cspMode(env = process.env) {
   return ["off", "report-only", "enforce"].includes(m) ? m : "enforce";
 }
 
-export const NOINDEX = ["/me", "/review", "/money", "/steward", "/treasury", "/join", "/api"];
+export const NOINDEX = ["/me", "/review", "/money", "/donations", "/steward", "/treasury", "/join", "/api"];
 
 export function securityHeaders(env = process.env) {
   const mode = cspMode(env);
