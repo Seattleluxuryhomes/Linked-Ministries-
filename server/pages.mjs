@@ -351,7 +351,7 @@ export function givingPage({ giving, base = "", notice = "", flags = FLAGS }) {
   const doorCard = closed
     ? `<div class="card door closed"><p class="label">Gifts online</p><h2>Not yet.</h2><p>Linked Ministries is not taking gifts online yet.</p><p>${reg ? `Its registration is on file, but the door is not open.` : "Washington wants a charity to register before it asks for gifts. Linked Ministries has not finished that registration. The door opens when it has."}</p>${reg ? "" : `<p class="quiet">There is no Give button until then.</p>`}</div>`
     : `<div class="card door open"><p class="label">Gifts online</p><h2>The door is open.</h2><p>Gifts online go through Zeffy, and Zeffy emails the receipt. A person on the money team writes each gift down here too, so the sums on this page add up. Every grant is voted on by the board and shown on this page.</p><p><a class="btn" href="/give">Give</a></p></div>`;
-  const regCard = reg ? `<p class="quiet">Washington charitable solicitation registration ${e(g.registration_number)}, dated ${e(dateWords(g.registration_date))}.</p>` : "";
+  const regCard = reg ? `<p class="quiet">Washington state registration ${e(g.registration_number)}, dated ${e(dateWords(g.registration_date))}.</p>` : "";
   const grants = g.grants.length ? g.grants.map((x) => `<article class="card grant"><div class="row between"><h3>${x.page_slug ? `<a href="/m/${e(x.page_slug)}">${e(x.recipient_name)}</a>` : e(x.recipient_name)}</h3><p class="amt">${e(money(x.amount_cents))}</p></div>
 <p>${e(x.purpose)}</p>
 <p class="when">The board voted yes on ${e(dateWords(x.voted_on))}: ${x.yes} yes${x.abstain ? `, ${x.abstain} abstained` : ""}${x.no ? `, ${x.no} no` : ""}. Record: ${e(x.doc_ref)}.</p>

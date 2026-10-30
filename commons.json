@@ -2,7 +2,7 @@
   "version": 1,
   "about": "Pieces this repository copied from another of the founder's products (Cross Universal), the sharing map. origin_sha256 is the origin file's SHA-256 at origin_commit; local_sha256 is this file's. A verbatim piece equals its origin; an adapted piece says what changed; a shaped-on piece is written new on the same model, rulings and defaults. 'Do not rebuild what has been built: copy it.' Regenerate with: node tools/commons.mjs",
   "origin_repo": "cross-univeral",
-  "origin_commit": "7d0d1fb8685535f094d29f9e2678dab9cb76c4b3",
+  "origin_commit": "59b6f921fca9585a428e1a04c775234b0ac59539",
   "pieces": [
     {
       "id": "plainwords",
@@ -142,7 +142,7 @@
       "mode": "adapted",
       "origin_repo": "cross-univeral",
       "origin_path": "behavioral-health-app/server/config.mjs",
-      "origin_sha256": "6125bfe9ca65e6f7454e809d3580746494fc4659e729e830c379b01a24111331",
+      "origin_sha256": "9ee8e0ec3e2760e58fc9c3cf386349578dd94458b1040fb3af16990b0ce0bc94",
       "local_path": "server/config.mjs",
       "local_sha256": "f8141476d1c521acb23eaf48c490723110a26b9eb0f0100764f05028a36387b5",
       "note": "The health-records guard, the demo mode and the text-message channel are removed; mail is required in production."
@@ -164,7 +164,7 @@
       "mode": "shaped-on",
       "origin_repo": "cross-univeral",
       "origin_path": "behavioral-health-app/server/auth.mjs",
-      "origin_sha256": "3c74526981d28391176e245a64dc407ff6e96ccd76c97c31f823dac07e33ad2f",
+      "origin_sha256": "6eb2e91310c43350c1db873db432022e00ee29a5b5df1ba2df63d528a83890c0",
       "local_path": "server/auth.mjs",
       "local_sha256": "510c2188c825f7605cba598a4bb2e1e106227906d5d7b92ef486397cffa839cb",
       "note": "Six-digit code by email, hash-stored, ten minutes, five tries, one use, five wrong codes lock an address, thirty-day httpOnly sessions. Anyone may sign in (the first sign-in makes the person); the phone channel is gone; the answer says plainly when no email can be sent."
@@ -351,7 +351,7 @@
       "mode": "shaped-on",
       "origin_repo": "cross-univeral",
       "origin_path": "behavioral-health-app/tests/unit-test.mjs",
-      "origin_sha256": "6bead93056daa8752e1c7eaca4e74352772b4d62cc6832e2916b8d739b6ab620",
+      "origin_sha256": "55ada112cd322258580d70583c104cec99970d3166a8f4546e785919812d4cb5",
       "local_path": "tests/unit-test.mjs",
       "local_sha256": "41ff7f07e6ecb1d5a9b1e8432f857e74f8067c9250b4b5fa328efb201995233a",
       "note": "The licence check, the commons check, the no-key scan and the migration checks are the original's."
@@ -395,7 +395,7 @@
       "mode": "adapted",
       "origin_repo": "cross-univeral",
       "origin_path": "lexos/pwa/make.mjs",
-      "origin_sha256": "36ee102a5db5b884cf22b999814b449626d1f16e0ddf8d2d9bb9945c5c293472",
+      "origin_sha256": "4ab8243c8933813f48d0b868eb1525f7a18a2a07996748876669470a00787e68",
       "local_path": "tools/make-pwa.mjs",
       "local_sha256": "59c24f8f93e4b137d2c5dad3aad82e1971dc01d43ef8d0c88ab499b781890e64",
       "note": "Same outputs (manifest, 192 and 512 icons, a maskable icon, an apple-touch icon, all drawn from the existing mark) with Linked Ministries' own mark, name and light palette. The original renders with a package this repository does not have; here the Chromium the tests use draws them, as tools/make-images.mjs does. One manifest, not three."
@@ -406,7 +406,7 @@
       "mode": "shaped-on",
       "origin_repo": "cross-univeral",
       "origin_path": "lexos/src/app.jsx",
-      "origin_sha256": "969eb96884bb235bebd25d5ad3d009e7d50fe2097180300ec09565e6d21f9c67",
+      "origin_sha256": "3028a941e292cd57a8c60d3df10bf78db9078e6d312d535d9008ea7aeaa31f74",
       "local_path": "public/js/pwa.js",
       "local_sha256": "73ce0ebd527541a6f9d8709b9190d7709815c8e0273ebf514619f718febb2f37",
       "note": "The same one line, navigator.serviceWorker.register('/sw.js', { scope: '/' }) with the failure ignored, in its own external file because this site's policy allows no inline script."
@@ -441,7 +441,7 @@
       "origin_path": "behavioral-health-app/CLAUDE.md",
       "origin_sha256": "3c403645fae7028168c5ee3e1201d85863a7ebbf30225d2007cef282ce16842e",
       "local_path": "CLAUDE.md",
-      "local_sha256": "321c88abc0a93774e642b999b1b027b685b2c9005937e67fd8e1a149b2ae21ba",
+      "local_sha256": "204401e1bea3ada8bac3ebfd420900ec996d7f1adb0f5a94a19d0d3797e00326",
       "note": "Same form; this product's hard rules."
     },
     {
