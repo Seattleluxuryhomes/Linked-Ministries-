@@ -160,7 +160,7 @@ Zeffy**, so the sums on the giving page add up.
 | 1 | On zeffy.com, sign up with Linked Ministries' exact legal name, its EIN and its bank account | Your Zeffy dashboard. |
 | 2 | In Zeffy, make a donation form, then copy its link (it starts `https://www.zeffy.com/`) | The form's own page. |
 | 3 | In Railway, click the `Linked-Ministries-` card, then **Variables**, then **New Variable**. Name: `ZEFFY_GIVE_URL` (no spaces). Value: the link | The variable in the list. Railway redeploys by itself. |
-| 4 | Open `linkedm.org/give` | With the door closed it still says gifts are not open yet. With the door open it shows **Give through Zeffy**. |
+| 4 | Open `linkedm.org/give` | With the door closed it still says gifts are not open yet. With the door open it shows a gold **Make a donation** button, and the same button sits in the top bar of every page. |
 | 5 | Give $1 yourself through the form | A receipt email from Zeffy. Then record that gift on the Money page as **Online through Zeffy**: the screen says no receipt was sent from here, because Zeffy already sent it. |
 
 ## Step 8d. Turn on Eden, the writing helper (optional; a key you add yourself)

@@ -21,7 +21,9 @@ export const READ = [
   [/\b(stewards?|treasur(?:y|ers?))\b/i, "the old working names for the team (say: the Linked Ministries team, Review, the money team, Money)"],
   [/\bpricing\b|\bpackages?\b|\bstarter\b|\benterprise\b|\bsubscribe\b|\bper month\b|\bper year\b|\bbuy now\b|\bcheckout\b/i, "a price or a package"],
   [/builder\s?buy\s?box|\bloxo\b|\bbidvoice\b|cross universal/i, "a name that stays behind the front"],
-  [/\b(donate|donation|tithe|tithing|paypal|venmo|zelle|cash app)\b/i, "a way to give money"],
+  /* founder, 2026-10-30 ("it should say make a donation"): the button that takes a gift is named Make a donation, and it sits in the top bar of
+     every page while the giving door is open, so "donate" and "donation" are no longer banned words; a processor's name still is */
+  [/\b(tithe|tithing|paypal|venmo|zelle|cash app)\b/i, "a way to give money"],
   /* founder, 2026-10-18: nothing names another company or product, and nothing is set beside one */
   [/\b(facebook|instagram|tiktok|craigslist|nextdoor|gofundme|eventbrite|mailchimp|whatsapp|slack|zoom|google|indeed|reddit|yelp|amazon|twitter|youtube)\b/i, "another company's name"],
   [/\b(better than|unlike|compared (to|with)|the only (board|network|place|site)|the best|number one|#1|world'?s (first|largest|best))\b/i, "a comparison or a boast"],

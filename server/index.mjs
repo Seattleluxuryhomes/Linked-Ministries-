@@ -156,24 +156,25 @@ export function buildApp({ env = process.env } = {}) {
 
   /* ---- the pages ----------------------------------------------------------------------------------------------------------- */
   const html = (res, status, body) => res.status(status).type("html").send(body);
-  const where = (req) => ({ base: String(env.LEXOS_PUBLIC_URL || "").replace(/\/+$/, ""), notice: noticeEmail(env), zeffy: zeffyGiveUrl(env.ZEFFY_GIVE_URL) });
-  app.get("/", wrap(async (req, res) => { const r = await boardQuery({}, { limit: 6 }); res.set("cache-control", "no-cache"); html(res, 200, frontPage({ latest: r.posts, giving: { open: await givingDoor() }, ...where(req) })); }));
-  app.get("/board", wrap(async (req, res) => { const r = await boardQuery(req.query); res.set("cache-control", "no-cache"); html(res, 200, boardPage({ result: r, ...where(req) })); }));
-  app.get("/board/:id", wrap(async (req, res) => { const p = await boardPost(req.params.id); res.set("cache-control", "no-cache"); p ? html(res, 200, postPage({ post: p, ...where(req) })) : html(res, 404, missingPostPage(where(req))); }));
+  /* every page carries the Make a donation button while the giving door is open, so the door is read for every page */
+  const where = async (req) => ({ base: String(env.LEXOS_PUBLIC_URL || "").replace(/\/+$/, ""), notice: noticeEmail(env), zeffy: zeffyGiveUrl(env.ZEFFY_GIVE_URL), donate: await givingDoor().catch(() => false) });
+  app.get("/", wrap(async (req, res) => { const r = await boardQuery({}, { limit: 6 }); res.set("cache-control", "no-cache"); html(res, 200, frontPage({ latest: r.posts, giving: { open: await givingDoor() }, ...(await where(req)) })); }));
+  app.get("/board", wrap(async (req, res) => { const r = await boardQuery(req.query); res.set("cache-control", "no-cache"); html(res, 200, boardPage({ result: r, ...(await where(req)) })); }));
+  app.get("/board/:id", wrap(async (req, res) => { const p = await boardPost(req.params.id); res.set("cache-control", "no-cache"); p ? html(res, 200, postPage({ post: p, ...(await where(req)) })) : html(res, 404, missingPostPage(await where(req))); }));
   /* a ministry's own page. The public sees the copy a person on the team read; a ministry's own people see their draft as a preview (never indexed). */
   app.get("/m/:slug", wrap(async (req, res) => {
     const pg = await publicPage(req.params.slug);
     res.set("cache-control", "no-cache");
-    if (pg) return html(res, 200, ministryPage({ page: pg, ...where(req), giving: { open: await givingDoor() } }));
+    if (pg) return html(res, 200, ministryPage({ page: pg, ...(await where(req)), giving: { open: await givingDoor() } }));
     const t = cookies(req)[COOKIE]; let u = null; if (t) { try { u = await sessionUser(t); } catch (e) { u = null; } }
     if (u) {
       const mine = await myPage(u.id);
       if (mine && mine.exists && mine.slug === String(req.params.slug).toLowerCase()) {
         res.set("cache-control", "private, no-store");
-        return html(res, 200, ministryPage({ page: { slug: mine.slug, name: mine.ministry.name, city: mine.ministry.city, state: mine.ministry.state, live: mine.draft, live_at: null }, ...where(req), giving: { open: false }, preview: true }));
+        return html(res, 200, ministryPage({ page: { slug: mine.slug, name: mine.ministry.name, city: mine.ministry.city, state: mine.ministry.state, live: mine.draft, live_at: null }, ...(await where(req)), giving: { open: false }, preview: true }));
       }
     }
-    html(res, 404, notFoundPage(where(req)));
+    html(res, 404, notFoundPage(await where(req)));
   }));
   /* a picture: public while the page a person on the team read names it; otherwise only to the ministry's own people, or a team member reading it */
   app.get("/photos/:id", wrap(async (req, res) => {
@@ -183,16 +184,16 @@ export function buildApp({ env = process.env } = {}) {
     res.set({ "content-type": ph.content_type, "cache-control": ph.is_public ? "public, max-age=300" : "private, no-store", "content-length": String(ph.bytes.length), "content-disposition": "inline" }).end(ph.bytes);
   }));
   /* where the money went: the record, added up from its rows by the database for the public role. No donor is in it. */
-  app.get("/giving", wrap(async (req, res) => { res.set("cache-control", "no-cache"); html(res, 200, givingPage({ giving: await givingPublic(), ...where(req) })); }));
+  app.get("/giving", wrap(async (req, res) => { res.set("cache-control", "no-cache"); html(res, 200, givingPage({ giving: await givingPublic(), ...(await where(req)) })); }));
   /* the Give button: no payment service is connected, so this page says so and has no form */
-  app.get("/give", wrap(async (req, res) => { res.set("cache-control", "no-cache"); html(res, 200, givePage({ open: await givingDoor(), ...where(req) })); }));
-  app.get("/terms", (req, res) => { res.set("cache-control", "public, max-age=300"); html(res, 200, termsPage(where(req))); });
-  app.get("/privacy", (req, res) => { res.set("cache-control", "public, max-age=300"); html(res, 200, privacyPage(where(req))); });
-  app.get("/join", (req, res) => html(res, 200, shellPage({ title: "Join the network", script: "/js/join.js", nav: "join", ...where(req) })));
-  app.get("/me", (req, res) => html(res, 200, shellPage({ title: "Your ministry", script: "/js/me.js", nav: "me", ...where(req) })));
+  app.get("/give", wrap(async (req, res) => { res.set("cache-control", "no-cache"); html(res, 200, givePage({ open: await givingDoor(), ...(await where(req)) })); }));
+  app.get("/terms", wrap(async (req, res) => { res.set("cache-control", "public, max-age=300"); html(res, 200, termsPage(await where(req))); }));
+  app.get("/privacy", wrap(async (req, res) => { res.set("cache-control", "public, max-age=300"); html(res, 200, privacyPage(await where(req))); }));
+  app.get("/join", wrap(async (req, res) => html(res, 200, shellPage({ title: "Join the network", script: "/js/join.js", nav: "join", ...(await where(req)) }))));
+  app.get("/me", wrap(async (req, res) => html(res, 200, shellPage({ title: "Your ministry", script: "/js/me.js", nav: "me", ...(await where(req)) }))));
   /* Review and Money are the team's two pages. /steward and /treasury were their first names: they answer with a permanent redirect so no link, bookmark or installed shortcut breaks. */
-  app.get("/money", (req, res) => html(res, 200, shellPage({ title: "Money", script: "/js/treasury.js", nav: "", width: "mid", ...where(req) })));
-  app.get("/review", (req, res) => html(res, 200, shellPage({ title: "Review", script: "/js/steward.js", nav: "", width: "mid", ...where(req) })));
+  app.get("/money", wrap(async (req, res) => html(res, 200, shellPage({ title: "Money", script: "/js/treasury.js", nav: "", width: "mid", ...(await where(req)) }))));
+  app.get("/review", wrap(async (req, res) => html(res, 200, shellPage({ title: "Review", script: "/js/steward.js", nav: "", width: "mid", ...(await where(req)) }))));
   app.get("/treasury", (req, res) => res.redirect(301, "/money"));
   app.get("/steward", (req, res) => res.redirect(301, "/review"));
   /* the front, the board, the terms and the privacy page are the public pages; the signed-in pages and the API are kept out of search */
@@ -206,7 +207,7 @@ export function buildApp({ env = process.env } = {}) {
   }));
   app.get("/favicon.ico", (req, res) => res.type("image/x-icon").set("cache-control", "public, max-age=86400").sendFile(path.join(PUBLIC, "favicon.ico")));
   app.use(express.static(PUBLIC, { index: false, maxAge: "5m", setHeaders: (res, p) => { if (/\.(woff2)$/.test(p)) res.setHeader("Cache-Control", "public, max-age=31536000, immutable"); else if (/[\\/]sw\.js$/.test(p)) res.setHeader("Cache-Control", "no-cache"); else if (/\.webmanifest$/.test(p)) res.type("application/manifest+json"); } }));
-  app.use((req, res) => html(res, 404, notFoundPage(where(req))));
+  app.use(wrap(async (req, res) => html(res, 404, notFoundPage(await where(req)))));
   return app;
 }
 

@@ -28,7 +28,11 @@ export const ART = `<svg class="art" viewBox="0 0 480 400" fill="none" aria-hidd
 /* a quiet picture for a board with nothing on it yet: an empty tray with the two rings above it */
 export const ART_EMPTY = `<svg class="art-empty" viewBox="0 0 160 110" fill="none" aria-hidden="true"><path d="M20 70h34l6 12h40l6-12h34v28a8 8 0 0 1-8 8H28a8 8 0 0 1-8-8z" stroke="#1b2430" stroke-width="2.5" stroke-linejoin="round" fill="#ffffff"/><circle cx="68" cy="38" r="22" stroke="#1b2430" stroke-width="5"/><circle cx="92" cy="38" r="22" stroke="#d97706" stroke-width="5"/><path d="M83 57A22 22 0 0 1 72 55" stroke="#ffffff" stroke-width="9"/><path d="M82.5 56.9A22 22 0 0 1 72.7 55.2" stroke="#1b2430" stroke-width="5"/></svg>`;
 
-export function layout({ title, description, body, script, nav = "", base = "", path = "", noindex = false, notice = "", ogTitle = "", image = "", imageAlt = "", ogType = "website" }) {
+/* the one name for the button that takes a gift (founder, 2026-10-30: "it should say make a donation"). It shows in the top bar of
+   every page, in the footer, on the giving page, the give page and the front, only while the giving door is open. */
+export const DONATE = "Make a donation";
+
+export function layout({ title, description, body, script, nav = "", base = "", path = "", noindex = false, notice = "", ogTitle = "", image = "", imageAlt = "", ogType = "website", donate = false }) {
   const t = title ? `${title} · ${PRODUCT.name}` : `${PRODUCT.name}: ministries helping ministries`;
   const desc = description || "A free network where ministries post what they need or what they can give, and other ministries answer.";
   const abs = (p) => (base ? base.replace(/\/+$/, "") + p : p);
@@ -68,7 +72,7 @@ ${image ? "" : `<meta property="og:image:width" content="1200">
 <a class="skip" href="#main">Skip to the page</a>
 <header class="top"><div class="wrap wide">
 <a class="lock" href="/" aria-label="${e(PRODUCT.name)}, home">${MARK}<span class="words"><span class="name">${e(PRODUCT.name)}</span><span class="small">${e(PRODUCT.domain)}</span></span></a>
-<nav class="nav" aria-label="Main"><a href="/board"${nav === "board" ? ' aria-current="page"' : ""}>Board</a><a href="/giving"${nav === "giving" ? ' aria-current="page"' : ""}>Giving</a><a href="/me"${nav === "me" ? ' aria-current="page"' : ""}>My ministry</a><a class="btn small" href="/join"${nav === "join" ? ' aria-current="page"' : ""}>Join the network</a></nav>
+<nav class="nav" aria-label="Main"><a href="/board"${nav === "board" ? ' aria-current="page"' : ""}>Board</a><a href="/giving"${nav === "giving" ? ' aria-current="page"' : ""}>Giving</a><a href="/me"${nav === "me" ? ' aria-current="page"' : ""}>My ministry</a>${donate ? `<a class="btn small donate" href="/give"${nav === "give" ? ' aria-current="page"' : ""}>${e(DONATE)}</a>` : ""}<a class="btn small${donate ? " ghost" : ""}" href="/join"${nav === "join" ? ' aria-current="page"' : ""}>Join the network</a></nav>
 </div></header>
 <main id="main" tabindex="-1">
 ${body}
@@ -80,7 +84,7 @@ ${verse("jas_1_27","small")}
 <p class="line">${e(NONPROFIT_LINE)}</p>
 <p>${e(CRISIS)}</p>
 </div>
-<p class="links"><a href="/board">Board</a> <a href="/giving">Giving</a> <a href="/join">Join the network</a> <a href="/terms">Terms</a> <a href="/privacy">Privacy</a> <a href="${e(PRODUCT.da.url)}" rel="noopener">${e(PRODUCT.da.name)}</a></p>
+<p class="links"><a href="/board">Board</a> <a href="/giving">Giving</a> ${donate ? `<a href="/give">${e(DONATE)}</a> ` : ""}<a href="/join">Join the network</a> <a href="/terms">Terms</a> <a href="/privacy">Privacy</a> <a href="${e(PRODUCT.da.url)}" rel="noopener">${e(PRODUCT.da.name)}</a></p>
 </div>
 </div></footer>
 <script type="module" src="/js/pwa.js"></script>
@@ -184,7 +188,7 @@ ${verse("cor2_9_7")}
 <div class="three">
 <div class="card"><p class="label">How it works</p><h3>Gifts come in. Grants go out.</h3><p>People give to Linked Ministries. The board picks where the money goes. It can go to a ministry's ask. It can go to housing for people in recovery. It can go to the free program. The board votes. The vote is written down.</p></div>
 <div class="card"><p class="label">What you can see</p><h3>Every grant, published.</h3><p>Who got it, how much, what for, and the day the board said yes. Every gift gets a numbered receipt. No one person can move money alone.</p></div>
-<div class="card"><p class="label">Today</p>${giving && giving.open ? `<h3>Gifts online are open.</h3><p>The board says the registration is filed. Gifts online go through Zeffy, and Zeffy emails the receipt. Every grant is shown on the giving page.</p>` : `<h3>Not taking gifts online yet.</h3><p>Linked Ministries is ${flags.FORMED ? "a Washington nonprofit" : "forming as a Washington nonprofit"}. Online giving opens after the state registration is filed. <a href="/giving">We will say there when it does.</a></p>`}<p><a class="btn ghost small" href="/giving">Where the money went</a></p></div>
+<div class="card"><p class="label">Today</p>${giving && giving.open ? `<h3>Gifts online are open.</h3><p>The board says the registration is filed. Gifts online go through Zeffy, and Zeffy emails the receipt. Every grant is shown on the giving page.</p><p><a class="btn" href="/give">${e(DONATE)}</a></p>` : `<h3>Not taking gifts online yet.</h3><p>Linked Ministries is ${flags.FORMED ? "a Washington nonprofit" : "forming as a Washington nonprofit"}. Online giving opens after the state registration is filed. <a href="/giving">We will say there when it does.</a></p>`}<p><a class="btn ghost small" href="/giving">Where the money went</a></p></div>
 </div>
 </div></section>
 ${people}
@@ -204,7 +208,7 @@ ${notice ? `<section class="band" id="contact"><div class="wrap wide"><div class
 <section class="band${notice ? " alt" : ""}"><div class="wrap wide">
 <div class="card cta-card"><div><h2>Join the network</h2><p>It is free. Sign in with your email, tell us about your ministry, and post your first ask or give.</p></div><p class="row"><a class="btn" href="/join">Join the network</a><a class="btn ghost" href="/board">See the board</a></p></div>
 </div></section>`;
-  return layout({ body, description: "Linked Ministries is a free network where ministries post what they need or what they can give, and other ministries answer.", nav: "", base, path: "/", notice });
+  return layout({ body, description: "Linked Ministries is a free network where ministries post what they need or what they can give, and other ministries answer.", nav: "", base, path: "/", notice, donate: !!(giving && giving.open) });
 }
 
 /* ---- the board ------------------------------------------------------------------------------------------------------------------ */
@@ -323,7 +327,7 @@ ${photos ? `<div class="mphotos${(c.photos || []).length === 1 ? " one" : ""}">$
 </article>`;
   const first = (c.photos || [])[0];
   const desc = `${c.tagline} ${place}.`.slice(0, 200);
-  return layout({ title: name, body, base, path: "/m/" + page.slug, noindex: preview, ogType: "profile", ogTitle: `${name} · ${place}`, description: desc,
+  return layout({ title: name, body, base, path: "/m/" + page.slug, noindex: preview, ogType: "profile", donate: !!(giving && giving.open), ogTitle: `${name} · ${place}`, description: desc,
     image: first ? "/photos/" + first.id : "", imageAlt: first ? (first.alt || "A picture from " + name) : "", notice });
 }
 
@@ -350,7 +354,7 @@ export function givingPage({ giving, base = "", notice = "", flags = FLAGS }) {
   const g = giving, closed = !g.door_open, reg = g.registration_number && g.registration_date;
   const doorCard = closed
     ? `<div class="card door closed"><p class="label">Gifts online</p><h2>Not yet.</h2><p>Linked Ministries is not taking gifts online yet.</p><p>${reg ? `Its registration is on file, but the door is not open.` : "Washington wants a charity to register before it asks for gifts. Linked Ministries has not finished that registration. The door opens when it has."}</p>${reg ? "" : `<p class="quiet">There is no Give button until then.</p>`}</div>`
-    : `<div class="card door open"><p class="label">Gifts online</p><h2>The door is open.</h2><p>Gifts online go through Zeffy, and Zeffy emails the receipt. A person on the money team writes each gift down here too, so the sums on this page add up. Every grant is voted on by the board and shown on this page.</p><p><a class="btn" href="/give">Give</a></p></div>`;
+    : `<div class="card door open"><p class="label">Gifts online</p><h2>The door is open.</h2><p>Gifts online go through Zeffy, and Zeffy emails the receipt. A person on the money team writes each gift down here too, so the sums on this page add up. Every grant is voted on by the board and shown on this page.</p><p><a class="btn" href="/give">${e(DONATE)}</a></p></div>`;
   const regCard = reg ? `<p class="quiet">Washington state registration ${e(g.registration_number)}, dated ${e(dateWords(g.registration_date))}.</p>` : "";
   const grants = g.grants.length ? g.grants.map((x) => `<article class="card grant"><div class="row between"><h3>${x.page_slug ? `<a href="/m/${e(x.page_slug)}">${e(x.recipient_name)}</a>` : e(x.recipient_name)}</h3><p class="amt">${e(money(x.amount_cents))}</p></div>
 <p>${e(x.purpose)}</p>
@@ -386,7 +390,7 @@ ${verse("cor2_9_7")}
 <li>The board moves no money between ministries. Linked Ministries may fund an ask from its gifts when its board says yes.</li></ul>
 ${notice ? `<p>Questions? Write to <a href="mailto:${e(notice)}">${e(notice)}</a>.</p>` : ""}</div></section>
 </div>`;
-  return layout({ title: "Where the money went", body, nav: "giving", base, path: "/giving", description: "Every gift Linked Ministries receives is written down, and every grant is voted on and shown here, with the amounts added up from the record." });
+  return layout({ title: "Where the money went", body, nav: "giving", base, path: "/giving", donate: !closed, description: "Every gift Linked Ministries receives is written down, and every grant is voted on and shown here, with the amounts added up from the record." });
 }
 
 /* the Give button's page. Gifts online go through Zeffy (founder, 2026-10-18). With the door open and a Zeffy form set (ZEFFY_GIVE_URL) it
@@ -394,10 +398,10 @@ ${notice ? `<p>Questions? Write to <a href="mailto:${e(notice)}">${e(notice)}</a
 export function givePage({ open, base = "", notice = "", zeffy = "" }) {
   const ready = open && zeffy;
   const body = `<div class="wrap prose"><p class="back"><a href="/giving">Back to where the money went</a></p>
-<h1>${ready ? "Give to Linked Ministries" : open ? "Giving online is not connected yet" : "Not taking gifts online yet"}</h1>
-<div class="card">${ready ? `<p>Gifts online go through Zeffy. Zeffy takes the gift and emails your receipt. Keep that email.</p><p>Zeffy may ask you for a tip for Zeffy itself. It is up to you. You can set it to $0. The tip is not part of the gift.</p><p>A person on the money team writes each gift down, and every grant is shown on <a href="/giving">the giving page</a>.</p><p class="row"><a class="btn" href="${e(zeffy)}" rel="noopener">Give through Zeffy</a></p>`
+<h1>${ready ? DONATE + " to Linked Ministries" : open ? "Giving online is not connected yet" : "Not taking gifts online yet"}</h1>
+<div class="card">${ready ? `<p>Gifts online go through Zeffy. Zeffy takes the gift and emails your receipt. Keep that email.</p><p>Zeffy may ask you for a tip for Zeffy itself. It is up to you. You can set it to $0. The tip is not part of the gift.</p><p>A person on the money team writes each gift down, and every grant is shown on <a href="/giving">the giving page</a>.</p><p class="row"><a class="btn" href="${e(zeffy)}" rel="noopener">${e(DONATE)}</a></p><p class="quiet">The button opens Zeffy's page for Linked Ministries.</p>`
     : open ? `<p>The payment service is not connected yet. Nothing can be sent or saved on this page, so there is no form here.</p><p>The board will say on <a href="/giving">the giving page</a> when it is.</p>` : `<p>Linked Ministries is not taking gifts online yet. The giving page says why.</p>`}
 ${notice ? `<p>To ask about giving another way, <a href="mailto:${e(notice)}">write to us</a>.</p>` : ""}
 <p class="row"><a class="btn" href="/giving">Where the money went</a><a class="btn ghost" href="/board">See the board</a></p></div></div>`;
-  return layout({ title: "Give", body, base, path: "/give", noindex: true });
+  return layout({ title: DONATE, body, nav: "give", base, path: "/give", noindex: true, donate: !!open });
 }
