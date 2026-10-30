@@ -36,7 +36,11 @@ Founder, 2026-10-18: "So if a ministry wants something or needs something we nee
    address on zeffy.com, checked at boot), the Give page links to that Zeffy form and says Zeffy sends the receipt and that Zeffy's tip can
    be $0. Still no card number, no processor code and no processor key in this repository. A person on the money team writes each Zeffy gift
    into the ledger with the method `zeffy` (migration 0011) so the public sums add up; such a gift gets **no** receipt email from this site,
-   so no donor gets two receipts with two numbers (`tests/api-giving-test.mjs`). No CDN, no analytics, no Tailwind CDN, no unpkg, no font host: every face is in `public/fonts`. No inline
+   so no donor gets two receipts with two numbers (`tests/api-giving-test.mjs`). Founder, 2026-10-30 ("Linked Ministries is registered; I just have to
+   set up the 501(c)(3)"): the giving door's registration is Linked Ministries' Washington Secretary of State registration (the corporation's UBI and
+   the day it was formed); the Charities Program registration is filed when the law asks for it (gifts of $50,000 a year, or anyone paid to raise
+   money) and may replace the number then. The public words say "Washington state registration", which is true of either; they never say
+   "charitable solicitation registration" for a UBI. No CDN, no analytics, no Tailwind CDN, no unpkg, no font host: every face is in `public/fonts`. No inline
    script and no style attribute (the policy allows neither). The two banned phrases about deducting a gift (`tests/banned.mjs` names them) appear nowhere; only once
    `IRS_LETTER_DATE` is set does one sentence, the IRS's own, say a gift may be deducted. No prices or packages: the old page's are in
    `docs/OLD-PAGE.md`; whether a paid tier ever returns is the founder's decision and a lawyer's question first.

@@ -347,7 +347,7 @@ export const WORDS = {
   ledgerResend: "Send the receipt",
   settingsTitle: "The giving door",
   settingsLead: "The door opens only when the state registration number and date are filled in.",
-  settingsRegNo: "Washington charitable solicitation registration number",
+  settingsRegNo: "Washington registration number (the UBI, or the charity registration)",
   settingsRegDate: "Date of the registration",
   settings990: "Link to the Form 990 (https, once it is filed)",
   settingsOpen: "The door is open",
