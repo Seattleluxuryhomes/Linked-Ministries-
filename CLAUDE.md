@@ -64,7 +64,7 @@ Founder, 2026-10-18: "So if a ministry wants something or needs something we nee
     sent it and why and sells nothing. `tests/banned.mjs` and `tests/unit-test.mjs` hold each of these.
 14. **Money is a record, and a person approves it.** Gifts, board votes and receipts are only ever added to; a mistake is a new row that
     points at the old one. A grant needs two different named people on the money team and the board's vote by name (a CHECK on the table, not a screen).
-    No event holds a donor's name, an email, a note or a board member. The public reads sums of the rows, never a donor. The money team (the `treasurer` flag, page Money at `/money`; `/treasury` redirects to it) is the Linked Ministries team with one more flag. `tests/db-giving-test.mjs` holds each of these.
+    No event holds a donor's name, an email, a note or a board member. The public reads sums of the rows, never a donor. The money team (the `treasurer` flag, page Donations at `/donations`, also `/money`; `/treasury` redirects to it) is the Linked Ministries team with one more flag. `tests/db-giving-test.mjs` holds each of these.
 15. **Eden is a writing helper and nothing more.** Founder, 2026-10-18: "needs to be a glowing orb on the side that can move around", and then, on
     whether it belongs on every page, "Let's try it". Eden is a glowing orange orb fixed to the side of **every page, public ones included**
     (it was the signed-in pages only: /me, the page form, /money). A person can drag it, it slides to the nearest edge, it wanders slowly on
@@ -120,8 +120,9 @@ ships.
 
 ## Words a person reads (founder ruling, 2026-10-18)
 
-A person never reads "steward" or "treasurer" or "treasury". The team's review page is **Review** (`/review`), the money page is **Money**
-(`/money`); a steward as a person is "the Linked Ministries team" or "a person at Linked Ministries", a treasurer is "a person on the money
+A person never reads "steward" or "treasurer" or "treasury". The team's review page is **Review** (`/review`; the button on My ministry is
+**Review new posts**), the money page is **Donations** (`/donations`; `/money` still answers; the button is **Record donations**. Founder,
+2026-10-30: "Open Money sounds absolutely ridiculous"); a steward as a person is "the Linked Ministries team" or "a person at Linked Ministries", a treasurer is "a person on the money
 team". Counts read "3 waiting for review". `/steward` and `/treasury` stay as permanent redirects. Code identifiers, the database flags
 (`steward`, `treasurer`), `lm.make_steward`, `lm.make_treasurer`, the API paths under `/api/steward` and `/api/treasury`, event kinds and
 migrations keep their names. The public giving and receipt sentences keep their meaning exactly. `tests/banned.mjs` fails if the old words reach a page.
