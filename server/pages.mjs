@@ -144,7 +144,7 @@ export function frontPage({ latest, base = "", notice = "", giving = { open: fal
 <h1 class="rise">Ministries helping ministries.</h1>
 <p class="lead rise">Linked Ministries is a place where a ministry says what it needs, or what it can give. Another ministry answers. A person at Linked Ministries reads every post before it goes up.</p>
 ${verse("gal_6_2","rise")}
-<p class="cta rise"><a class="btn" href="/board">See the board</a> <a class="btn ghost" href="/join">Join the network</a></p>
+<p class="cta rise">${giving && giving.open ? `<a class="btn donate" href="/give">${e(DONATE)}</a> ` : ""}<a class="btn${giving && giving.open ? " ghost" : ""}" href="/board">See the board</a> <a class="btn ghost" href="/join">Join the network</a></p>
 <ul class="chips rise" aria-label="What to know">
 <li>${ICO_FREE}<span>Free to use</span></li>
 <li>${ICO_PERSON}<span>Read by a person</span></li>
@@ -188,7 +188,7 @@ ${verse("cor2_9_7")}
 <div class="three">
 <div class="card"><p class="label">How it works</p><h3>Gifts come in. Grants go out.</h3><p>People give to Linked Ministries. The board picks where the money goes. It can go to a ministry's ask. It can go to housing for people in recovery. It can go to the free program. The board votes. The vote is written down.</p></div>
 <div class="card"><p class="label">What you can see</p><h3>Every grant, published.</h3><p>Who got it, how much, what for, and the day the board said yes. Every gift gets a numbered receipt. No one person can move money alone.</p></div>
-<div class="card"><p class="label">Today</p>${giving && giving.open ? `<h3>Gifts online are open.</h3><p>The board says the registration is filed. Gifts online go through Zeffy, and Zeffy emails the receipt. Every grant is shown on the giving page.</p><p><a class="btn" href="/give">${e(DONATE)}</a></p>` : `<h3>Not taking gifts online yet.</h3><p>Linked Ministries is ${flags.FORMED ? "a Washington nonprofit" : "forming as a Washington nonprofit"}. Online giving opens after the state registration is filed. <a href="/giving">We will say there when it does.</a></p>`}<p><a class="btn ghost small" href="/giving">Where the money went</a></p></div>
+<div class="card"><p class="label">Today</p>${giving && giving.open ? `<h3>Gifts online are open.</h3><p>The board says the registration is filed. Gifts online go through Zeffy, and Zeffy emails the receipt. Every grant is shown on the giving page.</p><p><a class="btn donate" href="/give">${e(DONATE)}</a></p>` : `<h3>Not taking gifts online yet.</h3><p>Linked Ministries is ${flags.FORMED ? "a Washington nonprofit" : "forming as a Washington nonprofit"}. Online giving opens after the state registration is filed. <a href="/giving">We will say there when it does.</a></p>`}<p><a class="btn ghost small" href="/giving">Where the money went</a></p></div>
 </div>
 </div></section>
 ${people}
@@ -305,7 +305,7 @@ export function ministryPage({ page, base = "", notice = "", giving = { open: fa
   const reach = [c.email ? `<dt>Email</dt><dd><a href="mailto:${e(c.email)}">${e(c.email)}</a></dd>` : "", c.phone ? `<dt>Phone</dt><dd><a href="${e(telHref(c.phone))}">${e(c.phone)}</a></dd>` : "", c.website ? `<dt>Website</dt><dd><a href="${e(c.website)}" rel="noopener nofollow">${e(c.website.replace(/^https?:\/\//, ""))}</a></dd>` : ""].join("");
   const reachCard = reach ? `<section class="card mcard" aria-labelledby="m-reach"><h2 id="m-reach">How to reach us</h2><dl class="kv">${reach}</dl></section>` : "";
   const canGive = !!(giving && giving.open && c.give_url);
-  const giveCard = canGive ? `<section class="card mcard give" aria-labelledby="m-give"><h2 id="m-give">${e(DONATE)} to ${e(name)}</h2><p>This link is ${e(name)}'s own. It goes to their own donation page. Linked Ministries does not collect or see a donation made there.</p><p><a class="btn" href="${e(c.give_url)}" rel="noopener nofollow">${e(DONATE)} to ${e(name)}</a></p></section>` : "";
+  const giveCard = canGive ? `<section class="card mcard give" aria-labelledby="m-give"><h2 id="m-give">${e(DONATE)} to ${e(name)}</h2><p>This link is ${e(name)}'s own. It goes to their own donation page. Linked Ministries does not collect or see a donation made there.</p><p><a class="btn donate" href="${e(c.give_url)}" rel="noopener nofollow">${e(DONATE)} to ${e(name)}</a></p></section>` : "";
   const read = preview ? `<p class="note">This is how your page will look. Only your ministry can see this. It is not public until a person at Linked Ministries reads it.</p>`
     : `<p class="quiet mread">A person at Linked Ministries read this page on ${e(dateWords(page.live_at))}. Linked Ministries does not check or vouch for any ministry. ${notice ? `Something wrong? Write to <a href="mailto:${e(notice)}">${e(notice)}</a>.` : ""}</p>`;
   const body = `<article class="mpage">
@@ -314,7 +314,7 @@ ${preview ? read : ""}<p class="eyebrow">A ministry on Linked Ministries</p>
 <h1>${e(name)}</h1>
 <p class="lead">${e(c.tagline)}</p>
 <p class="place">${e(place)}</p>
-<p class="cta">${canGive ? `<a class="btn" href="#m-give">${e(DONATE)} to ${e(name)}</a>` : ""}${c.website ? `<a class="btn ghost" href="${e(c.website)}" rel="noopener nofollow">Visit our website</a>` : ""}</p>
+<p class="cta">${canGive ? `<a class="btn donate" href="#m-give">${e(DONATE)} to ${e(name)}</a>` : ""}${c.website ? `<a class="btn ghost" href="${e(c.website)}" rel="noopener nofollow">Visit our website</a>` : ""}</p>
 </div></header>
 <div class="wrap wide mgrid">
 ${photos ? `<div class="mphotos${(c.photos || []).length === 1 ? " one" : ""}">${photos}</div>` : ""}
@@ -354,7 +354,7 @@ export function givingPage({ giving, base = "", notice = "", flags = FLAGS }) {
   const g = giving, closed = !g.door_open, reg = g.registration_number && g.registration_date;
   const doorCard = closed
     ? `<div class="card door closed"><p class="label">Gifts online</p><h2>Not yet.</h2><p>Linked Ministries is not taking gifts online yet.</p><p>${reg ? `Its registration is on file, but the door is not open.` : "Washington wants a charity to register before it asks for gifts. Linked Ministries has not finished that registration. The door opens when it has."}</p>${reg ? "" : `<p class="quiet">There is no Give button until then.</p>`}</div>`
-    : `<div class="card door open"><p class="label">Gifts online</p><h2>The door is open.</h2><p>Gifts online go through Zeffy, and Zeffy emails the receipt. A person on the money team writes each gift down here too, so the sums on this page add up. Every grant is voted on by the board and shown on this page.</p><p><a class="btn" href="/give">${e(DONATE)}</a></p></div>`;
+    : `<div class="card door open"><p class="label">Gifts online</p><h2>The door is open.</h2><p>Gifts online go through Zeffy, and Zeffy emails the receipt. A person on the money team writes each gift down here too, so the sums on this page add up. Every grant is voted on by the board and shown on this page.</p><p><a class="btn donate" href="/give">${e(DONATE)}</a></p></div>`;
   const regCard = reg ? `<p class="quiet">Washington state registration ${e(g.registration_number)}, dated ${e(dateWords(g.registration_date))}.</p>` : "";
   const grants = g.grants.length ? g.grants.map((x) => `<article class="card grant"><div class="row between"><h3>${x.page_slug ? `<a href="/m/${e(x.page_slug)}">${e(x.recipient_name)}</a>` : e(x.recipient_name)}</h3><p class="amt">${e(money(x.amount_cents))}</p></div>
 <p>${e(x.purpose)}</p>
@@ -399,7 +399,7 @@ export function givePage({ open, base = "", notice = "", zeffy = "" }) {
   const ready = open && zeffy;
   const body = `<div class="wrap prose"><p class="back"><a href="/giving">Back to where the money went</a></p>
 <h1>${ready ? DONATE + " to Linked Ministries" : open ? "Giving online is not connected yet" : "Not taking gifts online yet"}</h1>
-<div class="card">${ready ? `<p>Gifts online go through Zeffy. Zeffy takes the gift and emails your receipt. Keep that email.</p><p>Zeffy may ask you for a tip for Zeffy itself. It is up to you. You can set it to $0. The tip is not part of the gift.</p><p>A person on the money team writes each gift down, and every grant is shown on <a href="/giving">the giving page</a>.</p><p class="row"><a class="btn" href="${e(zeffy)}" rel="noopener">${e(DONATE)}</a></p><p class="quiet">The button opens Zeffy's page for Linked Ministries.</p>`
+<div class="card">${ready ? `<p>Gifts online go through Zeffy. Zeffy takes the gift and emails your receipt. Keep that email.</p><p>Zeffy may ask you for a tip for Zeffy itself. It is up to you. You can set it to $0. The tip is not part of the gift.</p><p>A person on the money team writes each gift down, and every grant is shown on <a href="/giving">the giving page</a>.</p><p class="row"><a class="btn donate big" href="${e(zeffy)}" rel="noopener">${e(DONATE)}</a></p><p class="quiet">The button opens Zeffy's page for Linked Ministries.</p>`
     : open ? `<p>The payment service is not connected yet. Nothing can be sent or saved on this page, so there is no form here.</p><p>The board will say on <a href="/giving">the giving page</a> when it is.</p>` : `<p>Linked Ministries is not taking gifts online yet. The giving page says why.</p>`}
 ${notice ? `<p>To ask about giving another way, <a href="mailto:${e(notice)}">write to us</a>.</p>` : ""}
 <p class="row"><a class="btn" href="/giving">Where the money went</a><a class="btn ghost" href="/board">See the board</a></p></div></div>`;

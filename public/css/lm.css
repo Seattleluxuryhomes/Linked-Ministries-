@@ -57,7 +57,9 @@ a:hover{text-decoration-thickness:3px}
 .nav{display:flex;align-items:center;gap:4px 20px;flex-wrap:wrap;font-size:16px}
 .nav a:not(.btn){display:inline-flex;align-items:center;min-height:44px;color:var(--ink);font-weight:500;text-decoration:none;border-bottom:2px solid transparent}
 .nav a:not(.btn):hover,.nav a[aria-current="page"]:not(.btn){border-bottom-color:var(--gold)}
-@media (max-width:640px){.nav{width:100%;border-top:1px solid var(--line);padding-top:2px}.nav .btn{margin-left:auto}.nav .btn.donate+.btn{margin-left:0}}
+@media (max-width:640px){.nav{width:100%;border-top:1px solid var(--line);padding-top:2px}.nav .btn{margin-left:auto}.nav .btn.donate+.btn{margin-left:0}
+.btn.donate.big{min-height:56px;padding:14px 30px;font-size:18px;width:100%}
+@media (min-width:640px){.btn.donate.big{width:auto}}}
 
 main{flex:1;padding:28px 0 56px}
 main:focus{outline:none}
