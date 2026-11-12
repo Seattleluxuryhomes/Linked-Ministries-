@@ -100,7 +100,9 @@ for (const kind of ["phone", "desk"]) {
   ok(/Linked Ministries has not applied for 501\(c\)\(3\) status yet/.test(txt) && !/deduct/i.test(txt), `${kind}: the status line says what is true, and nothing about deductions`);
   await calm(V.page, `${kind}: /giving`); await big(V.page, `${kind}: /giving`);
   await snap(V.page, `giving-door-closed-${px}`);
-  ok(!(await (await V.ctx.newPage().then(async (p) => { await p.goto("/m/alpha-table-ministry"); return p.locator("main").innerText().finally(() => p.close()); })).includes("Make a donation to Alpha")), `${kind}: and the ministry's own page has no Give button`);
+  { const mp = await V.ctx.newPage(); await mp.goto("/m/alpha-table-ministry");
+    ok((await mp.locator("main").innerText()).includes("Make a donation to Alpha") && (await mp.locator("main a[href='/give']").count()) === 0, `${kind}: the ministry's own page keeps its own Make a donation button while Linked Ministries' door is closed (founder, 2026-11-12), and has no link to Linked Ministries' own giving`);
+    await mp.close(); }
 
   /* ---- the treasurer opens the door, with the registration ---- */
   await A.page.goto("/money"); await A.page.waitForSelector("input[name=registration_number]");

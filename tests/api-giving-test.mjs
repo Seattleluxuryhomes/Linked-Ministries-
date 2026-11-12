@@ -138,7 +138,7 @@ ok(nodoor.status === 409 && /registration number and its date/.test(nodoor.json.
 ok((await tess.post("/api/treasury/settings", { registration_number: "WA-123456", door_open: true })).status === 409, "nor with a number and no date");
 ok((await tess.post("/api/treasury/settings", { registration_number: "WA-123456", registration_date: today, form990_url: "http://x.example", door_open: false })).status === 422, "a Form 990 link must be https");
 const mp = await anon.get("/m/alpha-table-ministry");
-ok(!/Make a donation to Alpha/.test(mp.text), "the ministry's page has no Give button while the door is closed");
+ok(/Make a donation to Alpha/.test(mp.text) && !/href="\/give"/.test(mp.text), "the ministry's own button shows while Linked Ministries' door is closed (founder, 2026-11-12); Linked Ministries' own Make a donation link does not");
 ok((await tess.post("/api/treasury/settings", { registration_number: "WA-123456", registration_date: today, form990_url: "https://example.org/990.pdf", door_open: true })).status === 200, "with the registration filled in, the door opens");
 const g2 = await anon.get("/giving");
 ok(/href="\/give"/.test(g2.text) && !/not taking gifts online yet/i.test(g2.text) && /WA-123456/.test(g2.text) && /href="https:\/\/example\.org\/990\.pdf"/.test(g2.text), "the page now has a Give button, the registration and the Form 990 link");
@@ -157,7 +157,8 @@ const mp2 = await anon.get("/m/alpha-table-ministry");
 ok(/Make a donation to Alpha Table Ministry/.test(mp2.text) && /href="https:\/\/pay\.alpha\.example\/give"/.test(mp2.text) && /This link is Alpha Table Ministry's own/.test(mp2.text), "the ministry's page now shows its own Give button, labelled as theirs");
 ok(/Gifts online are open/.test((await anon.get("/")).text), "the front says the gifts are open");
 await tess.post("/api/treasury/settings", { registration_number: "WA-123456", registration_date: today, form990_url: "https://example.org/990.pdf", door_open: false });
-ok(!/Make a donation to Alpha/.test((await anon.get("/m/alpha-table-ministry")).text), "closing the door takes the button off every page");
+{ const mp3 = (await anon.get("/m/alpha-table-ministry")).text;
+  ok(!/href="\/give"/.test(mp3) && /Make a donation to Alpha/.test(mp3), "closing the door takes Linked Ministries' own Make a donation link off every page; the ministry's own button stays, as it never depended on the door (founder, 2026-11-12)"); }
 
 /* ---- the spreadsheet ---- */
 const csv = await tess.get("/api/treasury/export.csv?what=gifts");

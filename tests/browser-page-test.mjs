@@ -98,7 +98,7 @@ for (const kind of ["phone", "desk"]) {
   ok(/Saturdays/.test(body) && /Grace Hall, 12 Main Street/.test(body) && /Thursdays/.test(body) && /6:30 pm/.test(body), `${kind}: when and where they meet`);
   ok(/hello@journey\.example/.test(body) && /206-555-0100/.test(body) && /journey\.example\.org/.test(body), `${kind}: how to reach them`);
   ok(/Isaiah 58:7/.test(body) && /A person at Linked Ministries read this page on/.test(body), `${kind}: the verse with its reference, and that a person read the page`);
-  ok(!(await A.page.locator("a:has-text('Give to')").count()), `${kind}: no Give button while the giving door is closed`);
+  ok((await A.page.locator("a.btn.donate:has-text('Make a donation to')").count()) >= 1, `${kind}: the ministry's own Make a donation button shows, though Linked Ministries' giving door is closed (founder, 2026-11-12)`);
   ok(await A.page.locator(".mphoto img").evaluate((im) => im.naturalWidth > 0), `${kind}: the picture loaded`);
   ok((await A.page.title()) === `${NAME} · Linked Ministries`, `${kind}: its own title`);
   await calm(A.page, `${kind}: the public page`); await big(A.page, `${kind}: the public page`);

@@ -60,7 +60,11 @@ copied are listed in `commons.json`, each with where it came from.
 | 4 | `/m/<slug>` | Anyone, signed out, reads the page: phone first, with its own title, description and share card (its first picture), and in the sitemap. |
 | 5 | `/me` | The lead edits any time. The public keeps seeing the copy a person on the team read until a person on the team reads the change. A change to the public name or city sends the whole ministry back to be read, as before. |
 
-A "Give" button shows on the page only when the giving door is open (see below) and the ministry has set a link of its own for gifts. The link is the ministry's, is labelled as theirs, and Linked Ministries never collects or sees that gift.
+A "Make a donation" button shows on the page as soon as the ministry has set a link of its own for gifts and a person on the team has read
+the page (founder, 2026-11-12: "make it easy for a ministry to start taking donations as quickly as possible"; it no longer waits for
+Linked Ministries' own giving door, which governs only Linked Ministries' own gifts). The link is the ministry's, is labelled as theirs,
+and Linked Ministries never collects or sees that gift. `/take-donations` walks a ministry through it in seven steps (an EIN, where it
+stands with the IRS, a bank account, a free Zeffy page, the link), and the page form links to it beside the donation-link box.
 
 ## The ministry's colours, Bible and gallery (migration 0012)
 

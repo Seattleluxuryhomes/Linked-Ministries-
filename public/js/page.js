@@ -105,6 +105,7 @@ export function pageForm(me, pg, { onDone, onCancel }) {
       field(WORDS.pagePhone, text("phone", d.phone, { type: "tel", max: 30, mode: "tel" })),
       field(WORDS.pageWebsite, text("website", d.website, { type: "url", max: 200, mode: "url", placeholder: "https://" })),
       field(WORDS.pageGive, text("give_url", d.give_url, { type: "url", max: 300, mode: "url", placeholder: "https://" }), WORDS.pageGiveHelp)),
+    h("p", {}, h("a", { href: "/take-donations", target: "_blank", rel: "noopener", "data-act": "give-how" }, WORDS.pageGiveHow)),
     h("h4", {}, WORDS.pageLook), h("p", { class: "help" }, WORDS.pageLookHelp), look,
     h("h4", {}, WORDS.pageBible), h("p", { class: "help" }, WORDS.pageBibleHelp),
     h("div", { class: "formgrid" }, field(WORDS.pageBibleFirst, bibleFirst), field(WORDS.pageBibleSecond, bibleSecond)),

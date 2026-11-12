@@ -315,7 +315,10 @@ export function ministryPage({ page, base = "", notice = "", giving = { open: fa
   const meets = (c.meets || []).length ? `<section class="card mcard" aria-labelledby="m-meet"><h2 id="m-meet">When and where we meet</h2><ul class="meets">${c.meets.map((r) => `<li><strong>${e(r.day)}</strong><span class="when-at">${e(r.time)}</span><span class="where-at">${e(r.place)}</span></li>`).join("")}</ul></section>` : "";
   const reach = [c.email ? `<dt>Email</dt><dd><a href="mailto:${e(c.email)}">${e(c.email)}</a></dd>` : "", c.phone ? `<dt>Phone</dt><dd><a href="${e(telHref(c.phone))}">${e(c.phone)}</a></dd>` : "", c.website ? `<dt>Website</dt><dd><a href="${e(c.website)}" rel="noopener nofollow">${e(c.website.replace(/^https?:\/\//, ""))}</a></dd>` : ""].join("");
   const reachCard = reach ? `<section class="card mcard" aria-labelledby="m-reach"><h2 id="m-reach">How to reach us</h2><dl class="kv">${reach}</dl></section>` : "";
-  const canGive = !!(giving && giving.open && c.give_url);
+  /* founder, 2026-11-12 ("make it easy for a ministry to start taking donations as quickly as possible"): a ministry's own button shows
+     as soon as a person on the team has read its page with the link. It no longer waits for Linked Ministries' own giving door: the gift
+     goes to the ministry's own donation page and bank, never through Linked Ministries. */
+  const canGive = !!c.give_url;
   const giveCard = canGive ? `<section class="card mcard give" aria-labelledby="m-give"><h2 id="m-give">${e(DONATE)} to ${e(name)}</h2><p>This link is ${e(name)}'s own. It goes to their own donation page. Linked Ministries does not collect or see a donation made there.</p><p><a class="btn donate" href="${e(c.give_url)}" rel="noopener nofollow">${e(DONATE)} to ${e(name)}</a></p></section>` : "";
   const read = preview ? `<p class="note">This is how your page will look. Only your ministry can see this. It is not public until a person at Linked Ministries reads it.</p>`
     : `<p class="quiet mread">A person at Linked Ministries read this page on ${e(dateWords(page.live_at))}. Linked Ministries does not check or vouch for any ministry. ${notice ? `Something wrong? Write to <a href="mailto:${e(notice)}">${e(notice)}</a>.` : ""}</p>`;
@@ -424,19 +427,20 @@ ${notice ? `<p>To ask about giving another way, <a href="mailto:${e(notice)}">wr
 export function takeDonationsPage({ base = "", notice = "", donate = false } = {}) {
   const steps = [
     ["Get an EIN", "The EIN is the number the IRS gives a group. It is free. You apply online and get it the same day.", "https://www.irs.gov/businesses/small-businesses-self-employed/get-an-employer-identification-number", "Apply for an EIN at irs.gov"],
+    ["Know where you stand with the IRS", "A church most often does not need to apply. Most other ministries ask the IRS for 501(c)(3) status on Form 1023-EZ or Form 1023. You can start to ask for donations while you wait. This is not legal advice. If you are not sure, ask a lawyer or an accountant.", "https://www.irs.gov/charities-non-profits/applying-for-tax-exempt-status", "Read how to apply at irs.gov"],
     ["Open a bank account in the ministry's name", "Take the EIN and your papers to a bank. The account must be in the ministry's name, not a person's.", "", ""],
     ["Make a free Zeffy page", "Zeffy is a donation service with no fee for the ministry. Sign up with the EIN and connect the bank account. Zeffy makes a donation page for you.", "https://www.zeffy.com", "Sign up at zeffy.com"],
     ["Copy the link to your Zeffy page", "In Zeffy, open your donation form and copy its link. It starts with https://www.zeffy.com.", "", ""],
     ["Paste the link on your Linked Ministries page", "Sign in, open your ministry, and paste the link in the box called Your donation link. Save.", "/me", "Open your ministry"],
-    ["Your page shows a Make a donation button", "People who find your ministry on linkedm.org can press it. The money goes to Zeffy, then to your bank. Linked Ministries never touches it.", "", ""],
+    ["Your page shows a Make a donation button", "Once a person at Linked Ministries reads your page, people who find it can press the button. The money goes to Zeffy, then to your bank. Linked Ministries never touches it.", "", ""],
   ];
   const body = `<div class="wrap prose"><p class="back"><a href="/">Back to the first page</a></p>
 <p class="eyebrow">For ministries on the network</p>
 <h1>How your ministry can take donations</h1>
-<p class="lead">Six steps. Most take a day. The donation page is yours. The bank account is yours. The money never passes through Linked Ministries.</p>
+<p class="lead">Seven steps. Most take a day. The donation page is yours. The bank account is yours. The money never passes through Linked Ministries.</p>
 <ol class="steps">${steps.map(([h3, p, href, words], i) => `<li class="card"><p class="label">Step ${i + 1}</p><h2>${e(h3)}</h2><p>${e(p)}</p>${href ? `<p><a class="btn ghost small" href="${e(href)}"${href.startsWith("http") ? ' rel="noopener"' : ""}>${e(words)}</a></p>` : ""}</li>`).join("\n")}</ol>
 <div class="card"><h2>Need a hand?</h2><p>A person at Linked Ministries will walk through these steps with you.${notice ? ` Write to <a href="mailto:${e(notice)}">${e(notice)}</a>.` : ""}</p>
 <p class="quiet">Zeffy may ask a donor for a tip for Zeffy itself. The donor can set it to $0. The tip is not part of the donation.</p></div>
 <p class="row"><a class="btn" href="/join">Join the network</a><a class="btn ghost" href="/giving">Where the money went</a></p></div>`;
-  return layout({ title: "How your ministry can take donations", body, base, path: "/take-donations", notice, donate, description: "Six steps for a ministry on the network to take donations of its own: an EIN, a bank account, a free Zeffy page, and the link on its Linked Ministries page." });
+  return layout({ title: "How your ministry can take donations", body, base, path: "/take-donations", notice, donate, description: "Seven steps for a ministry on the network to take donations of its own: an EIN, where it stands with the IRS, a bank account, a free Zeffy page, and the link on its Linked Ministries page." });
 }

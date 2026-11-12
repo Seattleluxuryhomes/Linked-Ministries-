@@ -46,7 +46,12 @@ Founder, 2026-10-18: "So if a ministry wants something or needs something we nee
    set up the 501(c)(3)"): the giving door's registration is Linked Ministries' Washington Secretary of State registration (the corporation's UBI and
    the day it was formed); the Charities Program registration is filed when the law asks for it (gifts of $50,000 a year, or anyone paid to raise
    money) and may replace the number then. The public words say "Washington state registration", which is true of either; they never say
-   "charitable solicitation registration" for a UBI. No CDN, no analytics, no Tailwind CDN, no unpkg, no font host: every face is in `public/fonts`. No inline
+   "charitable solicitation registration" for a UBI. Founder, 2026-11-12 ("make it easy for a ministry to set up their 501(c)(3) and Zeffy and start taking donations as quickly as possible"):
+   a ministry's **own** Make a donation button shows as soon as a person on the team has read its page with its own link; it does not wait
+   for Linked Ministries' giving door (the door governs only Linked Ministries' own gifts). `/take-donations` adds a step on 501(c)(3) status
+   (a church most often need not apply; others file Form 1023-EZ or 1023; not legal advice) and the page form links to it. The founder's
+   suggested gift of $1,000 from a ministry to Linked Ministries waits for a lawyer and appears nowhere until then (`docs/SUGGESTED-GIFT.md`).
+   No CDN, no analytics, no Tailwind CDN, no unpkg, no font host: every face is in `public/fonts`. No inline
    script and no style attribute (the policy allows neither). The two banned phrases about deducting a gift (`tests/banned.mjs` names them) appear nowhere; only once
    `IRS_LETTER_DATE` is set does one sentence, the IRS's own, say a gift may be deducted. No prices or packages: the old page's are in
    `docs/OLD-PAGE.md`; whether a paid tier ever returns is the founder's decision and a lawyer's question first.

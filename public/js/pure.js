@@ -280,6 +280,7 @@ export const WORDS = {
   pageWebsite: "Website",
   pageGive: "Your donation link",
   pageGiveHelp: "A link to your own donation page, like a Zeffy page. Your page then shows a Make a donation button. Linked Ministries never touches those donations.",
+  pageGiveHow: "No donation page yet? See how to set one up",
   pagePhotos: "Pictures",
   pagePhotosHelp: "Up to twelve. The first two lead your page and the rest make a gallery. A JPEG or a PNG, 1.5 MB or smaller. Where a picture was taken is taken out of it.",
   pagePhotosFull: "Your page holds twelve pictures. Remove one first.",
