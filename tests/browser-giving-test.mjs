@@ -104,6 +104,10 @@ for (const kind of ["phone", "desk"]) {
     ok((await mp.locator("main").innerText()).includes("Make a donation to Alpha") && (await mp.locator("main a[href='/give']").count()) === 0, `${kind}: the ministry's own page keeps its own Make a donation button while Linked Ministries' door is closed (founder, 2026-11-12), and has no link to Linked Ministries' own giving`);
     await mp.close(); }
 
+  /* the suggested gift (founder, 2026-11-12: "It's a gift"): a ministry's own people see it on /me only while Linked Ministries can take gifts */
+  const giftCard = async () => { const G = await open(browser, s.base, kind); await G.ctx.addCookies([asCookie(world.c["alex@alpha.example"])]); await G.page.goto("/me"); await G.page.waitForSelector("[data-page-card]");
+    const n = await G.page.locator("[data-gift]").count(), t = n ? await G.page.locator("[data-gift]").innerText() : "", href = n ? await G.page.locator("[data-gift] a.btn").getAttribute("href") : "", errs = G.errors.length; await G.close(); return { n, t, href, errs }; };
+  { const g0 = await giftCard(); ok(g0.n === 0 && g0.errs === 0, `${kind}: with Linked Ministries' door closed, /me asks for no gift`); }
   /* ---- the treasurer opens the door, with the registration ---- */
   await A.page.goto("/money"); await A.page.waitForSelector("input[name=registration_number]");
   await A.page.check("#door-open");
@@ -113,6 +117,8 @@ for (const kind of ["phone", "desk"]) {
   await A.page.fill("input[name=registration_number]", "WA-123456"); await A.page.fill("input[name=registration_date]", new Date().toISOString().slice(0, 10)); await A.page.fill("input[name=form990_url]", "https://example.org/990.pdf");
   await A.page.click("button:has-text('Save')");
   await A.page.waitForSelector("text=Saved.");
+  { const g1 = await giftCard();
+    ok(g1.n === 1 && /suggested gift is \$1,000/.test(g1.t) && /none is needed/.test(g1.t) && /free, and it stays free/.test(g1.t) && /whether or not a ministry gives/.test(g1.t) && g1.href === "/give" && g1.errs === 0, `${kind}: with the door open, /me shows the optional suggested gift of $1,000, says the page is free either way, and links to Make a donation`, g1); }
   await V.page.goto("/giving");
   ok((await V.page.locator("main a.btn:has-text('Make a donation')").count()) === 1 && (await V.page.locator("header a.btn.donate:has-text('Make a donation')").count()) === 1 && /WA-123456/.test(await V.page.locator("main").innerText()) && !/not taking gifts online yet/i.test(await V.page.locator("main").innerText()) && (await V.page.locator("a:has-text('Read the Form 990')").count()) === 1, `${kind}: with the registration filled in, /giving has the Make a donation button on the page and in the top bar, the registration and the Form 990 link`);
   await calm(V.page, `${kind}: /giving with the door open`);

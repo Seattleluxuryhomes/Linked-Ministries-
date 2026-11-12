@@ -28,12 +28,14 @@ function openWithDraft(p) { lastFilled = { title: p.title.trim(), body: p.body.t
 onEdenDraft((p) => { if (ownWordsInForm()) return false; openWithDraft(p); load().then(() => scrollTo(0, 0)); return true; });
 { const handed = readHandoff(location.hash); if (handed) { history.replaceState(null, "", location.pathname + location.search); openWithDraft(handed); } }
 
+let doorOpen = false;   /* Linked Ministries can take gifts: the suggested-gift card shows only then */
 async function load() {
   const meR = await get("/api/me");
   if (!meR.ok || !meR.data.signed_in) return toSignIn("/me");
   const me = meR.data;
   if (!me.ministry) return location.assign("/join");
-  const [postsR, answersR, teamR, pageR] = await Promise.all([get("/api/my/posts"), get("/api/answers"), get("/api/team"), get("/api/page")]);
+  const [postsR, answersR, teamR, pageR, givingR] = await Promise.all([get("/api/my/posts"), get("/api/answers"), get("/api/team"), get("/api/page"), get("/api/giving")]);
+  doorOpen = !!(givingR.ok && givingR.data && givingR.data.door_open);
   render(me, postsR.data.posts || [], answersR.data || { received: [], sent: [] }, teamR.data || { people: [], invites: [] }, pageR.data || { exists: false });
 }
 
@@ -66,6 +68,9 @@ function render(me, posts, answers, team, pg) {
   /* the ministry's own public page */
   parts.push(h("div", { class: "sectionhead" }, h("h2", {}, WORDS.pageTitle)));
   parts.push(editingPage && me.lead ? pageForm(me, pg, { onDone: (w) => { editingPage = false; say(w, true); load(); }, onCancel: () => { editingPage = false; load(); } }) : pageCard(me, pg, { onEdit: () => { editingPage = true; load().then(() => document.querySelector("[data-page-form]") && document.querySelector("[data-page-form]").scrollIntoView()); } }));
+  /* the suggested gift (founder, 2026-11-12: "It's a gift"): optional, after the page exists, never while the page form is open */
+  if (doorOpen && pg.exists && !editingPage) parts.push(h("div", { class: "card gift", "data-gift": "" }, h("h3", {}, WORDS.giftTitle), h("p", {}, WORDS.giftBody), h("p", { class: "quiet" }, WORDS.giftSame),
+    h("p", {}, h("a", { class: "btn donate small", href: "/give" }, WORDS.giftButton))));
 
   /* posts */
   parts.push(h("div", { class: "sectionhead" }, h("h2", {}, WORDS.yourPosts), posts.length ? h("span", { class: "count-pill" }, posts.length === 1 ? "1 post" : `${posts.length} posts`) : null));

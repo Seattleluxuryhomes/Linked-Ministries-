@@ -534,3 +534,4 @@ html.themed,body.themed{background:var(--t-ground)}
 .theme-pick:has(input:focus-visible){outline:3px solid var(--t-ink);outline-offset:2px}
 .theme-pick .swatch{width:28px;height:28px;flex:none;border-radius:50%;border:14px solid var(--t);box-sizing:border-box}
 .theme-pick:has(input:checked){border-color:var(--t-ink);background:var(--t-soft);box-shadow:inset 0 0 0 1px var(--t-ink)}
+.card.gift{border-top:4px solid var(--gold)}

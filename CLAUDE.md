@@ -50,7 +50,10 @@ Founder, 2026-10-18: "So if a ministry wants something or needs something we nee
    a ministry's **own** Make a donation button shows as soon as a person on the team has read its page with its own link; it does not wait
    for Linked Ministries' giving door (the door governs only Linked Ministries' own gifts). `/take-donations` adds a step on 501(c)(3) status
    (a church most often need not apply; others file Form 1023-EZ or 1023; not legal advice) and the page form links to it. The founder's
-   suggested gift of $1,000 from a ministry to Linked Ministries waits for a lawyer and appears nowhere until then (`docs/SUGGESTED-GIFT.md`).
+   suggested gift of $1,000 from a ministry to Linked Ministries: founder, 2026-11-12, "It's a gift." It is optional and changes nothing:
+   a page is free, is read the same way and is shown the same way whether or not a ministry gives. It shows only to a ministry's own
+   people on `/me` (never on a public page, in the review queue, or in an email), and only while the giving door is open, linking to
+   `/give`. The lawyer's questions in `docs/SUGGESTED-GIFT.md` are still worth asking.
    No CDN, no analytics, no Tailwind CDN, no unpkg, no font host: every face is in `public/fonts`. No inline
    script and no style attribute (the policy allows neither). The two banned phrases about deducting a gift (`tests/banned.mjs` names them) appear nowhere; only once
    `IRS_LETTER_DATE` is set does one sentence, the IRS's own, say a gift may be deducted. No prices or packages: the old page's are in

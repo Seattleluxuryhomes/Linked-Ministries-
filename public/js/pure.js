@@ -281,6 +281,13 @@ export const WORDS = {
   pageGive: "Your donation link",
   pageGiveHelp: "A link to your own donation page, like a Zeffy page. Your page then shows a Make a donation button. Linked Ministries never touches those donations.",
   pageGiveHow: "No donation page yet? See how to set one up",
+  /* founder, 2026-11-12: "We will just ask for a donation. But it's not necessary. Suggested donation is 1,000." Asked whether a ministry
+     is paying for its page, the founder ruled: "It's a gift." So the words say the page is free either way, and nothing about a ministry's
+     page or its review changes with a gift. Shown only to a ministry's own people on /me, and only while Linked Ministries can take gifts. */
+  giftTitle: "A gift for the network (optional)",
+  giftBody: "Your page at linkedm.org is free, and it stays free. If your ministry wants to help keep the network running, the suggested gift is $1,000. Any amount helps, and none is needed.",
+  giftSame: "Every page is read and shown the same way, whether or not a ministry gives.",
+  giftButton: "Make a donation",
   pagePhotos: "Pictures",
   pagePhotosHelp: "Up to twelve. The first two lead your page and the rest make a gallery. A JPEG or a PNG, 1.5 MB or smaller. Where a picture was taken is taken out of it.",
   pagePhotosFull: "Your page holds twelve pictures. Remove one first.",

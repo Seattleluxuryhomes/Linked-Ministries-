@@ -1,10 +1,14 @@
-# The suggested gift: held for a lawyer
+# The suggested gift
 
-Founder, 2026-11-12: "We will just ask for a donation. But it's not necessary. Suggested donation is 1,000." Every ministry's page,
-its Bible and its gallery are hosted at linkedm.org. Asked whether to show the number now or wait for a lawyer, the founder chose to
-wait. **Nothing below is on any page.** The front keeps today's line: "A ministry gives what it can."
+Founder, 2026-11-12: "We will just ask for a donation. But it's not necessary. Suggested donation is 1,000." Asked whether the $1,000
+is a payment for the hosted page, the founder ruled: **"It's a gift."**
 
-## Why it waits
+**It is live** on `/me`, for a ministry's own people, only while Linked Ministries' giving door is open (`WORDS.giftTitle`,
+`giftBody`, `giftSame` in `public/js/pure.js`; `tests/browser-giving-test.mjs` holds it). Because it is a gift, nothing depends on
+it: every page is free, read the same way, and shown the same way, whether or not a ministry gives. It is never on a public page,
+never in the review queue, and never in an email.
+
+## Questions still worth asking a lawyer
 
 | Question for the lawyer | Why it matters |
 |---|---|
@@ -14,15 +18,13 @@ wait. **Nothing below is on any page.** The front keeps today's line: "A ministr
 | If the page is free either way, what words make that clear enough that no ministry feels it must pay? | The founder said the gift is not necessary. A page must never be held back or shown lower for not giving. |
 | Is the suggested amount a price under the repository's rule 7 (no prices or packages)? | Rule 7 says a paid tier is the founder's decision and a lawyer's question first. |
 
-## Draft words, ready when the lawyer approves
-
-Only after a lawyer reads the questions above, and only in the words the lawyer approves:
+## The words on /me
 
 > Your page at linkedm.org is free, and it stays free. If your ministry wants to help keep the network running, the suggested gift is
 > $1,000. Any amount helps, and none is needed. A person at Linked Ministries reads every page the same way, whether or not a ministry gives.
 
-Where it would go: the join page after a ministry is added, and the Your public page card on `/me`. Never on a ministry's public page,
-never in the review queue, and never in an email that asks twice.
+Where it is: under the Your public page card on `/me`, once the ministry has a page. Never on a ministry's public page, never in the
+review queue, and never in an email.
 
 ## What is already true without it
 
