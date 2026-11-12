@@ -49,7 +49,12 @@ export const SOURCE = [
    until the IRS letter is dated (IRS_LETTER_DATE in server/words.mjs): "tax-deductible" and "write-off". */
 const MONEY_OK = new Set(["a dollar sign (no prices, no money)", "a word about taxes or deductions", "a way to give money", "a claim of nonprofit status (only the footer's own line may say the application is not filed)"]);
 export const NEVER = [[/tax[- ]?deductible|write[- ]?offs?\b|tax[- ]exempt|tax receipt/i, "tax-deductible or write-off (only the IRS's own sentence, and only once IRS_LETTER_DATE is set)"]];
+/* Scripture is the Bible's own words, quoted exactly inside <blockquote class="scripture">, never ours: the Bible has a Red Sea, a
+   tax collector, and a man "not slack". The lists above are about the words this site writes, so a quoted verse is left out of
+   them, as tests/plainwords-test.mjs already leaves it out (founder, 2026-11-12: every ministry's page carries the whole Bible). */
+export const withoutScripture = (html) => String(html).replace(/<blockquote class="scripture[\s\S]*?<\/blockquote>/g, " ");
 export function checkPage(html, { money = false, irsLetter = false } = {}) {
+  html = withoutScripture(html);
   const out = [], text = visibleText(html).split(NONPROFIT_LINE).join(" ");   /* the founder's one line about the corporation is the only place that may name the application */
   for (const [re, why] of READ) if (!(money && MONEY_OK.has(why)) && re.test(text)) out.push("reads " + why + ": " + (text.match(re) || [""])[0]);
   if (!irsLetter) for (const [re, why] of NEVER) if (re.test(text)) out.push("reads " + why + ": " + (text.match(re) || [""])[0]);

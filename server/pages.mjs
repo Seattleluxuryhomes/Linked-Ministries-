@@ -8,6 +8,8 @@ import { PRODUCT, CATEGORIES, KIND, KINDS, STATES, categoryLabel, dateWords, CRI
 import { NONPROFIT_LINE, FLAGS, statusLine, deductibleAnswer, FOUNDER } from "./words.mjs";
 import { BOARD } from "./board-members.mjs";
 import { TERMS, PRIVACY, DRAFT_LINE, LAST_CHANGED } from "./legal.mjs";
+import { themeOf } from "./themes.mjs";
+import { pageBibles } from "./bible.mjs";
 
 const AMP = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
 export const e = (v) => String(v == null ? "" : v).replace(/[&<>"']/g, (c) => AMP[c]);
@@ -32,13 +34,15 @@ export const ART_EMPTY = `<svg class="art-empty" viewBox="0 0 160 110" fill="non
    every page, in the footer, on the giving page, the give page and the front, only while the giving door is open. */
 export const DONATE = "Make a donation";
 
-export function layout({ title, description, body, script, nav = "", base = "", path = "", noindex = false, notice = "", ogTitle = "", image = "", imageAlt = "", ogType = "website", donate = false }) {
+export function layout({ title, description, body, script, nav = "", base = "", path = "", noindex = false, notice = "", ogTitle = "", image = "", imageAlt = "", ogType = "website", donate = false, theme = "" }) {
+  /* a ministry's own page and its Bible wear the theme the ministry chose (0012); every other page keeps the one gold */
+  const themed = theme ? ` class="themed theme-${e(themeOf(theme))}"` : "";
   const t = title ? `${title} · ${PRODUCT.name}` : `${PRODUCT.name}: ministries helping ministries`;
   const desc = description || "A free network where ministries post what they need or what they can give, and other ministries answer.";
   const abs = (p) => (base ? base.replace(/\/+$/, "") + p : p);
   const share = ogTitle || title || `${PRODUCT.name}: ministries helping ministries`;
   return `<!doctype html>
-<html lang="en">
+<html lang="en"${themed}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -68,7 +72,7 @@ ${image ? "" : `<meta property="og:image:width" content="1200">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="stylesheet" href="/css/lm.css">
 </head>
-<body>
+<body${themed}>
 <a class="skip" href="#main">Skip to the page</a>
 <header class="top"><div class="wrap wide">
 <a class="lock" href="/" aria-label="${e(PRODUCT.name)}, home">${MARK}<span class="words"><span class="name">${e(PRODUCT.name)}</span><span class="small">${e(PRODUCT.domain)}</span></span></a>
@@ -300,7 +304,14 @@ export const privacyPage = (o = {}) => legalPage(PRIVACY, { ...o, path: "/privac
 const telHref = (p) => "tel:" + String(p).replace(/[^0-9+]/g, "");
 export function ministryPage({ page, base = "", notice = "", giving = { open: false }, preview = false }) {
   const c = page.live || {}, name = page.name, place = `${page.city}, ${page.state}`;
-  const photos = (c.photos || []).map((ph) => `<figure class="mphoto"><img src="/photos/${e(ph.id)}" alt="${e(ph.alt || "A picture from " + name)}" width="800" height="600" loading="lazy" decoding="async"></figure>`).join("");
+  const pic = (ph, cls) => `<figure class="${cls}"><img src="/photos/${e(ph.id)}" alt="${e(ph.alt || "A picture from " + name)}" width="800" height="600" loading="lazy" decoding="async"></figure>`;
+  const all = c.photos || [], lead = all.slice(0, 2), more = all.slice(2);
+  const photos = lead.map((ph) => pic(ph, "mphoto")).join("");
+  /* 0012: a page holds up to twelve pictures. The first two lead the page; the rest are a gallery under it. */
+  const gallery = more.length ? `<section class="mgallery" aria-labelledby="m-pics"><h2 id="m-pics">More pictures</h2><div class="mgallery-grid">${more.map((ph) => pic(ph, "mphoto small")).join("")}</div></section>` : "";
+  /* 0012: every page carries the Bible, in the languages the ministry chose (King James Version when it chose none) */
+  const bibles = pageBibles(c.bible), bibleHref = "/m/" + page.slug + "/bible";
+  const bibleCard = bibles.length ? `<section class="card mcard" aria-labelledby="m-bible"><h2 id="m-bible">Read the Bible</h2><p>${bibles.map((t) => `<span lang="${e(t.lang)}" dir="${e(t.dir)}">${e(t.native)}</span>`).join(" and ")}. All 66 books, free to read.</p><p><a class="btn" href="${e(bibleHref)}">Open the Bible</a></p></section>` : "";
   const meets = (c.meets || []).length ? `<section class="card mcard" aria-labelledby="m-meet"><h2 id="m-meet">When and where we meet</h2><ul class="meets">${c.meets.map((r) => `<li><strong>${e(r.day)}</strong><span class="when-at">${e(r.time)}</span><span class="where-at">${e(r.place)}</span></li>`).join("")}</ul></section>` : "";
   const reach = [c.email ? `<dt>Email</dt><dd><a href="mailto:${e(c.email)}">${e(c.email)}</a></dd>` : "", c.phone ? `<dt>Phone</dt><dd><a href="${e(telHref(c.phone))}">${e(c.phone)}</a></dd>` : "", c.website ? `<dt>Website</dt><dd><a href="${e(c.website)}" rel="noopener nofollow">${e(c.website.replace(/^https?:\/\//, ""))}</a></dd>` : ""].join("");
   const reachCard = reach ? `<section class="card mcard" aria-labelledby="m-reach"><h2 id="m-reach">How to reach us</h2><dl class="kv">${reach}</dl></section>` : "";
@@ -314,12 +325,13 @@ ${preview ? read : ""}<p class="eyebrow">A ministry on Linked Ministries</p>
 <h1>${e(name)}</h1>
 <p class="lead">${e(c.tagline)}</p>
 <p class="place">${e(place)}</p>
-<p class="cta">${canGive ? `<a class="btn donate" href="#m-give">${e(DONATE)} to ${e(name)}</a>` : ""}${c.website ? `<a class="btn ghost" href="${e(c.website)}" rel="noopener nofollow">Visit our website</a>` : ""}</p>
+<p class="cta">${canGive ? `<a class="btn donate" href="#m-give">${e(DONATE)} to ${e(name)}</a>` : ""}${bibles.length ? `<a class="btn ghost" href="${e(bibleHref)}">Read the Bible</a>` : ""}${c.website ? `<a class="btn ghost" href="${e(c.website)}" rel="noopener nofollow">Visit our website</a>` : ""}</p>
 </div></header>
 <div class="wrap wide mgrid">
-${photos ? `<div class="mphotos${(c.photos || []).length === 1 ? " one" : ""}">${photos}</div>` : ""}
+${photos ? `<div class="mphotos${lead.length === 1 ? " one" : ""}">${photos}</div>` : ""}
 <div class="mmain"><section class="card mcard" aria-labelledby="m-about"><h2 id="m-about">About us</h2><p class="words">${e(c.about)}</p></section></div>
-<div class="mside">${meets}${reachCard}${giveCard}</div>
+<div class="mside">${meets}${bibleCard}${reachCard}${giveCard}</div>
+${gallery ? `<div class="mfull">${gallery}</div>` : ""}
 <div class="mfull">${c.verse ? verse(c.verse) : ""}</div>
 <div class="mfull">${preview ? "" : read}
 <p class="row mlinks"><a class="btn ghost" href="/board">See the board</a><a class="btn ghost" href="/giving">Where the money went</a></p></div>
@@ -328,7 +340,7 @@ ${photos ? `<div class="mphotos${(c.photos || []).length === 1 ? " one" : ""}">$
   const first = (c.photos || [])[0];
   const desc = `${c.tagline} ${place}.`.slice(0, 200);
   return layout({ title: name, body, base, path: "/m/" + page.slug, noindex: preview, ogType: "profile", donate: !!(giving && giving.open), ogTitle: `${name} · ${place}`, description: desc,
-    image: first ? "/photos/" + first.id : "", imageAlt: first ? (first.alt || "A picture from " + name) : "", notice });
+    image: first ? "/photos/" + first.id : "", imageAlt: first ? (first.alt || "A picture from " + name) : "", notice, theme: c.theme || "gold" });
 }
 
 /* ---- giving: where the money went, and the door ---------------------------------------------------------------------------------------------------------- */

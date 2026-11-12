@@ -134,6 +134,17 @@ ok((await anon.get("/m/alpha-table-ministry")).status === 404 && !(await anon.ge
 await sam.post(`/api/steward/ministries/${mid}/review`, { decision: "approve" });
 ok((await anon.get("/m/alpha-table-ministry")).status === 200 && /Alpha Table Church/.test((await anon.get("/m/alpha-table-ministry")).text), "it returns under the new name when a steward has read the ministry");
 
+/* ---- 0012: the theme and the Bible, checked against what this server carries ---- */
+{ const g = (await alex.get("/api/page")).json;
+  ok(g.themes.length === 12 && g.themes[0].key === "gold" && g.bibles.length >= 6 && g.bibles.every((b) => b.id && b.language && b.native && b.name), "the form is offered twelve themes and the Bible languages this server carries");
+  ok(!g.bibles.some((b) => b.id === "ur-ugv"), "a translation whose licence is not confirmed is not offered");
+  const t1 = await alex.post("/api/page", { ...form, theme: "neon" }); ok(t1.status === 422 && t1.json.error === "theme_not_known", "an unknown theme is refused in words", t1.json);
+  const b1 = await alex.post("/api/page", { ...form, bible: ["ur-ugv"] }); ok(b1.status === 422 && b1.json.error === "bible_not_known", "a Bible this server does not carry is refused, even when it is well formed", b1.json);
+  const b2 = await alex.post("/api/page", { ...form, bible: ["en-kjv", "hi-irv", "ar-nav"] }); ok(b2.status === 422 && b2.json.error === "bible_too_many", "three Bible languages are refused", b2.json);
+  const home = await anon.get("/m/alpha-table-ministry/bible"), ch = await anon.get("/m/alpha-table-ministry/bible/john/3");
+  ok(home.status === 200 && /Old Testament/.test(home.text) && ch.status === 200 && /For God so loved the world/.test(ch.text), "a public page's Bible is open to anyone, in the King James Version when none was chosen");
+  ok((await anon.get("/m/alpha-table-ministry/bible/john/99")).status === 404 && (await anon.get("/m/no-such-page/bible")).status === 404, "a chapter that does not exist, or a page that is not public, is not found"); }
+
 /* ---- the record ---- */
 const evs = await sql("select kind, actor_label, payload from lm.events where kind in ('pages.insert','pages.update','page.approved','page.sent_back','page_photos.insert')");
 ok(evs.length >= 6 && evs.every((e) => e.actor_label && e.actor_label !== "system") && !JSON.stringify(evs).includes("folding") && !JSON.stringify(evs).includes("hot meal") && !JSON.stringify(evs).includes(SECRET), "every act on the page wrote an event with a name on it, and none holds the words or a picture");

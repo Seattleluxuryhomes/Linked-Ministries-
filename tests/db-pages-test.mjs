@@ -121,7 +121,16 @@ await bad({ give_url: "http://pay.example/give" }, /give_url_not_readable/, "a l
 await bad({ give_url: "https://user:pw@pay.example/give" }, /give_url_not_readable/, "and cannot carry a password");
 await bad({ verse: "Not A Key!" }, /verse_not_readable/, "a verse is a key from the list, never typed words");
 await bad({ photos: [{ id: "00000000-0000-4000-8000-000000000000" }] }, /photo_not_found/, "a picture that is not this ministry's is refused");
-await bad({ photos: [{ id: "x" }, { id: "y" }, { id: "z" }] }, /too_many_photos/, "three pictures are refused");
+await bad({ photos: Array.from({ length: 13 }, (_, i) => ({ id: "x" + i })) }, /too_many_photos/, "thirteen pictures are refused (0012: a page holds twelve)");
+/* 0012: a theme from the twelve, and at most two Bible languages, each once */
+await bad({ theme: "neon" }, /theme_not_known/, "a theme that is not one of the twelve is refused");
+await bad({ bible: ["en-kjv", "hi-irv", "ar-nav"] }, /bible_too_many/, "three Bible languages are refused");
+await bad({ bible: ["en-kjv", "en-kjv"] }, /bible_twice/, "the same Bible language twice is refused");
+await bad({ bible: ["Not a key!"] }, /bible_not_known/, "a Bible language is a key from the list, never typed words");
+await bad({ bible: "en-kjv" }, /bible_too_many/, "a Bible language list must be a list");
+{ const r = await save(a1, "Alpha Table Church", "Seattle", "WA", "", draft({ theme: "forest", bible: ["hi-irv", "en-kjv"] }));
+  const d = (await q(a1, "select lm.page_mine() as p"))[0].p.draft;
+  ok(r.state === "draft" && d.theme === "forest" && JSON.stringify(d.bible) === '["hi-irv","en-kjv"]', "a theme and two Bible languages are kept, in the order chosen", d); }
 const blank = await save(a1, "Alpha Table Church", "Seattle", "WA", "", draft({ meets: [{ day: "", time: "", place: "" }], email: "", phone: "", website: "", give_url: "" }));
 ok(blank.state === "draft" && (await q(a1, "select lm.page_mine() as p"))[0].p.draft.meets.length === 0, "empty rows are dropped, and each contact is optional");
 
@@ -152,9 +161,9 @@ ok((await get(null, p2)).length === 1, "it is public when the change is approved
 await save(a1, "Alpha Table Church", "Seattle", "WA", "", draft({ photos: [{ id: p1, alt: "x" }] }), true);
 await q(st, "select lm.page_review($1, true, null)", [mA]);
 ok((await admin("select count(*)::int n from lm.page_photos where id = $1", [p2]))[0].n === 0, "a picture taken off the page, once the change is approved, is thrown away");
-const spare = []; for (let i = 0; i < 5; i++) spare.push(await photoAdd(a1, "image/jpeg", JPEG));
-ok((await refused(photoAdd(a1, "image/jpeg", JPEG), /too_many_photos|two pictures/)).refused, "a ministry cannot pile up pictures it does not use");
-ok((await admin("select count(*)::int n from lm.events where kind = 'page_photos.insert' and actor_label = 'Pat Lead'"))[0].n >= 6 && !(await admin("select payload from lm.events where kind = 'page_photos.insert' limit 1"))[0].payload.bytes, "each picture wrote an event with the lead's name, and the event does not hold the picture");
+const spare = []; for (let i = 0; i < 23; i++) spare.push(await photoAdd(a1, "image/jpeg", JPEG));
+ok((await refused(photoAdd(a1, "image/jpeg", JPEG), /too_many_photos|twelve pictures/)).refused, "a ministry cannot pile up pictures it does not use (0012: it keeps twenty-four, twelve live and twelve in a draft)");
+ok((await admin("select count(*)::int n from lm.events where kind = 'page_photos.insert' and actor_label = 'Pat Lead'"))[0].n >= 24 && !(await admin("select payload from lm.events where kind = 'page_photos.insert' limit 1"))[0].payload.bytes, "each picture wrote an event with the lead's name, and the event does not hold the picture");
 
 /* ===== 9. the steward's queue and the grants ===== */
 await save(a1, "Alpha Table Church", "Seattle", "WA", "", draft({ tagline: "Waiting in the queue" }), true);

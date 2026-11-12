@@ -15,6 +15,7 @@ import { boardQuery, boardPost } from "./board.mjs";
 import { publicPage, publicPageList, photo, myPage, givingPublic, givingDoor } from "./site.mjs";
 import { frontPage, boardPage, postPage, missingPostPage, shellPage, notFoundPage, termsPage, privacyPage, ministryPage, givingPage, givePage, takeDonationsPage } from "./pages.mjs";
 import { noticeEmail } from "../lib/email.mjs";
+import { bibleHomePage, bibleBookPage, bibleChapterPage } from "./bible-pages.mjs";
 import { zeffyGiveUrl } from "../public/js/pure.js";
 import { PRODUCT, CATEGORIES, STATES } from "../public/js/pure.js";
 
@@ -162,20 +163,32 @@ export function buildApp({ env = process.env } = {}) {
   app.get("/board", wrap(async (req, res) => { const r = await boardQuery(req.query); res.set("cache-control", "no-cache"); html(res, 200, boardPage({ result: r, ...(await where(req)) })); }));
   app.get("/board/:id", wrap(async (req, res) => { const p = await boardPost(req.params.id); res.set("cache-control", "no-cache"); p ? html(res, 200, postPage({ post: p, ...(await where(req)) })) : html(res, 404, missingPostPage(await where(req))); }));
   /* a ministry's own page. The public sees the copy a person on the team read; a ministry's own people see their draft as a preview (never indexed). */
-  app.get("/m/:slug", wrap(async (req, res) => {
+  const pageFor = async (req) => {
     const pg = await publicPage(req.params.slug);
-    res.set("cache-control", "no-cache");
-    if (pg) return html(res, 200, ministryPage({ page: pg, ...(await where(req)), giving: { open: await givingDoor() } }));
+    if (pg) return { page: pg, preview: false };
     const t = cookies(req)[COOKIE]; let u = null; if (t) { try { u = await sessionUser(t); } catch (e) { u = null; } }
-    if (u) {
-      const mine = await myPage(u.id);
-      if (mine && mine.exists && mine.slug === String(req.params.slug).toLowerCase()) {
-        res.set("cache-control", "private, no-store");
-        return html(res, 200, ministryPage({ page: { slug: mine.slug, name: mine.ministry.name, city: mine.ministry.city, state: mine.ministry.state, live: mine.draft, live_at: null }, ...(await where(req)), giving: { open: false }, preview: true }));
-      }
-    }
-    html(res, 404, notFoundPage(await where(req)));
+    if (!u) return null;
+    const mine = await myPage(u.id);
+    if (!mine || !mine.exists || mine.slug !== String(req.params.slug).toLowerCase()) return null;
+    return { page: { slug: mine.slug, name: mine.ministry.name, city: mine.ministry.city, state: mine.ministry.state, live: mine.draft, live_at: null }, preview: true };
+  };
+  app.get("/m/:slug", wrap(async (req, res) => {
+    const f = await pageFor(req);
+    if (!f) { res.set("cache-control", "no-cache"); return html(res, 404, notFoundPage(await where(req))); }
+    res.set("cache-control", f.preview ? "private, no-store" : "no-cache");
+    html(res, 200, ministryPage({ page: f.page, ...(await where(req)), giving: { open: f.preview ? false : await givingDoor() }, preview: f.preview }));
   }));
+  /* the page's Bible (0012): the books, a book's chapters, a chapter. Public with the page; a preview for the ministry's own people. */
+  const biblePage = (build) => wrap(async (req, res) => {
+    const f = await pageFor(req);
+    const out = f && build({ page: f.page, preview: f.preview, key: req.params.book, n: req.params.chapter, t: String(req.query.t || ""), ...(await where(req)) });
+    if (!out) { res.set("cache-control", "no-cache"); return html(res, 404, notFoundPage(await where(req))); }
+    res.set("cache-control", f.preview ? "private, no-store" : "no-cache");
+    html(res, 200, out);
+  });
+  app.get("/m/:slug/bible", biblePage(bibleHomePage));
+  app.get("/m/:slug/bible/:book", biblePage(bibleBookPage));
+  app.get("/m/:slug/bible/:book/:chapter", biblePage(bibleChapterPage));
   /* a picture: public while the page a person on the team read names it; otherwise only to the ministry's own people, or a team member reading it */
   app.get("/photos/:id", wrap(async (req, res) => {
     const t = cookies(req)[COOKIE];

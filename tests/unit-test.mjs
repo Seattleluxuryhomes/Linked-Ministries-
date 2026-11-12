@@ -27,6 +27,10 @@ import { smtpUrlWithTimeouts } from "../server/mail.mjs";
 import { normCode, normEmail, validEmail } from "../server/auth.mjs";
 import { securityHeaders, POLICY } from "../server/headers.mjs";
 import { problems as frozenProblems } from "../tools/freeze-migrations.mjs";
+import { THEMES, THEME_LIST, themeCss, lum as themeLum, contrast as themeContrast, isRed } from "../server/themes.mjs";
+import { BOOKS, TRANSLATIONS, pageBibles, chapter as bibleChapter } from "../server/bible.mjs";
+import { bibleHomePage, bibleBookPage, bibleChapterPage } from "../server/bible-pages.mjs";
+import { build as buildBible } from "../tools/import-bible.mjs";
 const { pool: unitPool } = await import("../server/db.mjs");
 
 const T = counter("unit-test"); const { ok } = T;
@@ -98,7 +102,7 @@ const built = {
 for (const [name, html] of Object.entries(built)) {
   const bad = checkPage(html, { money: /^(giving|give|takeDonations|ministryOpen|front)/.test(name) }); ok(bad.length === 0, `page ${name}: nothing banned, no inline script, no style attribute, no other host, never tax-deductible or write-off`, bad);
   ok(html.includes(NONPROFIT_LINE) && html.includes("If someone is in danger, call 911. If someone is thinking of hurting themselves, call or text 988."), `page ${name}: the nonprofit line and the emergency line are in the footer`);
-  ok(/<title>[^<]{3,}<\/title>/.test(html) && /<meta name="viewport"/.test(html) && /<html lang="en">/.test(html) && /<meta name="color-scheme" content="light">/.test(html), `page ${name}: a title, a viewport, a language and a light colour scheme`);
+  ok(/<title>[^<]{3,}<\/title>/.test(html) && /<meta name="viewport"/.test(html) && /<html lang="en"[ >]/.test(html) && /<meta name="color-scheme" content="light">/.test(html), `page ${name}: a title, a viewport, a language and a light colour scheme`);
   ok(/Linked Ministries/.test(html) && /<svg class="mark"/.test(html), `page ${name}: the name and the mark`);
 }
 ok(built.front.includes('href="https://www.disciplesauthority.org"') && /Sober-living housing/.test(built.front) && /Planned/.test(built.front) && /free, 24-week/.test(built.front), "the front links Disciples' Authority and says sober-living housing is planned");
@@ -124,6 +128,56 @@ ok(!/<script(?![^>]*src)/.test(built.me) && /<script type="module" src="\/js\/me
   const evil = ministryPage({ page: { ...samplePage, name: "<b>X</b> & Co", live: { ...samplePage.live, about: '<script>alert(1)</script>"><img src=x onerror=alert(1)>', website: 'https://a.example/"><script>x</script>', verse: "not_a_key" } } });
   ok(!/<script>alert|<b>X|<img src=x/.test(evil) && /&lt;script&gt;alert/.test(evil), "a ministry's words are escaped: text is never markup");
   ok(!/blockquote class="scripture/.test(evil.replace(/<footer[\s\S]*<\/footer>/, "")), "a verse key the file does not hold shows nothing: never a guess"); }
+
+/* ---- a ministry's own colours, its Bible and its gallery (migration 0012; founder, 2026-11-12) ---- */
+{ /* every theme keeps the light rules, and the stylesheet carries exactly the values server/themes.mjs works out */
+  ok(THEME_LIST.length === 12 && Object.keys(THEMES).length === 12, "there are twelve themes");
+  for (const t of Object.values(THEMES)) {
+    ok(themeLum(t.ground) >= 0.9 && themeLum(t.soft) > 0.6, `theme ${t.key}: a pale ground and a pale band`, [t.ground, t.soft]);
+    ok(themeContrast(t.ink, "#ffffff") >= 7 && themeContrast(t.ink, t.soft) >= 4.5, `theme ${t.key}: its deep shade reads at 7 to 1 on white and 4.5 to 1 on its band`, t.ink);
+    ok(!isRed(t.accent) && !isRed(t.ink), `theme ${t.key}: never red`, [t.accent, t.ink]);
+  }
+  const css = read("public/css/lm.css"), blockCss = (/\/\* themes: begin \*\/\n([\s\S]*?)\n\/\* themes: end \*\//.exec(css) || [])[1];
+  ok(blockCss === themeCss(), "public/css/lm.css carries the twelve themes exactly as server/themes.mjs works them out (node tools/make-themes.mjs)");
+  ok(/\(\'gold\', \'clay\', \'rose\', \'plum\', \'indigo\', \'ocean\', \'sky\', \'teal\', \'forest\', \'olive\', \'earth\', \'slate\'\)/.test(read("migrations/0012_page_theme_bible_gallery.sql")) && THEME_LIST.map(([k]) => k).join() === "gold,clay,rose,plum,indigo,ocean,sky,teal,forest,olive,earth,slate", "the database and the server name the same twelve themes");
+  /* the Bible: 66 books; each carried translation is ready, has a licence, and holds every chapter; a translation not ready is not carried */
+  ok(BOOKS.length === 66 && BOOKS.reduce((n, b) => n + b.chapters, 0) === 1189, "the Bible has 66 books and 1,189 chapters");
+  ok(TRANSLATIONS.length >= 6 && TRANSLATIONS.every((t) => t.ready && t.licence.length > 10 && /^[a-z]{2,3}-[a-z0-9]{2,10}$/.test(t.id) && ["ltr", "rtl"].includes(t.dir)), "at least six translations are carried, each ready, with its licence named", TRANSLATIONS.map((t) => t.id));
+  const catalog = JSON.parse(read("data/bible/translations.json"));
+  for (const t of catalog.filter((x) => !x.ready)) ok(!fs.existsSync(path.join(ROOT, "data", "bible", t.id + ".json.gz")), `${t.language} (${t.id}) is not ready, so this public repository does not carry its text`);
+  for (const t of TRANSLATIONS) { const last = bibleChapter(t.id, "revelation", 22), first = bibleChapter(t.id, "genesis", 1); ok(first && last && first.verses.length > 20 && last.verses.length > 15, `${t.language}: Genesis 1 to Revelation 22 are there`); }
+  ok(bibleChapter("en-kjv", "john", 3).verses[15][1] === "For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.", "John 3:16 in the King James Version, word for word");
+  ok(!TRANSLATIONS.some((t) => [["genesis", 1], ["psalms", 23], ["john", 3]].some(([b, c]) => bibleChapter(t.id, b, c).verses.some(([, v]) => /\(\s*[^()]*\d+:\d+[^()]*\)/.test(v)))), "no cross-reference in brackets is left inside a verse");
+  ok(bibleChapter("en-kjv", "john", 0) === null && bibleChapter("en-kjv", "john", 22) === null && bibleChapter("en-kjv", "nope", 1) === null && bibleChapter("xx-none", "john", 1) === null, "a chapter, a book or a translation that does not exist is null: never a guess");
+  ok(pageBibles([]).map((t) => t.id).join() === "en-kjv" && pageBibles(["xx-none", "hi-irv"]).map((t) => t.id).join() === "hi-irv", "a page with no Bible chosen gets the King James Version; a translation the server does not carry is left out");
+  /* the import never prints a verse number that may be wrong */
+  const one = (n) => Array.from({ length: n }, (_, i) => "v" + (i + 1));
+  const src = BOOKS.map((b) => ({ name: b.en, chapters: Array.from({ length: b.chapters }, () => one(3)) }));
+  const ref = BOOKS.map((b) => Array.from({ length: b.chapters }, () => 3)); ref[0][0] = 4;
+  const out = buildBible("vi-1925", src, ref);
+  ok(out.books[0].chapters[0].unnumbered === true && !out.books[0].chapters[1].unnumbered, "a chapter whose verse count differs from the King James Version is marked to show without numbers");
+  ok(buildBible("hi-irv", [{ name: "x", chapters: [["In the beginning. (Heb. 1:10)"]] }, ...src.slice(1)].map((b, i) => (i === 0 ? { ...b, chapters: [["In the beginning. (Heb. 1:10)"], ...src[0].chapters.slice(1)] } : b)), null).books[0].chapters[0].v[0][1] === "In the beginning.", "a cross-reference in brackets is taken out of a verse; the verse's own words are kept");
+  /* the pages */
+  const themed = { ...samplePage, live: { ...samplePage.live, theme: "forest", bible: ["hi-irv", "en-kjv"], photos: [1, 2, 3, 4].map((i) => ({ id: `3333333${i}-3333-4333-8333-333333333333`, alt: "Picture " + i })) } };
+  const mp = ministryPage({ page: themed });
+  ok(/<body class="themed theme-forest">/.test(mp) && /<html lang="en" class="themed theme-forest">/.test(mp), "a ministry's page wears its theme");
+  ok(/<body>/.test(built.front) && /<body>/.test(built.board), "the network's own pages wear no theme");
+  ok((mp.match(/class="mphoto"/g) || []).length === 2 && (mp.match(/class="mphoto small"/g) || []).length === 2 && /More pictures/.test(mp), "two pictures lead the page and the rest make a gallery");
+  ok(/href="\/m\/alpha-table-ministry\/bible"/.test(mp) && /हिन्दी<\/span> and <span lang="en" dir="ltr">English/.test(mp), "the page links its Bible and names its languages");
+  ok(ministryPage({ page: { ...samplePage, live: { ...samplePage.live, theme: "<b>" } } }).includes('class="themed theme-gold"'), "a theme the server does not know falls back to gold");
+  const bh = bibleHomePage({ page: themed }), bb = bibleBookPage({ page: themed, key: "john" }), bc = bibleChapterPage({ page: themed, key: "john", n: "3", t: "en-kjv" }), ar = bibleChapterPage({ page: { ...themed, live: { ...themed.live, bible: ["ar-nav"] } }, key: "john", n: "1" });
+  ok(/lang="hi"/.test(bh) && (bh.match(/<li><a href="\/m\/alpha-table-ministry\/bible\//g) || []).length === 66 && /Old Testament/.test(bh) && /New Testament/.test(bh), "the Bible's first page lists the 66 books in the first language the ministry chose");
+  ok((bb.match(/bible\/john\/\d+"/g) || []).length === 21, "a book lists its chapters");
+  ok(/For God so loved the world/.test(bc) && /href="\/m\/alpha-table-ministry\/bible\/john\/4\?t=en-kjv"/.test(bc) && /href="\/m\/alpha-table-ministry\/bible\/john\/3"[^>]*lang="hi"/.test(bc) && /King James Version\. Public domain\./.test(bc), "a chapter in the second language keeps it on Next, offers the first at the same chapter, and names its translation and licence");
+  ok(/class="scripture bible-text" lang="ar" dir="rtl"/.test(ar), "an Arabic chapter is marked Arabic and right to left");
+  ok(bibleBookPage({ page: themed, key: "nope" }) === null && bibleChapterPage({ page: themed, key: "john", n: "99" }) === null, "a book or chapter that does not exist builds no page");
+  ok(/noindex/.test(bibleHomePage({ page: themed, preview: true })) && /This is how your Bible will look/.test(bibleHomePage({ page: themed, preview: true })), "a preview of the Bible is marked private and not indexed");
+  for (const [name, html] of Object.entries({ bibleHome: bh, bibleBook: bb, bibleChapter: bc, bibleArabic: ar, ministryThemed: mp })) {
+    ok(checkPage(html).length === 0, `page ${name}: nothing banned in our own words, no inline script, no style attribute, no other host`, checkPage(html));
+    ok(html.includes(NONPROFIT_LINE) && html.includes("If someone is in danger, call 911."), `page ${name}: the nonprofit line and the emergency line are in the footer`);
+  }
+  const evilB = bibleHomePage({ page: { ...themed, name: '<script>x</script>', slug: "alpha-table-ministry" } });
+  ok(!/<script>x/.test(evilB) && /&lt;script&gt;x/.test(evilB), "the ministry's name on its Bible is escaped"); }
 
 /* ---- giving: where the money went, the door, the flags, the receipt (founder, 2026-10-18: safe and transparent) ---- */
 { const t = (h) => visibleText(h).split(NONPROFIT_LINE).join(" ");

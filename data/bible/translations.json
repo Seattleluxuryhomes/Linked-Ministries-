@@ -1,0 +1,10 @@
+[
+  { "id": "en-kjv", "language": "English", "native": "English", "lang": "en", "dir": "ltr", "name": "King James Version", "short": "KJV", "licence": "Public domain.", "ready": true },
+  { "id": "vi-1925", "language": "Vietnamese", "native": "Tiếng Việt", "lang": "vi", "dir": "ltr", "name": "Kinh Thánh 1925", "short": "1925", "licence": "Public domain.", "ready": true },
+  { "id": "hi-irv", "language": "Hindi", "native": "हिन्दी", "lang": "hi", "dir": "ltr", "name": "Indian Revised Version, Hindi, 2019", "short": "IRV", "licence": "Indian Revised Version, Bridge Connectivity Solutions. Creative Commons Attribution-ShareAlike 4.0.", "ready": true },
+  { "id": "bn-irv", "language": "Bengali", "native": "বাংলা", "lang": "bn", "dir": "ltr", "name": "Indian Revised Version, Bengali, 2019", "short": "IRV", "licence": "Indian Revised Version, Bridge Connectivity Solutions. Creative Commons Attribution-ShareAlike 4.0.", "ready": true },
+  { "id": "ne-oncv", "language": "Nepali", "native": "नेपाली", "lang": "ne", "dir": "ltr", "name": "Biblica Open Nepali Contemporary Version", "short": "ONCV", "licence": "Biblica, Inc. Creative Commons Attribution-ShareAlike 4.0.", "ready": true },
+  { "id": "ar-nav", "language": "Arabic", "native": "العربية", "lang": "ar", "dir": "rtl", "name": "Biblica Open New Arabic Version 2012", "short": "NAV", "licence": "Biblica, Inc. Creative Commons Attribution-ShareAlike 4.0.", "ready": true },
+  { "id": "ur-ugv", "language": "Urdu", "native": "اردو", "lang": "ur", "dir": "rtl", "name": "Urdu Geo Version", "short": "UGV", "licence": "Not confirmed. Not carried until the founder confirms the licence.", "ready": false },
+  { "id": "es-rv1909", "language": "Spanish", "native": "Español", "lang": "es", "dir": "ltr", "name": "Reina-Valera 1909", "short": "RV1909", "licence": "Public domain. Waiting for a clean copy of the text (the one found carried notes inside the verses).", "ready": false }
+]

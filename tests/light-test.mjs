@@ -31,7 +31,7 @@ ok(contrast("#ffffff", tokens.ink) >= 7, "white words on the dark button read at
 for (const [sel, body] of [...bare.matchAll(/([^{}@]+)\{([^{}]*)\}/g)].map((m) => [m[1].trim(), m[2]])) {
   for (const d of body.matchAll(/(?:^|;)\s*background(?:-color)?\s*:\s*([^;]+)/g)) {
     const v = d[1].trim(); const m = /var\(--([a-z-]+)\)/.exec(v); const hex = m ? tokens[m[1]] : (/^#[0-9a-f]{6}$/i.test(v) ? v : null);
-    if (hex && lum(hex) < 0.5) ok(/^\.btn(:hover)?$/.test(sel) || (hex.toLowerCase() === tokens.gold.toLowerCase() && /^\.eyebrow::before$/.test(sel)), `a dark fill (${v}) appears only on a button (or the gold bar of 4 pixels over a label), never on "${sel}"`);
+    if (hex && lum(hex) < 0.5) ok(/^(\.themed \.mpage )?\.btn(\.[a-z]+)*(:hover)?$/.test(sel) || (hex.toLowerCase() === tokens.gold.toLowerCase() && /^\.eyebrow::before$/.test(sel)), `a dark fill (${v}) appears only on a button (the gold Make a donation button, and a button on a ministry's own themed page, are buttons too), or the gold bar of 4 pixels over a label, never on "${sel}"`);
   }
 }
 ok(!/#(?:f00|ff0000|dc2626|ef4444|b91c1c|991b1b|e11d48|c00)\b|\bred\b|crimson|firebrick|tomato/i.test(bare), "the stylesheet names no red");

@@ -12,6 +12,8 @@ import { WORDS, POST_STATUS, MINISTRY_STATUS, CLOSE_REASON, KIND, NO_MONEY, CRIS
 import { signInEmail, answerEmail, inviteEmail, reportEmail } from "../server/emails.mjs";
 import { NONPROFIT_LINE, IRS_PHRASE } from "../server/words.mjs";
 import { receiptEmail } from "../server/emails.mjs";
+import { bibleHomePage, bibleBookPage, bibleChapterPage } from "../server/bible-pages.mjs";
+import { TRANSLATIONS } from "../server/bible.mjs";
 import { takeDonationsPage, givingPage, givePage, ministryPage, frontPage, boardPage, postPage, missingPostPage, notFoundPage, shellPage, termsPage, privacyPage, postCard } from "../server/pages.mjs";
 
 const T = counter("plainwords-test"); const { ok } = T;
@@ -41,10 +43,17 @@ const gv = { door_open: true, registration_number: "WA-123456", registration_dat
 const pages = { giving: givingPage({ giving: gv }), givingClosed: givingPage({ giving: { ...gv, door_open: false, registration_number: null, registration_date: null, grants: [] } }), give: givePage({ open: true, notice: "notices@linkedm.example" }), giveClosed: givePage({ open: false }), takeDonations: takeDonationsPage({ notice: "notices@linkedm.example" }), ministry: ministryPage({ page: { slug: "alpha", name: "Alpha Table Ministry", city: "Seattle", state: "WA", live_at: "2026-10-18T10:00:00Z", live: { tagline: "x", about: "x", meets: [{ day: "Sundays", time: "9 am", place: "The hall" }], email: "a@b.example", website: "https://a.example", give_url: "https://pay.example/g", photos: [] } }, notice: "notices@linkedm.example", giving: { open: true } }), front: frontPage({ latest: [] }), board: boardPage({ result: { posts: [], total: 0, page: 1, pages: 1, filters: { kind: "", category: "", state: "", city: "", q: "" } } }),
   missing: missingPostPage(), notFound: notFoundPage(), terms: termsPage({ notice: "notices@linkedm.example" }), privacy: privacyPage({ notice: "notices@linkedm.example" }), termsNoAddress: termsPage({}),
   card: postCard({ id: "11111111-1111-4111-8111-111111111111", kind: "ask", category: "furniture", title: "x", body: "x", city: "Seattle", state: "WA", open_until: "2026-11-17", posted_at: "2026-10-18T10:00:00Z", ministry: "x", ministry_city: "Seattle", ministry_state: "WA" }), join: shellPage({ title: "Join the network", script: "/js/join.js" }), me: shellPage({ title: "Your ministry", script: "/js/me.js" }), steward: shellPage({ title: "Waiting to be read", script: "/js/steward.js" }) };
+/* 0012: a ministry's page with its colour, two Bible languages and a gallery, and its Bible (the verses are the Bible's and are left out) */
+{ const bp = { slug: "alpha", name: "Alpha Table Ministry", city: "Seattle", state: "WA", live_at: "2026-10-18T10:00:00Z", live: { tagline: "x", about: "x", meets: [], theme: "teal", bible: ["hi-irv", "en-kjv"], photos: [1, 2, 3].map((i) => ({ id: `3333333${i}-3333-4333-8333-333333333333`, alt: "" })) } };
+  Object.assign(pages, { ministryThemed: ministryPage({ page: bp }), bibleHome: bibleHomePage({ page: bp }), bibleBook: bibleBookPage({ page: bp, key: "john" }), bibleChapter: bibleChapterPage({ page: bp, key: "john", n: "3" }),
+    bibleUnnumbered: bibleChapterPage({ page: { ...bp, live: { ...bp.live, bible: ["ar-nav"] } }, key: "acts", n: "15" }), biblePreview: bibleHomePage({ page: bp, preview: true }) }); }
+/* The third named exception: each Bible translation's name and licence, as its rights holder asks it to be credited ("Indian Revised
+   Version, Bridge Connectivity Solutions. Creative Commons Attribution-ShareAlike 4.0."). It is proper names, not our sentences. */
+const CREDITS = new Set(TRANSLATIONS.map((t) => `${t.name}. ${t.licence}`));
 let sentences = 0;
 for (const [name, html] of Object.entries(pages)) {
   const blocks = html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<svg[\s\S]*?<\/svg>|<select[\s\S]*?<\/select>|<blockquote class="scripture[\s\S]*?<\/blockquote>/gi, " ").replace(/<\/(p|h1|h2|h3|li|label|div|a|button|span|td|th|tr|caption|figcaption)>/gi, "\n").split("\n").map((b) => visibleText(b)).filter((b) => b.split(/\s+/).length >= 4);
-  for (const b of blocks) { if (b === LEGAL) continue; sentences++; check(`page ${name}`, b); }
+  for (const b of blocks) { if (b === LEGAL || CREDITS.has(b)) continue; sentences++; check(`page ${name}`, b); }
 }
 { /* the offline page is a plain file, so its sentences are read from the file itself */
   const off = read("public/offline.html"); const blocks = off.replace(/<svg[\s\S]*?<\/svg>|<head>[\s\S]*?<\/head>/gi, " ").replace(/<\/(p|h1|h2|li|a|span|div)>/gi, "\n").replace(/<[^>]+>/g, " ").split("\n").map((x) => x.replace(/\s+/g, " ").trim()).filter((x) => x.split(" ").length >= 3 && x !== "Linked Ministries linkedm.org");

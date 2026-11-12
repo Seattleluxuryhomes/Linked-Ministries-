@@ -62,7 +62,7 @@ export function pageForm(me, pg, { onDone, onCancel }) {
   file.addEventListener("change", async () => {
     const f = file.files && file.files[0]; if (!f) return;
     out.replaceChildren();
-    if (photos.length >= PAGE_LIMITS.photos) { out.replaceChildren(msg("A page holds two pictures. Remove one first.")); file.value = ""; return; }
+    if (photos.length >= PAGE_LIMITS.photos) { out.replaceChildren(msg(WORDS.pagePhotosFull)); file.value = ""; return; }
     if (f.size > PAGE_LIMITS.photoBytes) { out.replaceChildren(msg("That picture is bigger than 1.5 MB. Choose a smaller one.")); file.value = ""; return; }
     const r = await upload("/api/page/photos", f);
     file.value = "";
@@ -78,6 +78,16 @@ export function pageForm(me, pg, { onDone, onCancel }) {
   const slug = text("slug", pg.slug || pg.suggested_slug || "", { max: 60 });
   if (slugLocked) slug.disabled = true;
   const verseSel = select("verse", (pg.verses || []).map((v) => [v.key, `${v.ref}: ${v.text.slice(0, 48)}...`]), d.verse || "", WORDS.pageVerseNone);
+  /* 0012: the page's colour, one of twelve, shown as a ring of that colour (a class the stylesheet knows: no style attribute) */
+  const theme = d.theme || "gold";
+  const look = h("fieldset", { class: "themes", "data-themes": "" }, h("legend", { class: "sr" }, WORDS.pageLook),
+    (pg.themes || []).map((t) => h("label", { class: "theme-pick theme-" + t.key },
+      h("input", { type: "radio", name: "theme", value: t.key, checked: t.key === theme }), h("span", { class: "swatch", "aria-hidden": "true" }), h("span", {}, t.name))));
+  /* 0012: the Bible, in one language or two; the first is the one it opens in */
+  const bibles = pg.bibles || [], chosen = d.bible || [];
+  const bibleOpts = bibles.map((b) => [b.id, `${b.native} · ${b.language} · ${b.name}`]);
+  const bibleFirst = select("bible_first", bibleOpts, chosen[0] || (bibles[0] && bibles[0].id) || "");
+  const bibleSecond = select("bible_second", bibleOpts, chosen[1] || "", WORDS.pageBibleNone);
   const form = h("form", { class: "card formcard", novalidate: true, "data-page-form": "" },
     h("h3", {}, WORDS.pageTitle),
     h("p", { class: "note" }, WORDS.pageNameNote),
@@ -95,6 +105,9 @@ export function pageForm(me, pg, { onDone, onCancel }) {
       field(WORDS.pagePhone, text("phone", d.phone, { type: "tel", max: 30, mode: "tel" })),
       field(WORDS.pageWebsite, text("website", d.website, { type: "url", max: 200, mode: "url", placeholder: "https://" })),
       field(WORDS.pageGive, text("give_url", d.give_url, { type: "url", max: 300, mode: "url", placeholder: "https://" }), WORDS.pageGiveHelp)),
+    h("h4", {}, WORDS.pageLook), h("p", { class: "help" }, WORDS.pageLookHelp), look,
+    h("h4", {}, WORDS.pageBible), h("p", { class: "help" }, WORDS.pageBibleHelp),
+    h("div", { class: "formgrid" }, field(WORDS.pageBibleFirst, bibleFirst), field(WORDS.pageBibleSecond, bibleSecond)),
     h("h4", {}, WORDS.pagePhotos), h("p", { class: "help" }, WORDS.pagePhotosHelp), photoBox,
     h("div", { class: "field" }, h("label", { for: "page-photo-file" }, WORDS.pagePhotoAdd), file),
     h("div", { class: "formgrid" }, field(WORDS.pageVerse, verseSel), field(WORDS.pageAddress, slug, slugLocked ? WORDS.pageAddressLocked : WORDS.pageAddressHelp)),
@@ -112,7 +125,8 @@ export function pageForm(me, pg, { onDone, onCancel }) {
     await busy(btn, async () => {
       const v = values(form);
       const body = { name: v.name, city: v.city, state: v.state, slug: slugLocked ? undefined : v.slug, tagline: v.tagline, about: v.about, email: v.email, phone: v.phone, website: v.website,
-        give_url: v.give_url, verse: v.verse, meets: [...meetBox.querySelectorAll("[data-meet]")].map((r) => r.read()), photos: readPhotos(), submit };
+        give_url: v.give_url, verse: v.verse, theme: (form.querySelector("input[name=theme]:checked") || {}).value || "",
+        bible: [v.bible_first, v.bible_second].filter((x, i, a) => x && a.indexOf(x) === i), meets: [...meetBox.querySelectorAll("[data-meet]")].map((r) => r.read()), photos: readPhotos(), submit };
       const r = await post("/api/page", body);
       if (!r.ok) return out.replaceChildren(msg(r.data.words || WORDS.tryAgain));
       onDone(r.data.state === "approved" ? WORDS.pageNoChange : submit ? WORDS.pageSent : WORDS.pageSaved);

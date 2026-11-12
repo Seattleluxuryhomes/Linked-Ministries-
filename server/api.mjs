@@ -11,6 +11,8 @@ import { boardPost } from "./board.mjs";
 import express from "express";
 import { cleanPhoto, MAX_BYTES } from "../lib/photo.mjs";
 import { VERSES } from "./scripture.mjs";
+import { THEMES, THEME_LIST } from "./themes.mjs";
+import { TRANSLATIONS, translation } from "./bible.mjs";
 import { parseCents, receiptCode, methodLabel, GIFT_METHODS } from "../public/js/pure.js";
 import { receiptEmail } from "./emails.mjs";
 import { toCsv, dollars } from "../lib/csv.mjs";
@@ -65,11 +67,17 @@ function postFields(b, now) {
 /* the fields of a ministry's public page, cleaned for a friendlier sentence than the database's (the database holds every rule too) */
 function pageFields(b) {
   const meets = (Array.isArray(b.meets) ? b.meets : []).slice(0, 8).map((r) => ({ day: str(r && r.day, 30), time: str(r && r.time, 30), place: str(r && r.place, 120) }));
-  const photos = (Array.isArray(b.photos) ? b.photos : []).slice(0, 2).map((p) => ({ id: str(p && p.id, 36).toLowerCase(), alt: str(p && p.alt, 160) }));
+  const photos = (Array.isArray(b.photos) ? b.photos : []).slice(0, 12).map((p) => ({ id: str(p && p.id, 36).toLowerCase(), alt: str(p && p.alt, 160) }));
   const verse = str(b.verse, 30);
   if (verse && !Object.prototype.hasOwnProperty.call(VERSES, verse)) throw bad("Choose a verse from the list, or none.", 422, "verse_not_known");
+  /* 0012: the page's colours and its Bible. The database checks the shape; here each is checked against what this server carries. */
+  const theme = str(b.theme, 20);
+  if (theme && !Object.prototype.hasOwnProperty.call(THEMES, theme)) throw bad("Choose one of the colors on the list.", 422, "theme_not_known");
+  const bible = [...new Set((Array.isArray(b.bible) ? b.bible : []).map((x) => str(x, 20)).filter(Boolean))];
+  if (bible.length > 2) throw bad("Choose one or two Bible languages.", 422, "bible_too_many");
+  if (bible.some((x) => !translation(x))) throw bad("Choose a Bible language from the list.", 422, "bible_not_known");
   const f = { name: str(b.name, 120), city: str(b.city, 80), state: str(b.state, 2).toUpperCase(), slug: str(b.slug, 60).toLowerCase(),
-    draft: { tagline: str(b.tagline, 140), about: str(b.about, 3000), meets, email: str(b.email, 254).toLowerCase(), phone: str(b.phone, 30), website: str(b.website, 200), give_url: str(b.give_url, 300), verse, photos } };
+    draft: { tagline: str(b.tagline, 140), about: str(b.about, 3000), meets, email: str(b.email, 254).toLowerCase(), phone: str(b.phone, 30), website: str(b.website, 200), give_url: str(b.give_url, 300), verse, theme, bible, photos } };
   if (f.name.length < 2) throw bad("Type your ministry's name.", 422, "name_needed");
   if (f.city.length < 2) throw bad("Type your city.", 422, "city_needed");
   if (!STATE_CODES.includes(f.state)) throw bad("Choose your state.", 422, "state_needed");
@@ -141,7 +149,8 @@ export function mount(app, { wrap, publicBase, env = process.env, now = () => Da
   }));
 
   /* ---- the ministry's public page: one form, read by a steward before anyone sees it ---------------------------------------------- */
-  get("/api/page", async (req) => ({ ...((await one(req, "select lm.page_mine() as p")).p || { exists: false }), verses: Object.entries(VERSES).map(([key, v]) => ({ key, ref: v.ref, text: v.text })) }));
+  get("/api/page", async (req) => ({ ...((await one(req, "select lm.page_mine() as p")).p || { exists: false }), verses: Object.entries(VERSES).map(([key, v]) => ({ key, ref: v.ref, text: v.text })),
+    themes: THEME_LIST.map(([key, name]) => ({ key, name })), bibles: TRANSLATIONS.map((t) => ({ id: t.id, language: t.language, native: t.native, name: t.name })) }));
   post("/api/page", async (req) => {
     const b = req.body || {}, f = pageFields(b);
     await slow(req, "page", 60);

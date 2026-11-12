@@ -80,7 +80,7 @@ export const PAGE_STATUS = {
   ministry_waiting: "Your page will be public after a person at Linked Ministries reads your ministry.",
 };
 export const MEET_DAYS = ["Every day", "Sundays", "Mondays", "Tuesdays", "Wednesdays", "Thursdays", "Fridays", "Saturdays", "Weekdays", "Weekends", "First of the month", "Once a month"];
-export const PAGE_LIMITS = { tagline: 140, about: 3000, meets: 8, photos: 2, photoBytes: 1572864 };
+export const PAGE_LIMITS = { tagline: 140, about: 3000, meets: 8, photos: 12, photoBytes: 1572864, bibles: 2 };
 
 /* dollars from whole cents, the way a person reads them: 123456 -> "$1,234.56". Money is only ever whole cents; never a float. */
 export function money(cents) {
@@ -281,7 +281,15 @@ export const WORDS = {
   pageGive: "Your donation link",
   pageGiveHelp: "A link to your own donation page, like a Zeffy page. Your page then shows a Make a donation button. Linked Ministries never touches those donations.",
   pagePhotos: "Pictures",
-  pagePhotosHelp: "One or two. A JPEG or a PNG, 1.5 MB or smaller. Where a picture was taken is taken out of it.",
+  pagePhotosHelp: "Up to twelve. The first two lead your page and the rest make a gallery. A JPEG or a PNG, 1.5 MB or smaller. Where a picture was taken is taken out of it.",
+  pagePhotosFull: "Your page holds twelve pictures. Remove one first.",
+  pageLook: "Your page's color",
+  pageLookHelp: "Choose a color for your page and your Bible. Every color stays calm and easy to read.",
+  pageBible: "Your Bible",
+  pageBibleHelp: "Your page has the whole Bible. Choose the language it opens in. You can add a second language, and readers can switch.",
+  pageBibleFirst: "Bible language",
+  pageBibleSecond: "A second language (optional)",
+  pageBibleNone: "No second language",
   pagePhotoAdd: "Add a picture",
   pagePhotoAlt: "Say what is in the picture",
   pagePhotoRemove: "Remove this picture",

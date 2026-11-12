@@ -455,3 +455,80 @@ section[aria-labelledby] h2{margin-bottom:.6em}
 .install-slot:empty{display:none}
 .eden-sub{margin:16px 0 4px;padding-top:12px;border-top:1px solid var(--line)}
 .eden-free .field{margin-bottom:8px}
+
+/* ---- a ministry's own colours (migration 0012). Only /m/<slug> and its Bible wear a theme; the network's own pages keep the one gold.
+   Every theme keeps the light rules: a pale ground, a pale band, dark words, a deep shade that reads at 7 to 1, and never red. The values
+   come from server/themes.mjs (node tools/make-themes.mjs writes the block between the two markers; the unit test checks they match). */
+/* themes: begin */
+.theme-gold{--t:#d97706;--t-ink:#814c11;--t-soft:#faefe1;--t-ground:#fefaf6}
+.theme-clay{--t:#b5651d;--t-ink:#804c1e;--t-soft:#f6ede4;--t-ground:#fcfaf7}
+.theme-rose{--t:#c0507e;--t-ink:#8b3f62;--t-soft:#f7eaf0;--t-ground:#fdf9fa}
+.theme-plum{--t:#8e44ad;--t-ink:#7a3d96;--t-soft:#f1e9f5;--t-ground:#fbf8fc}
+.theme-indigo{--t:#4f46e5;--t-ink:#4941d1;--t-soft:#eae9fc;--t-ground:#f9f9fe}
+.theme-ocean{--t:#1e6fb8;--t-ink:#1b5b96;--t-soft:#e4eef6;--t-ground:#f7fafd}
+.theme-sky{--t:#0284c7;--t-ink:#075c8b;--t-soft:#e1f0f8;--t-ground:#f6fbfd}
+.theme-teal{--t:#0f8a80;--t-ink:#0f635f;--t-soft:#e2f1f0;--t-ground:#f7fbfb}
+.theme-forest{--t:#2f7d4f;--t-ink:#286443;--t-soft:#e6efea;--t-ground:#f8faf9}
+.theme-olive{--t:#7a8a2e;--t-ink:#525e28;--t-soft:#eff1e6;--t-ground:#fafbf8}
+.theme-earth{--t:#9a6b3f;--t-ink:#715235;--t-soft:#f3ede8;--t-ground:#fbfaf8}
+.theme-slate{--t:#56677d;--t-ink:#4b5a6e;--t-soft:#ebedef;--t-ground:#f9fafa}
+/* themes: end */
+html.themed,body.themed{background:var(--t-ground)}
+.themed .mpage a{text-decoration-color:var(--t)}
+.themed .mpage .eyebrow{color:var(--t-ink)}
+.themed .mpage .eyebrow a{color:var(--t-ink);text-decoration:none}
+.themed .mpage .eyebrow::before{background:none;height:0;border-top:4px solid var(--t)}
+.themed .mpage .mhero{background:var(--t-soft);border-bottom:4px solid var(--t)}
+.themed .mpage .mcard{border-top:4px solid var(--t)}
+.themed .mpage .scripture{border-left-color:var(--t)}
+.themed .mpage .btn{background:var(--t-ink);border-color:var(--t-ink)}
+.themed .mpage .btn:hover{background:var(--ink);border-color:var(--ink)}
+.themed .mpage .btn.ghost{background:var(--card);color:var(--t-ink);border-color:var(--t-ink)}
+.themed .mpage .btn.ghost:hover{background:var(--t-soft);border-color:var(--t-ink)}
+.themed .mpage .btn.donate{background:var(--gold);border-color:var(--gold);color:#1b1b1b}
+.themed .mpage .btn.donate:hover{background:var(--gold-ink);border-color:var(--gold-ink);color:#ffffff}
+
+
+/* the gallery: up to ten more pictures under the first two */
+.mgallery h2{font-size:24px;margin-top:8px}
+.mgallery-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (min-width:700px){.mgallery-grid{grid-template-columns:repeat(3,1fr)}}
+@media (min-width:1000px){.mgallery-grid{grid-template-columns:repeat(4,1fr)}}
+.mphoto.small img{aspect-ratio:1/1}
+
+/* the Bible: a shelf of books, a grid of chapters, and a chapter set for reading. Right-to-left languages turn the text, not the page. */
+.bible .mhero{padding:22px 0 18px}
+.bible .crumbs{margin:0;font-size:15px;color:var(--muted)}
+.bible .crumbs a{color:var(--ink)}
+.bible-langs{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.bible-langs a{display:inline-flex;align-items:center;min-height:44px;padding:8px 18px;border-radius:999px;border:2px solid var(--t-ink);background:var(--card);color:var(--t-ink);font-weight:600;text-decoration:none}
+.bible-langs a[aria-current]{background:var(--t-soft);box-shadow:inset 0 0 0 2px var(--t-ink)}
+.bible-body{padding-top:24px;padding-bottom:8px}
+.bible-body h1{font-size:34px}
+.bible-shelf h2{font-size:22px;margin-top:28px}
+.bible-books{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media (min-width:700px){.bible-books{grid-template-columns:repeat(3,1fr)}}
+.bible-books a{display:flex;align-items:center;min-height:48px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);text-decoration:none;font-weight:600;overflow-wrap:anywhere}
+.bible-books a:hover{border-color:var(--t);background:var(--t-soft)}
+.bible-chapters{list-style:none;padding:0;margin:16px 0 0;display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+@media (min-width:700px){.bible-chapters{grid-template-columns:repeat(10,1fr)}}
+.bible-chapters a{display:flex;align-items:center;justify-content:center;min-height:48px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);text-decoration:none;font-weight:600;font-variant-numeric:tabular-nums}
+.bible-chapters a:hover{border-color:var(--t);background:var(--t-soft)}
+.scripture.bible-text{max-width:40rem;margin:20px 0;padding:4px 0 4px 18px}
+.scripture.bible-text[dir=rtl]{padding:4px 18px 4px 0;border-left:0;border-right:4px solid var(--t)}
+.scripture.bible-text p{font-size:19px;line-height:1.75;margin:0 0 .55em}
+.scripture.bible-text[dir=rtl] p{font-size:21px;line-height:2}
+.scripture.bible-text sup{font:700 12px var(--face);color:var(--t-ink);margin-inline-end:6px;vertical-align:super}
+.bible-steps{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;max-width:40rem;margin:8px 0 16px}
+.bible-steps .next{margin-left:auto}
+.bible-steps .step-label{font-weight:700}
+.bible-licence{max-width:40rem}
+
+/* the colour picker on the page form: twelve rings, each the theme's own colour, painted as a border (never a dark fill) */
+.themes{border:0;padding:0;margin:0 0 var(--gap);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media (min-width:600px){.themes{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (min-width:900px){.themes{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.theme-pick{display:flex;align-items:center;gap:10px;min-height:48px;padding:8px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);cursor:pointer;font-weight:600}
+.theme-pick input{width:20px;height:20px;margin:0;accent-color:var(--t-ink)}
+.theme-pick .swatch{width:28px;height:28px;flex:none;border-radius:50%;border:14px solid var(--t);box-sizing:border-box}
+.theme-pick:has(input:checked){border-color:var(--t-ink);background:var(--t-soft);box-shadow:inset 0 0 0 1px var(--t-ink)}

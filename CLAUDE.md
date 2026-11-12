@@ -25,6 +25,12 @@ Founder, 2026-10-18: "So if a ministry wants something or needs something we nee
    a person wrote (an answer's words are in its own row and in the email, never in the event).
 5. **Light only.** A pale ground, white cards, dark words, one gold (#D97706) for lines and small labels. No dark theme, panel or
    sidebar; the only dark fill is a button (and the 44-pixel ink tile of the mark, which is a logo, drawn as an SVG). Never alarmed: no red. `tests/light-test.mjs` fails on any dark surface and on red.
+   Founder, 2026-11-12 ("a template that we can give to different ministries ... the only thing that they would have to change are the pictures
+   and colors"; asked inside linkedm.org or a separate template, and how wide the colour choice, answered: inside linkedm.org, curated themes):
+   a ministry's own page (`/m/<slug>`) and its Bible may wear **one of twelve themes** (`server/themes.mjs`, migration 0012). Each theme is one
+   accent with its shades worked out so it keeps every rule above: a pale ground, a pale band, a deep shade that reads at 7 to 1, never red.
+   The theme paints only the ministry's own part of the page (`.mpage`); the top bar, the footer and every network page keep the one gold.
+   No style attribute: a theme is a class the stylesheet carries (`node tools/make-themes.mjs`).
 6. **Plain words**, grade 8 or under, on every public sentence. `lib/plainwords.mjs` reads them in `tests/plainwords-test.mjs`. The one
    named exception is the founder's own line about the nonprofit corporation, which carries a legal name.
 7. **No AI except Eden, the writing helper (below). No payment processor. No money category. No tracking.** The board moves no money between ministries and says so. Founder,
@@ -84,6 +90,25 @@ Founder, 2026-10-18: "So if a ministry wants something or needs something we nee
 16. **A new database function gets no grant until it needs one.** Postgres lets everyone run a new function: revoke it from public, anon and
     authenticated in the same migration, and grant only what a signed-in person needs (0004's blanket revoke covered only what existed then).
     Whatever reads a contact address, or erases a person, runs on the service connection alone.
+
+## A ministry's Bible (migration 0012)
+
+Founder, 2026-11-12: every ministry's page "will have the Bible app ... including the language that they choose to use for the Bible".
+`/m/<slug>/bible` is the whole Bible, built on the server, in the one or two languages the ministry chose (King James Version when it chose
+none). The rules:
+
+- **The Bible's words, never ours.** Text comes only from `data/bible/<id>.json.gz`, made by `tools/import-bible.mjs` from a source file. The
+  tool takes out what is not the text (a cross-reference in brackets, a source's numbering note) and never rewrites a word. Eden never writes
+  or chooses Scripture here; rule 15 is unchanged.
+- **Only what the licence allows.** This repository is public, so a translation is carried only when its licence lets it be shared:
+  public domain, or an open licence such as CC BY-SA, named on every chapter. `data/bible/translations.json` says which; `ready: false`
+  means not carried (today: Urdu Geo Version, licence not confirmed; Reina-Valera 1909, waiting for a clean copy). The tool refuses one
+  that is not ready, and the unit test fails if its file is in the repository.
+- **Never a wrong chapter and verse.** A source with no verse numbers is numbered by place only where each chapter holds the King James
+  Version's count; any other chapter is shown without numbers, with a note saying why.
+- **Quoted Scripture is not our copy.** `tests/banned.mjs` and `tests/plainwords-test.mjs` leave out what sits inside
+  `<blockquote class="scripture">` (the Bible has a Red Sea and a man "not slack"). Each translation's credit line is the plain-words test's
+  third named exception.
 
 ## Installable app
 

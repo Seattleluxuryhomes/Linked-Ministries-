@@ -62,6 +62,25 @@ copied are listed in `commons.json`, each with where it came from.
 
 A "Give" button shows on the page only when the giving door is open (see below) and the ministry has set a link of its own for gifts. The link is the ministry's, is labelled as theirs, and Linked Ministries never collects or sees that gift.
 
+## The ministry's colours, Bible and gallery (migration 0012)
+
+Founder, 2026-11-12: a ministry's page is the template every ministry gets; it changes only its pictures and colours, and it carries
+the Bible in the language it chooses.
+
+| # | Where | What happens |
+|---|---|---|
+| 1 | `/me`, the page form | "Your page's color": twelve calm themes (`server/themes.mjs`). "Your Bible": the language it opens in, and an optional second one. "Pictures": up to twelve. |
+| 2 | `/review` | Read like any change to the page. Nothing is public until a person on the team approves it. |
+| 3 | `/m/<slug>` | The page wears its theme. The first two pictures lead; the rest are a gallery. A "Read the Bible" card names the languages. |
+| 4 | `/m/<slug>/bible` | The 66 books, in the first language. Then a book's chapters (`/bible/<book>`) and a chapter (`/bible/<book>/<n>`), with Back and Next across books. |
+| 5 | a chapter | With two languages, a switch keeps the reader on the same chapter (`?t=<id>`). Right-to-left languages read right to left. Each chapter names its translation and licence. |
+
+The Bible's text is in `data/bible/`: `books.json` (the 66 books), `translations.json` (each translation, its licence and whether it is
+`ready`), and one `<id>.json.gz` per carried translation. Carried today: English (King James Version), Vietnamese (1925), Hindi and Bengali
+(Indian Revised Version), Nepali (Biblica Open Nepali Contemporary Version) and Arabic (Biblica Open New Arabic Version). To add one whose
+licence allows it: add it to `translations.json` with `ready: true`, then `node tools/import-bible.mjs <id> <source.json>`.
+After changing a theme's accent in `server/themes.mjs`, run `node tools/make-themes.mjs`.
+
 ## Giving: the ledger, with the money door closed (migration 0008)
 
 Founder, 2026-10-18: "We are a safe and transparent place to donate money." The standard is proved by the record, not claimed. The board
@@ -157,6 +176,7 @@ makes the browser test write screenshots.
 | `tests/db-pages-test.mjs` | The ministry page as every person: only the copy a person on the team read is public, the address is unique and final once public, the form's rules held by the database, pictures served only when the live copy names them, a ministry that leaves takes its page. |
 | `tests/api-pages-test.mjs` | The page builder over HTTP: the form, a picture checked and cleaned (where it was taken is taken out), the private preview, the team's review, the public page signed out, the sitemap, the board's link. |
 | `tests/browser-page-test.mjs` | Real clicks at 390 and 1440: a lead makes the page from the form, a person on the team approves it, a visitor opens it, and it prints to a PDF. |
+| `tests/browser-bible-test.mjs` | Real clicks at 390 and 1440: a lead chooses a theme, two Bible languages and three pictures; the team approves; a visitor reads John 3 in Hindi, switches to English on the same chapter and steps to John 4; an Arabic chapter reads right to left; a chapter numbered differently shows no numbers; all twelve themes are light and never red. |
 | `tests/db-giving-test.mjs` | The ledger as every person: records only added to, no gap in receipt numbers, two different people on the money team, the board's vote, a grant no larger than the gifts, the door's CHECK, no donor in any event, the public reads sums only. |
 | `tests/api-giving-test.mjs` | The money pages over HTTP with a real SMTP stand-in: a receipt only when the provider takes it, the vote, /giving signed out, the door and the Give button, the CSV that cannot run as a formula. |
 | `tests/browser-giving-test.mjs` | Real clicks at 390 and 1440: two people on the money team, a gift, a grant proposed and approved by a different person, /giving signed out, the door closed and open. |
