@@ -6,7 +6,7 @@ import { pageCard, pageForm } from "/js/page.js";
 import { edenPanel, onEdenDraft, readHandoff } from "/js/eden.js";
 import { installCard } from "/js/install.js";
 import { values as formValues } from "/js/common.js";
-import { WORDS, KIND, POST_STATUS, MINISTRY_STATUS, CLOSE_REASON, categoryLabel, dateWords } from "/js/pure.js";
+import { WORDS, KIND, POST_STATUS, MINISTRY_STATUS, CLOSE_REASON, categoryLabel, dateWords, placeWords } from "/js/pure.js";
 
 const app = document.getElementById("app");
 let flash = null;          // one message shown at the top, from the last thing the person did
@@ -167,7 +167,7 @@ function postRow(me, p) {
 }
 
 function receivedRow(a) {
-  return h("div", { class: "mine" }, h("h3", {}, `${a.from_ministry} (${a.from_city}, ${a.from_state})`),
+  return h("div", { class: "mine" }, h("h3", {}, `${a.from_ministry} (${placeWords(a.from_city, a.from_state)})`),
     h("p", { class: "when" }, `Answered "${a.post_title}" on ${dateWords(a.sent_at)}`),
     h("p", { class: "quote" }, a.words),
     h("p", {}, `Reply to ${a.from_name || "the ministry"}: `, h("a", { href: "mailto:" + a.email }, a.email), a.phone ? ` · ${a.phone}` : ""));
@@ -182,7 +182,7 @@ function profileCard(me) {
   return h("div", { class: "card" },
     h("dl", { class: "kv" },
       h("dt", {}, WORDS.fieldName), h("dd", {}, m.name),
-      h("dt", {}, WORDS.fieldCity), h("dd", {}, `${m.city}, ${m.state}`),
+      h("dt", {}, WORDS.fieldCity), h("dd", {}, placeWords(m.city, m.state, m.country)),
       h("dt", {}, WORDS.fieldAbout), h("dd", {}, m.about),
       h("dt", {}, WORDS.fieldWebsite), h("dd", {}, m.website || "None"),
       h("dt", {}, WORDS.fieldContact), h("dd", {}, m.contact_name),

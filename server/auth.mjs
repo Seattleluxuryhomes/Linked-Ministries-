@@ -114,7 +114,7 @@ export async function whoami(user) {
       steward: !!(person && person.steward),
       treasurer: !!(person && person.treasurer),
       ministry: ministry ? {
-        id: ministry.id, name: ministry.name, city: ministry.city, state: ministry.state, about: ministry.about, website: ministry.website,
+        id: ministry.id, name: ministry.name, city: ministry.city, state: ministry.state, country: ministry.country || "US", about: ministry.about, website: ministry.website,
         contact_name: ministry.contact_name, contact_email: ministry.contact_email, status: ministry.status, review_note: ministry.review_note,
       } : null,
       lead: !!(person && person.role === "lead"),

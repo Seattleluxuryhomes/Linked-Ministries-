@@ -1,7 +1,7 @@
 /* steward.js — /review (it was /steward): what is waiting for a person at Linked Ministries to read. Approve it, or send it back with a note the
    poster reads. The page mirrors the database's decision; the database refuses anyone who is not on the team (the steward flag). */
 import { h, get, post, msg, field, text, area, busy, toSignIn } from "/js/common.js";
-import { waitingCount, WORDS, KIND, REPORT_REASONS, categoryLabel, dateWords } from "/js/pure.js";
+import { waitingCount, WORDS, KIND, REPORT_REASONS, categoryLabel, dateWords, placeWords } from "/js/pure.js";
 
 const app = document.getElementById("app");
 let flash = null;
@@ -79,7 +79,7 @@ function reportCard(r) {
 
 function ministryCard(m) {
   return h("div", { class: "card", "data-ministry": m.id },
-    h("h3", {}, m.name), h("p", { class: "when" }, `${m.city}, ${m.state}`),
+    h("h3", {}, m.name), h("p", { class: "when" }, placeWords(m.city, m.state, m.country)),
     h("dl", { class: "kv" },
       h("dt", {}, "What it does"), h("dd", {}, m.about),
       h("dt", {}, "Website"), h("dd", {}, m.website || "None"),
@@ -91,7 +91,7 @@ function pageCard(g) {
   const d = g.draft || {};
   const photos = (d.photos || []).map((p) => h("img", { class: "thumb", src: "/photos/" + p.id, alt: p.alt || "A picture on the page", width: 160, height: 120 }));
   return h("div", { class: "card", "data-page": g.ministry_id },
-    h("h3", {}, g.ministry), h("p", { class: "when" }, `${g.city}, ${g.state} · /m/${g.slug} · ${g.is_change ? WORDS.stewardPageChange : WORDS.stewardPageNew}`),
+    h("h3", {}, g.ministry), h("p", { class: "when" }, `${placeWords(g.city, g.state)} · /m/${g.slug} · ${g.is_change ? WORDS.stewardPageChange : WORDS.stewardPageNew}`),
     g.ministry_status !== "public" ? h("p", { class: "msg" }, "This ministry has not been read yet. Read the ministry first, then its page.") : null,
     h("dl", { class: "kv" },
       h("dt", {}, "One line"), h("dd", {}, d.tagline),
@@ -110,7 +110,7 @@ function postCard(p) {
   return h("div", { class: "card", "data-post": p.id },
     h("div", { class: "meta row" }, h("span", { class: "tag " + p.kind }, KIND[p.kind].label), h("span", { class: "cat" }, categoryLabel(p.category))),
     h("h3", {}, p.title),
-    h("p", { class: "who" }, `${p.ministry} · ${p.city}, ${p.state}`),
+    h("p", { class: "who" }, `${p.ministry} · ${placeWords(p.city, p.state)}`),
     p.ministry_status !== "public" ? h("p", { class: "msg" }, "This ministry has not been read yet. Read the ministry first, then this post.") : null,
     h("p", { class: "quote" }, p.body),
     h("p", { class: "when" }, `Open until ${dateWords(p.open_until)}`),

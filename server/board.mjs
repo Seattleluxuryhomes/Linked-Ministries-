@@ -2,7 +2,7 @@
    only a public, still-open post of a public ministry comes back, and only the columns 0004 grants. This file only asks.
    The front page, the board, a single post and the public API all come through here. */
 import { asAnon } from "./db.mjs";
-import { CATEGORY_IDS, STATE_CODES } from "../public/js/pure.js";
+import { CATEGORY_IDS, STATE_CODES, COUNTRY_CODES } from "../public/js/pure.js";
 
 export const PAGE_SIZE = 20;
 
@@ -10,12 +10,13 @@ export const PAGE_SIZE = 20;
 export function cleanFilters(q = {}) {
   const one = (v) => (Array.isArray(v) ? v[0] : v);
   const s = (v, n) => String(one(v) == null ? "" : one(v)).trim().slice(0, n);
-  const kind = s(q.kind, 10), category = s(q.category, 30), state = s(q.state, 2).toUpperCase();
+  const kind = s(q.kind, 10), category = s(q.category, 30), state = s(q.state, 2).toUpperCase(), country = s(q.country, 2).toUpperCase();
   const page = Math.min(500, Math.max(1, parseInt(s(q.page, 5), 10) || 1));
   return {
     kind: kind === "ask" || kind === "give" ? kind : "",
     category: CATEGORY_IDS.includes(category) ? category : "",
     state: STATE_CODES.includes(state) ? state : "",
+    country: COUNTRY_CODES.includes(country) ? country : "",
     city: s(q.city, 80),
     q: s(q.q, 120),
     page,
@@ -24,7 +25,7 @@ export function cleanFilters(q = {}) {
 
 const esc = (w) => w.replace(/[\\%_]/g, (c) => "\\" + c);
 const COLS = `p.id, p.kind, p.category, p.title, p.body, p.city, p.state, to_char(p.open_until, 'YYYY-MM-DD') as open_until,
-  to_char(p.approved_at at time zone 'utc', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as posted_at, m.name as ministry, m.city as ministry_city, m.state as ministry_state, lm.page_slug_of(m.id) as page_slug`;
+  to_char(p.approved_at at time zone 'utc', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as posted_at, m.name as ministry, m.city as ministry_city, m.state as ministry_state, m.country as ministry_country, lm.page_slug_of(m.id) as page_slug`;
 
 /** public posts, newest first. Returns { posts, total, page, pages, filters } */
 export async function boardQuery(input = {}, { limit = PAGE_SIZE } = {}) {
@@ -34,6 +35,7 @@ export async function boardQuery(input = {}, { limit = PAGE_SIZE } = {}) {
   if (f.kind) add("p.kind = $#", f.kind);
   if (f.category) add("p.category = $#", f.category);
   if (f.state) add("p.state = $#", f.state);
+  if (f.country) add("m.country = $#", f.country);
   if (f.city) add("p.city ilike $# escape '\\'", esc(f.city) + "%");
   for (const w of f.q.split(/\s+/).filter(Boolean).slice(0, 6)) add("(p.title ilike $# escape '\\' or p.body ilike $# escape '\\' or m.name ilike $# escape '\\')", "%" + esc(w) + "%");
   const off = (f.page - 1) * limit;
@@ -51,3 +53,8 @@ export async function boardPost(id) {
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id || ""))) return null;
   return asAnon(async (c) => (await c.query(`select ${COLS} from lm.posts p join lm.ministries m on m.id = p.ministry_id where p.id = $1`, [String(id).toLowerCase()])).rows[0] || null);
 }
+
+/** every public ministry with its country, its page's line and donation link, and its open asks (for /ministries) */
+export const directory = () => asAnon(async (c) => (await c.query("select lm.directory_public() as d")).rows[0].d);
+/** one ministry's public, still-open asks (its page lists them) */
+export const asksOf = (ministryId) => asAnon(async (c) => (await c.query("select lm.asks_public($1) as a", [ministryId])).rows[0].a);

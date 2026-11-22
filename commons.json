@@ -2,7 +2,7 @@
   "version": 1,
   "about": "Pieces this repository copied from another of the founder's products (Cross Universal), the sharing map. origin_sha256 is the origin file's SHA-256 at origin_commit; local_sha256 is this file's. A verbatim piece equals its origin; an adapted piece says what changed; a shaped-on piece is written new on the same model, rulings and defaults. 'Do not rebuild what has been built: copy it.' Regenerate with: node tools/commons.mjs",
   "origin_repo": "cross-univeral",
-  "origin_commit": "59b6f921fca9585a428e1a04c775234b0ac59539",
+  "origin_commit": "364848c12031b5f6fa226d68f239af89a82c41b5",
   "pieces": [
     {
       "id": "plainwords",
@@ -166,7 +166,7 @@
       "origin_path": "behavioral-health-app/server/auth.mjs",
       "origin_sha256": "6eb2e91310c43350c1db873db432022e00ee29a5b5df1ba2df63d528a83890c0",
       "local_path": "server/auth.mjs",
-      "local_sha256": "510c2188c825f7605cba598a4bb2e1e106227906d5d7b92ef486397cffa839cb",
+      "local_sha256": "8f2ee1575ce9977c1aca9bbfbbc42efe1dabb51a8f4a7b1cbc80949f86498f77",
       "note": "Six-digit code by email, hash-stored, ten minutes, five tries, one use, five wrong codes lock an address, thirty-day httpOnly sessions. Anyone may sign in (the first sign-in makes the person); the phone channel is gone; the answer says plainly when no email can be sent."
     },
     {
@@ -177,7 +177,7 @@
       "origin_path": "behavioral-health-app/server/api.mjs",
       "origin_sha256": "d181a933847ec6245881206eea307ad9c4a818e936ac05d2e14fc98ca7822c55",
       "local_path": "server/api.mjs",
-      "local_sha256": "2da57803776ede30980221020b1a35b6593f2d6f66e8deeed46b55f1e864a192",
+      "local_sha256": "34e1eab0ebaa5b54c77d6a6ed47bd3e345cf36a4ec86bbb064418b74e9b4af7d",
       "note": "Same pattern (asUser, functions decide, early friendly checks). The routes are this product's: ministries, team, posts, answers, stewards."
     },
     {
@@ -186,9 +186,9 @@
       "mode": "shaped-on",
       "origin_repo": "cross-univeral",
       "origin_path": "behavioral-health-app/server/index.mjs",
-      "origin_sha256": "b1375df160f0be6f55b551c26472bdeb63eef9c9af918fff8ba44584fd168e21",
+      "origin_sha256": "b525f7f5619187e71b76325fe4b53390f94b4c5ae59cd6f4d6fef6bb66ae5c3e",
       "local_path": "server/index.mjs",
-      "local_sha256": "6eba5f3c3b6f924f714f06291929a092ce0df5e6d47fe807c5cb3bd60e699a66",
+      "local_sha256": "aaedb1bb9837beca1ec7808a01d14bc5df5a4eb6edd9fdf7771f6e3a190c0d7b",
       "note": "Same boot order and health answer (two words). Public pages are built on the server."
     },
     {
@@ -210,7 +210,7 @@
       "origin_path": "behavioral-health-app/public/js/common.js",
       "origin_sha256": "2fdb3638d46193dd3d4184ed2dd793e5595b006bed5c73821c076fdfe8c75358",
       "local_path": "public/js/common.js",
-      "local_sha256": "11d64863d0d53bfc141285cba644e2415fd3496ca6d3b4dce5cf744104cdf360",
+      "local_sha256": "294c1387947f259a3ff31a2e9a4bb952a0afbf4895dd98d9ec9edaaa3b764d01",
       "note": "Same h() and api() helpers; the forms are this product's."
     },
     {
@@ -287,7 +287,7 @@
       "origin_path": "behavioral-health-app/tests/run-all.mjs",
       "origin_sha256": "0393056d1af1ba679912560390363c6ba835cb69b64eab959c7f4b5eb9ae6145",
       "local_path": "tests/run-all.mjs",
-      "local_sha256": "d6b60565e79bc62fc9c508274cbe97f850ee846dbb62100850318085b943e975",
+      "local_sha256": "a34f1b095e55f8859ee43041cee6bd9409c76d8d9e7fa7335e5b0ad8b390fed2",
       "note": "This product's test list; drops the image and mutation tests."
     },
     {
@@ -320,7 +320,7 @@
       "origin_path": "behavioral-health-app/tests/db-test.mjs",
       "origin_sha256": "42b82181b4c1199b22a4548c76c1ec937413ecb684b367356721995cac3c5cfd",
       "local_path": "tests/db-test.mjs",
-      "local_sha256": "344cc126ab0681731f14b8905ba1df1c0331ab2ce4cf384f0dc579071525fdc1",
+      "local_sha256": "da5525a687e67f32927048e01abbc69ffd09d881e06c32bc396f88b1d46e1d65",
       "note": "Same method; this product's rules."
     },
     {
@@ -329,9 +329,9 @@
       "mode": "shaped-on",
       "origin_repo": "cross-univeral",
       "origin_path": "behavioral-health-app/tests/api-test.mjs",
-      "origin_sha256": "b9aed98a7b54da362b31cbf559aa6e2637b2a6d38db924b6335cfdd21d646f7c",
+      "origin_sha256": "96019f302952736931f95d689864c4bc5d8ccd24d94acda1ce5abf5cce159b24",
       "local_path": "tests/api-test.mjs",
-      "local_sha256": "6be65565c4bd2b9e83ae8692a4f3bdaab53526b6d2d70ff38299b72975681e20",
+      "local_sha256": "6b47f7663e27f530ac7ef9f3e66da229fc929fffb3e98dac3ac065bebd42f17f",
       "note": "Same method; adds the stand-in mail server."
     },
     {
@@ -406,7 +406,7 @@
       "mode": "shaped-on",
       "origin_repo": "cross-univeral",
       "origin_path": "lexos/src/app.jsx",
-      "origin_sha256": "3028a941e292cd57a8c60d3df10bf78db9078e6d312d535d9008ea7aeaa31f74",
+      "origin_sha256": "b824f4076feaa621f90f3ca39546c6255eb2682592a0d1cbc0e6e373f13b0fa8",
       "local_path": "public/js/pwa.js",
       "local_sha256": "73ce0ebd527541a6f9d8709b9190d7709815c8e0273ebf514619f718febb2f37",
       "note": "The same one line, navigator.serviceWorker.register('/sw.js', { scope: '/' }) with the failure ignored, in its own external file because this site's policy allows no inline script."

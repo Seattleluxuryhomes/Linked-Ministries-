@@ -3,7 +3,7 @@
    the database refuses anyone who is not a treasurer, a proposer who approves their own grant, and a grant larger than the gifts. */
 import { h, get, post, msg, field, text, area, select, busy, values, toSignIn } from "/js/common.js";
 import { edenPanel } from "/js/eden.js";
-import { WORDS, GIFT_METHODS, GRANT_STATUS, money, methodLabel, receiptCode, dateWords } from "/js/pure.js";
+import { WORDS, GIFT_METHODS, GRANT_STATUS, money, methodLabel, receiptCode, dateWords, placeWords } from "/js/pure.js";
 
 const app = document.getElementById("app");
 let flash = null, openForm = null;     // one message from the last thing done; which row's form is open
@@ -85,7 +85,7 @@ function giftForm() {
 
 function grantForm(v) {
   const kind = select("recipient_kind", [["ministry", "A ministry on the network"], ["outside", WORDS.grantOutside]], "ministry");
-  const mins = select("ministry_id", v.ministries.map((m) => [m.id, `${m.name} (${m.city}, ${m.state})`]), "", "Choose a ministry");
+  const mins = select("ministry_id", v.ministries.map((m) => [m.id, `${m.name} (${placeWords(m.city, m.state)})`]), "", "Choose a ministry");
   const outside = text("recipient_name", "", { max: 120 });
   const outField = field(WORDS.grantOutsideName, outside); outField.hidden = true;
   const minField = field(WORDS.grantTo, mins);
