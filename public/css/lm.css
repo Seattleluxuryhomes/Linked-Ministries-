@@ -469,3 +469,37 @@ section[aria-labelledby] h2{margin-bottom:.6em}
 .dneeds li,.needs li{margin:4px 0}
 .needs li .quiet{display:block;font-size:14px}
 .dcard .row{margin-top:auto;flex-wrap:wrap;gap:8px}
+
+/* the profile and the Verified badge (0013) */
+.vbadge{display:inline-flex;align-items:center;gap:6px;vertical-align:middle;font:700 15px var(--face);color:var(--gold-ink);background:var(--gold-soft);border:1px solid var(--gold);border-radius:999px;padding:3px 12px 3px 6px;letter-spacing:0}
+.vbadge .ico{width:22px;height:22px;color:var(--gold)}
+.vbadge.small{font-size:13px;padding:2px 9px 2px 4px}
+.vbadge.small .ico{width:18px;height:18px}
+h1 .vbadge{font-size:16px;margin-left:6px}
+.vcard{border-color:var(--gold)}
+.tags{list-style:none;display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0;padding:0}
+.tags li{border:1px solid var(--gold);color:var(--gold-ink);border-radius:999px;padding:3px 10px;font-size:14px;font-weight:600;background:#fff}
+.tags.small li{font-size:13px;padding:2px 9px}
+.mission .words.big{font-size:20px;line-height:1.45}
+.lead-name{margin:0 0 6px}
+.chips-pick{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.chips-pick .pick{display:inline-flex;align-items:center;gap:6px;border:1px solid #d9cfbf;border-radius:999px;padding:8px 12px;min-height:44px;cursor:pointer;background:#fff}
+.chips-pick .pick:has(input:checked){border-color:var(--gold);background:var(--gold-soft)}
+.label-like{font-weight:600;margin:0}
+.ladder{list-style:none;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:12px 0;padding:0;counter-reset:step}
+.ladder li{text-align:center;font-size:13px;font-weight:600;color:#6b6257;border-top:4px solid #e7e0d4;padding-top:8px}
+.ladder li.done{border-top-color:var(--gold);color:var(--gold-ink)}
+.ladder li.now{border-top-color:var(--gold-ink);color:var(--ink)}
+.start{margin:18px 0}
+.start-tabs{flex-wrap:wrap;gap:8px;margin:12px 0}
+.steps-check{margin:12px 0 0;padding-left:22px}
+.steps-check li{margin:14px 0}
+.stepcheck{display:flex;align-items:center;gap:10px;min-height:44px;cursor:pointer}
+.stepcheck input{width:22px;height:22px;accent-color:var(--gold)}
+.stephead{font-weight:700;font-size:18px}
+.stepcheck:has(input:checked) .stephead{text-decoration:line-through;text-decoration-color:var(--gold)}
+/* the whole pill is the target (44 pixels); the box itself is hidden and still takes the keyboard */
+.chips-pick input{position:absolute;opacity:0;width:0;height:0;margin:0}
+.chips-pick .pick{position:relative}
+.chips-pick .pick:has(input:checked) span::before{content:"✓ ";color:var(--gold-ink);font-weight:700}
+.chips-pick .pick:has(input:focus-visible){outline:3px solid var(--gold);outline-offset:2px}

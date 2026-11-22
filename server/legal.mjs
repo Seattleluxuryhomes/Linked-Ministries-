@@ -22,7 +22,7 @@ export const TERMS = {
     ]],
     ["What we do and what we do not do", [
       "A person on the Linked Ministries team reads each new ministry page and each new post before it goes on the board. That is all the team does.",
-      "We do not check or vouch for any ministry or person on the board. We cannot know that what is posted is true.",
+      "We do not check or vouch for any ministry or person on the board. We cannot know that what is posted is true. A ministry may ask for a Verified badge. Then a person on our team checks its papers against a public record. The badge means only that the papers matched. It is free, and it does not mean we vouch for the ministry or its work.",
       "The board moves no money between ministries. No ministry pays another through this site. Linked Ministries may take gifts. Its board may use them to fund an ask. Each grant is written down and made public. We do not promise that any ask will be met, or that any give will be taken.",
       "What two ministries agree on is between them. Linked Ministries is not part of it.",
       "We do not give legal, medical or counseling advice.",

@@ -1,7 +1,7 @@
 /* steward.js — /review (it was /steward): what is waiting for a person at Linked Ministries to read. Approve it, or send it back with a note the
    poster reads. The page mirrors the database's decision; the database refuses anyone who is not on the team (the steward flag). */
 import { h, get, post, msg, field, text, area, busy, toSignIn } from "/js/common.js";
-import { waitingCount, WORDS, KIND, REPORT_REASONS, categoryLabel, dateWords, placeWords } from "/js/pure.js";
+import { waitingCount, WORDS, KIND, REPORT_REASONS, categoryLabel, dateWords, placeWords, verifyFormLabel } from "/js/pure.js";
 
 const app = document.getElementById("app");
 let flash = null;
@@ -10,14 +10,14 @@ async function load() {
   const me = await get("/api/me");
   if (!me.ok || !me.data.signed_in) return toSignIn("/review");
   if (!me.data.steward) return app.replaceChildren(h("h1", {}, WORDS.stewardTitle), msg(WORDS.stewardOnly));
-  const q = await get("/api/steward/queue");
+  const [q, v] = await Promise.all([get("/api/steward/queue"), get("/api/steward/verify")]);
   if (!q.ok) return app.replaceChildren(h("h1", {}, WORDS.stewardTitle), msg(q.data.words || WORDS.tryAgain));
-  render(q.data);
+  render({ ...q.data, verify: v.ok ? v.data : { requested: [], verified: [] } });
 }
 
 function render(q) {
   const parts = [h("h1", {}, WORDS.stewardTitle), h("p", { class: "lead" }, WORDS.stewardLead)];
-  const waiting = q.ministries.length + q.posts.length + (q.pages || []).length + (q.reports || []).length;
+  const waiting = q.ministries.length + q.posts.length + (q.pages || []).length + (q.reports || []).length + (q.verify.requested || []).length;
   if (waiting) parts.push(h("p", { class: "count", "data-waiting": waiting }, waitingCount(waiting)));
   if (flash) { parts.push(msg(flash.words, flash.ok ? "ok" : undefined)); flash = null; }
   if (!q.ministries.length && !q.posts.length && !(q.pages || []).length && !(q.reports || []).length) parts.push(h("div", { class: "empty card compact" }, h("h2", {}, WORDS.stewardEmptyTitle), h("p", {}, WORDS.stewardEmpty)));
@@ -25,9 +25,44 @@ function render(q) {
   if (q.ministries.length) parts.push(h("h2", {}, "Ministries"), ...q.ministries.map(ministryCard));
   if ((q.pages || []).length) parts.push(h("h2", {}, WORDS.stewardPages), ...q.pages.map(pageCard));
   if (q.posts.length) parts.push(h("h2", {}, "Posts"), ...q.posts.map(postCard));
+  if ((q.verify.requested || []).length) parts.push(h("h2", {}, WORDS.verifyQueueHead), h("p", { class: "help" }, WORDS.verifyQueueHelp), ...q.verify.requested.map(verifyCard));
+  if ((q.verify.verified || []).length) parts.push(h("details", { class: "fold" }, h("summary", {}, `${WORDS.verifiedListHead} (${q.verify.verified.length})`), h("div", { class: "fold-body" }, q.verify.verified.map(verifiedRow))));
   parts.push(h("h2", {}, WORDS.teamTitle), stewardsCard(q.stewards));
   parts.push(h("p", {}, h("a", { href: "/me" }, "Back to my ministry")));
   app.replaceChildren(...parts);
+}
+
+/* a ministry asks for the badge: a person checks the papers against a public record, then writes what they checked (the public reads it) */
+function verifyCard(m) {
+  const checked = text("checked", "", { max: 300 }), note = area("note", "", 1000), out = h("div", { class: "out" });
+  const go = async (btn, decision) => {
+    out.replaceChildren();
+    await busy(btn, async () => {
+      const r = await post(`/api/steward/verify/${m.id}`, { decision, checked: checked.value, note: note.value });
+      if (!r.ok) return out.replaceChildren(msg(r.data.words || WORDS.tryAgain));
+      flash = { words: decision === "verify" ? WORDS.verifyGranted : WORDS.verifyNotYet, ok: true }; load();
+    });
+  };
+  return h("div", { class: "card", "data-verify": m.id },
+    h("h3", {}, m.name), h("p", { class: "when" }, `${placeWords(m.city, m.state, m.country)} · asked ${dateWords(m.asked_at)}`),
+    h("dl", { class: "kv" }, h("dt", {}, "On paper"), h("dd", {}, verifyFormLabel(m.form)), h("dt", {}, "Number"), h("dd", {}, m.number || "None given"),
+      m.website ? [h("dt", {}, "Website"), h("dd", {}, m.website)] : null, h("dt", {}, "Contact"), h("dd", {}, `${m.contact_name} · ${m.contact_email}`)),
+    m.message ? h("p", { class: "words" }, m.message) : null,
+    h("p", { class: "help" }, WORDS.verifyHowTo),
+    field(WORDS.verifyChecked, checked, WORDS.verifyCheckedHelp),
+    field(WORDS.verifyNote, note, WORDS.verifyNoteHelp),
+    out,
+    h("p", { class: "row" }, h("button", { class: "btn", type: "button", on: { click: (ev) => go(ev.currentTarget, "verify") } }, WORDS.verifyGrant),
+      h("button", { class: "btn ghost", type: "button", on: { click: (ev) => go(ev.currentTarget, "not_yet") } }, WORDS.verifyNotYetBtn)));
+}
+function verifiedRow(m) {
+  const note = area("note", "", 1000), out = h("div", { class: "out" });
+  return h("div", { class: "card" }, h("h3", {}, m.name), h("p", { class: "when" }, `Verified ${dateWords(m.verified_at)} · ${m.checked}`),
+    field(WORDS.verifyRemoveNote, note), out,
+    h("p", {}, h("button", { class: "btn ghost small", type: "button", on: { click: async (ev) => { out.replaceChildren(); await busy(ev.currentTarget, async () => {
+      const r = await post(`/api/steward/verify/${m.id}`, { decision: "not_yet", note: note.value });
+      if (!r.ok) return out.replaceChildren(msg(r.data.words || WORDS.tryAgain));
+      flash = { words: WORDS.verifyRemoved, ok: true }; load(); }); } } }, WORDS.verifyRemove)));
 }
 
 /* approve, or send back with a note */

@@ -5,7 +5,7 @@
 import { asUser, asAdmin } from "./db.mjs";
 import { whoami, limited, validEmail } from "./auth.mjs";
 import { sendEmail, emailConfigured } from "./mail.mjs";
-import { CATEGORY_IDS, STATE_CODES, COUNTRY_CODES, KINDS, REPORT_REASONS } from "../public/js/pure.js";
+import { CATEGORY_IDS, STATE_CODES, COUNTRY_CODES, KINDS, REPORT_REASONS, FOCUS_IDS, VERIFY_FORMS } from "../public/js/pure.js";
 import { answerEmail, inviteEmail, reportEmail } from "./emails.mjs";
 import { boardPost } from "./board.mjs";
 import express from "express";
@@ -71,7 +71,11 @@ function pageFields(b) {
   const verse = str(b.verse, 30);
   if (verse && !Object.prototype.hasOwnProperty.call(VERSES, verse)) throw bad("Choose a verse from the list, or none.", 422, "verse_not_known");
   const f = { name: str(b.name, 120), city: str(b.city, 80), state: str(b.state, 2).toUpperCase(), slug: str(b.slug, 60).toLowerCase(),
-    draft: { tagline: str(b.tagline, 140), about: str(b.about, 3000), meets, email: str(b.email, 254).toLowerCase(), phone: str(b.phone, 30), website: str(b.website, 200), give_url: str(b.give_url, 300), verse, photos } };
+    draft: { tagline: str(b.tagline, 140), about: str(b.about, 3000), meets, email: str(b.email, 254).toLowerCase(), phone: str(b.phone, 30), website: str(b.website, 200), give_url: str(b.give_url, 300), verse, photos,
+      /* the profile (0013): every one optional; the database checks each */
+      leader_name: str(b.leader_name, 120), leader_role: str(b.leader_role, 60), leader_bio: str(b.leader_bio, 800), mission: str(b.mission, 300), beliefs: str(b.beliefs, 2000),
+      denomination: str(b.denomination, 80), founded: str(b.founded, 4), serves: str(b.serves, 160), languages: str(b.languages, 160),
+      focus: (Array.isArray(b.focus) ? b.focus : []).map((x) => str(x, 20)).filter((x) => FOCUS_IDS.includes(x)).slice(0, 6) } };
   if (f.name.length < 2) throw bad("Type your ministry's name.", 422, "name_needed");
   if (f.city.length < 2) throw bad("Type your city.", 422, "city_needed");
   if (f.state && !STATE_CODES.includes(f.state)) throw bad("Choose your state.", 422, "state_needed");
@@ -352,6 +356,20 @@ export function mount(app, { wrap, publicBase, env = process.env, now = () => Da
   }));
 
   /* ---- stewards -------------------------------------------------------------------------------------------------------- */
+  /* the ladder to the Verified badge (0013): the lead asks, a person on the team checks the papers and decides */
+  get("/api/verify", async (req) => (await one(req, "select lm.verify_mine() as v")).v || { state: "none" });
+  post("/api/verify", async (req) => {
+    const b = req.body || {}, form = str(b.form, 40);
+    if (!VERIFY_FORMS.some((f) => f[0] === form)) throw bad("Choose what kind of ministry it is on paper.", 422, "form_needed");
+    await slow(req, "verify", 10);
+    return { state: (await one(req, "select lm.verify_request($1, $2, $3) as s", [form, str(b.number, 60) || null, str(b.message, 1000) || null])).s };
+  });
+  get("/api/steward/verify", async (req) => (await one(req, "select lm.verify_queue() as q")).q);
+  post("/api/steward/verify/:id", async (req) => {
+    const b = req.body || {}, d = str(b.decision, 12);
+    if (d !== "verify" && d !== "not_yet") throw bad("Choose verify or not yet.", 400, "decision_needed");
+    return { state: (await one(req, "select lm.verify_decide($1, $2, $3, $4) as s", [id(req.params.id), d === "verify", str(b.checked, 300) || null, str(b.note, 1000) || null])).s };
+  });
   get("/api/steward/queue", async (req) => (await one(req, "select lm.steward_queue() as q")).q);
   post("/api/steward/ministries/:id/review", async (req) => {
     const d = str((req.body || {}).decision, 12);

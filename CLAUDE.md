@@ -94,6 +94,23 @@ country sends a public ministry back to be read. `/ministries` (in the top bar a
 its page, what it needs now (`lm.asks_public`) and its own donation link while the giving door is open (`lm.directory_public`); a ministry's
 page lists "What we need now". The board filters by country. Tests: `tests/api-countries-test.mjs`.
 
+## The profile, the Verified badge and the guide (migration 0013)
+
+Founder, 2026-11-22: "we are the LinkedIn for Ministry ... who's the leader and what they stand for, basic information, denomination ... from
+just started to pending to all the way to verified. Like Instagram without paying." The **profile** (leader's name, role and a few lines; what we
+stand for; what we believe; church family; year started; who we serve; languages; up to six things the ministry does from `FOCUS`) lives in the page's
+own copy, so a person on the team reads it with the rest of the page (rule 2). The **ladder** on My ministry: Joined -> Read by a person -> Papers
+sent -> Verified. A lead asks (`lm.verify_request`: the kind of body on paper, the number on its papers, a note); **a person on the team decides**
+(`lm.verify_decide`), writes what they checked (the public reads that line), cannot decide their own ministry, and can take a badge off with a note.
+The number is never public. A new name or country takes the badge off. The badge is free; the page says it means the papers matched a public record
+and does not mean Linked Ministries vouches for the work (the terms say the same).
+**Open question for the founder:** he asked for papers to be "verified by AI on Eden". Rule 15 keeps Eden a writing helper and rule 2 keeps a person
+deciding, so nothing here reads papers with a model. If he rules that Eden may *read* uploaded papers and *suggest* what to check (a person still
+decides), that is a new ruling to record here first.
+`/start` (also `/setup`) is the plain guide to setting up a ministry on paper: the US (state nonprofit, EIN, bylaws, Form 1023-EZ $275 or 1023 $600,
+state charity sign-up, yearly 990), Nigeria (CAC Incorporated Trustees, CAMA 2020 Part F) and anywhere else; every step links to the government's own
+page and the page says it is not legal or tax advice. Tests: `tests/api-profile-test.mjs`.
+
 ## Installable app
 
 The site installs to a phone (founder, 2026-10-18: "Make sure the app is downloadable to a phone"). The pattern is Cross Universal's D-290,

@@ -177,7 +177,7 @@
       "origin_path": "behavioral-health-app/server/api.mjs",
       "origin_sha256": "d181a933847ec6245881206eea307ad9c4a818e936ac05d2e14fc98ca7822c55",
       "local_path": "server/api.mjs",
-      "local_sha256": "34e1eab0ebaa5b54c77d6a6ed47bd3e345cf36a4ec86bbb064418b74e9b4af7d",
+      "local_sha256": "a8005a1eaec5842c503e7b03cd6d2e68d2a18b50f6ff10546ed99764c233086f",
       "note": "Same pattern (asUser, functions decide, early friendly checks). The routes are this product's: ministries, team, posts, answers, stewards."
     },
     {
@@ -188,7 +188,7 @@
       "origin_path": "behavioral-health-app/server/index.mjs",
       "origin_sha256": "b525f7f5619187e71b76325fe4b53390f94b4c5ae59cd6f4d6fef6bb66ae5c3e",
       "local_path": "server/index.mjs",
-      "local_sha256": "aaedb1bb9837beca1ec7808a01d14bc5df5a4eb6edd9fdf7771f6e3a190c0d7b",
+      "local_sha256": "433ad63b0516e23063e101d1165589568850bc82250372b40402f3dabd871571",
       "note": "Same boot order and health answer (two words). Public pages are built on the server."
     },
     {
@@ -287,7 +287,7 @@
       "origin_path": "behavioral-health-app/tests/run-all.mjs",
       "origin_sha256": "0393056d1af1ba679912560390363c6ba835cb69b64eab959c7f4b5eb9ae6145",
       "local_path": "tests/run-all.mjs",
-      "local_sha256": "a34f1b095e55f8859ee43041cee6bd9409c76d8d9e7fa7335e5b0ad8b390fed2",
+      "local_sha256": "68db957b7efd1131ffe27fef266cf71c30efe64f2fb72d100fb5780ba34a85fd",
       "note": "This product's test list; drops the image and mutation tests."
     },
     {
@@ -320,7 +320,7 @@
       "origin_path": "behavioral-health-app/tests/db-test.mjs",
       "origin_sha256": "42b82181b4c1199b22a4548c76c1ec937413ecb684b367356721995cac3c5cfd",
       "local_path": "tests/db-test.mjs",
-      "local_sha256": "da5525a687e67f32927048e01abbc69ffd09d881e06c32bc396f88b1d46e1d65",
+      "local_sha256": "5d07dde85ac6fab2682e18ae4230e9d009ad1d833a5db78410afc000cca67115",
       "note": "Same method; this product's rules."
     },
     {
@@ -441,7 +441,7 @@
       "origin_path": "behavioral-health-app/CLAUDE.md",
       "origin_sha256": "3c403645fae7028168c5ee3e1201d85863a7ebbf30225d2007cef282ce16842e",
       "local_path": "CLAUDE.md",
-      "local_sha256": "70d58ae1a300bc40c1b3ff8df3792eed0c772296b5ebe7ce65f25f2044f12a53",
+      "local_sha256": "b0e4e3829270c4fc5d6a80758d1f1e5268a8aa572a89ba9ee6e4b6da95213979",
       "note": "Same form; this product's hard rules."
     },
     {

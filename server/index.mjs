@@ -13,7 +13,7 @@ import { keyIsSet } from "./eden-engine.mjs";
 import { refusal } from "./words.mjs";
 import { boardQuery, boardPost, directory, asksOf } from "./board.mjs";
 import { publicPage, publicPageList, photo, myPage, givingPublic, givingDoor } from "./site.mjs";
-import { frontPage, boardPage, postPage, missingPostPage, shellPage, notFoundPage, termsPage, privacyPage, ministryPage, directoryPage, givingPage, givePage, takeDonationsPage } from "./pages.mjs";
+import { frontPage, boardPage, postPage, missingPostPage, shellPage, notFoundPage, termsPage, privacyPage, ministryPage, directoryPage, startPage, givingPage, givePage, takeDonationsPage } from "./pages.mjs";
 import { noticeEmail } from "../lib/email.mjs";
 import { zeffyGiveUrl } from "../public/js/pure.js";
 import { PRODUCT, CATEGORIES, STATES, COUNTRY_CODES } from "../public/js/pure.js";
@@ -176,6 +176,8 @@ export function buildApp({ env = process.env } = {}) {
     }
     html(res, 404, notFoundPage(await where(req)));
   }));
+  /* set up a ministry, step by step: a plain guide with each step's official page (not legal advice) */
+  app.get(["/start", "/setup"], wrap(async (req, res) => { res.set("cache-control", "public, max-age=300"); html(res, 200, startPage(await where(req))); }));
   /* every public ministry, by country, with its page, what it needs now and its donation link (only while the giving door is open) */
   app.get("/ministries", wrap(async (req, res) => {
     const c = String(req.query.country || "").toUpperCase().slice(0, 2);
@@ -210,7 +212,7 @@ export function buildApp({ env = process.env } = {}) {
   app.get("/sitemap.xml", wrap(async (req, res) => {
     const b = publicBase(req), r = await boardQuery({}, { limit: 500 });
     const pg = await publicPageList();
-    const urls = [["/", null], ["/ministries", null], ["/board", null], ["/giving", null], ["/take-donations", null], ["/terms", null], ["/privacy", null], ...pg.map((p) => ["/m/" + p.slug, p.live_at]), ...r.posts.map((p) => ["/board/" + p.id, p.posted_at])];
+    const urls = [["/", null], ["/ministries", null], ["/start", null], ["/board", null], ["/giving", null], ["/take-donations", null], ["/terms", null], ["/privacy", null], ...pg.map((p) => ["/m/" + p.slug, p.live_at]), ...r.posts.map((p) => ["/board/" + p.id, p.posted_at])];
     res.type("application/xml").set("cache-control", "public, max-age=300").send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(([u, d]) => `<url><loc>${b}${u}</loc>${d ? `<lastmod>${d}</lastmod>` : ""}</url>`).join("\n")}\n</urlset>\n`);
   }));
   app.get("/favicon.ico", (req, res) => res.type("image/x-icon").set("cache-control", "public, max-age=86400").sendFile(path.join(PUBLIC, "favicon.ico")));
