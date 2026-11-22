@@ -75,6 +75,27 @@ await sam.post(`/api/steward/verify/${mid}`, { decision: "verify", checked: "CAC
 await ada.post("/api/ministry/update", { name: "Lagos Hope Church", city: "Lagos", country: "NG", about: "We care for families who lost their homes, and we pray together every week.", contact_name: "Ada Okafor", contact_email: "ada@lagos.example", website: "" });
 { const v = (await ada.get("/api/verify")).json; ok(v.state === "none" && /name or country changed/.test(v.note || ""), "changing the name takes the badge off, and says why", v); }
 
+/* the four page styles (0014): the same cards in another order, and a first button that fits */
+{ const send = async (template, extra = {}) => { const r = await ada.post("/api/page", { ...page, name: "Lagos Hope Church", ...extra, template, submit: true }); await sam.post(`/api/steward/pages/${mid}/review`, { decision: "approve" }); return r; };
+  await sam.post(`/api/steward/ministries/${mid}/review`, { decision: "approve" });
+  const slug = (await ada.get("/api/page")).json.slug;
+  const at = (t, a, b) => t.indexOf(a) >= 0 && t.indexOf(b) >= 0 && t.indexOf(a) < t.indexOf(b);
+  await send("church", { meets: [{ day: "Sundays", time: "10:00 am", place: "The fellowship hall" }] });
+  let p = (await anon.get("/m/" + slug)).text;
+  ok(/t-church/.test(p) && /Visit us/.test(p) && at(p, "When and where we meet", "About us"), "a church page leads with when it meets, and a Visit us button");
+  await send("recovery", { phone: "+234 800 000 0000" });
+  p = (await anon.get("/m/" + slug)).text;
+  ok(/Need help today/.test(p) && /Get help today/.test(p) && /tel:/.test(p) && at(p, "Need help today", "About us") && /988/.test(p), "a recovery house leads with help today, its phone, and the 988 line");
+  { const day = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
+    const ask = (await ada.post("/api/posts", { kind: "ask", category: "housing", title: "Roofing sheets for three homes", body: "Three families need new roofs before the rains come.", open_until: day, submit: true })).json;
+    await sam.post(`/api/steward/posts/${ask.id}/review`, { decision: "approve" }); }
+  await send("mission");
+  p = (await anon.get("/m/" + slug)).text;
+  ok(/See what we need/.test(p) && at(p, "What we need now", "About us"), "a mission abroad leads with what it needs");
+  const bad = await ada.post("/api/page", { ...page, name: "Lagos Hope Church", template: "flashy", submit: false });
+  ok(bad.status === 200 && (await sql("select draft ->> 'template' as t from lm.pages where ministry_id = $1", [mid]))[0].t === null, "a style that is not one of the four is not kept");
+  const v = checkPage(p); ok(!v.length, "a styled page passes the page rules", v); }
+
 /* the guide */
 { const g = await anon.get("/start"); ok(g.status === 200 && /Set up your ministry, step by step/.test(g.text) && /Form 1023-EZ/.test(g.text) && /\$275/.test(g.text) && /Get an EIN/.test(g.text) && /Incorporated Trustees/.test(g.text) && /not legal or tax advice/.test(g.text), "/start is the plain guide: the US steps, Nigeria's, and that it is not legal advice");
   const v = checkPage(g.text, { money: true }); ok(!v.length, "the guide passes the page rules", v); }

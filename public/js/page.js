@@ -1,7 +1,7 @@
 /* page.js — the form that makes a ministry's public page (/m/<slug>), used on /me. One form, no code. The page says "public" only
    when the server says so, and "sent" only when the server took it. A picture is checked on the server: this script only sends bytes. */
 import { h, get, post, upload, msg, field, text, area, select, stateSelect, busy, values } from "/js/common.js";
-import { WORDS, PAGE_STATUS, MEET_DAYS, PAGE_LIMITS, FOCUS, DENOMINATIONS } from "/js/pure.js";
+import { WORDS, PAGE_STATUS, MEET_DAYS, PAGE_LIMITS, FOCUS, DENOMINATIONS, TEMPLATES } from "/js/pure.js";
 import { edenPanel } from "/js/eden.js";
 
 /** how the page is doing, in words, for the lead */
@@ -100,6 +100,11 @@ export function pageForm(me, pg, { onDone, onCancel }) {
       field(WORDS.fieldLanguages, text("languages", d.languages, { max: 160 }))),
     h("datalist", { id: "denoms" }, DENOMINATIONS.map((x) => h("option", { value: x }))),
     h("div", { class: "field" }, h("p", { class: "label-like" }, WORDS.fieldFocus), h("p", { class: "help" }, WORDS.fieldFocusHelp), focusBox));
+  /* the page style (0014): four cards to pick from, the whole card is the target */
+  const styleBox = h("div", { class: "styles", role: "radiogroup", "aria-label": WORDS.templateHead },
+    TEMPLATES.map(([k, label, blurb]) => { const r = h("input", { type: "radio", name: "template", value: k }); r.checked = (d.template || "") === k;
+      return h("label", { class: "style-pick" }, r, h("span", { class: "style-name" }, label), h("span", { class: "style-blurb" }, blurb)); }));
+  const styles = h("div", { class: "field", "data-styles": "" }, h("h4", {}, WORDS.templateHead), h("p", { class: "help" }, WORDS.templateHelp), styleBox);
   const form = h("form", { class: "card formcard", novalidate: true, "data-page-form": "" },
     h("h3", {}, WORDS.pageTitle),
     h("p", { class: "note" }, WORDS.pageNameNote),
@@ -110,6 +115,7 @@ export function pageForm(me, pg, { onDone, onCancel }) {
       (me.ministry && me.ministry.country && me.ministry.country !== "US") ? h("input", { type: "hidden", name: "state", value: "" }) : field(WORDS.fieldState, stateSelect(m.state)),
       field(WORDS.pageTagline, text("tagline", d.tagline, { max: 140, required: true }), WORDS.pageTaglineHelp, "full"),
       field(WORDS.pageAbout, area("about", d.about, 3000), WORDS.pageAboutHelp, "full")),
+    styles,
     profile,
     h("h4", {}, WORDS.pageMeets), h("p", { class: "help" }, WORDS.pageMeetsHelp), meetBox, h("p", {}, addRow),
     h("h4", {}, WORDS.pageReach), h("p", { class: "help" }, WORDS.pageReachHelp),
@@ -129,7 +135,7 @@ export function pageForm(me, pg, { onDone, onCancel }) {
   /* Eden: the one line and the about words, from a few words. They go into the form only when the person presses "Use these words"; a verse is only ever one from the list. */
   const eden = edenPanel({ job: "page_words", withVerse: true, getFields: () => { const v = values(form); return { name: v.name, city: v.city, state: v.state, tagline: v.tagline, about: v.about }; },
     onUse: (d, verse) => { form.elements.tagline.value = d.tagline; form.elements.about.value = d.about; if (verse && form.elements.verse) form.elements.verse.value = verse.key; } });
-  form.insertBefore(eden, profile);
+  form.insertBefore(eden, styles);
   const run = async (btn, submit) => {
     out.replaceChildren();
     await busy(btn, async () => {
@@ -137,6 +143,7 @@ export function pageForm(me, pg, { onDone, onCancel }) {
       const body = { name: v.name, city: v.city, state: v.state, slug: slugLocked ? undefined : v.slug, tagline: v.tagline, about: v.about, email: v.email, phone: v.phone, website: v.website,
         give_url: v.give_url, verse: v.verse,
         leader_name: v.leader_name, leader_role: v.leader_role, leader_bio: v.leader_bio, mission: v.mission, beliefs: v.beliefs, denomination: v.denomination,
+        template: (styleBox.querySelector("input:checked") || {}).value || "",
         founded: v.founded, serves: v.serves, languages: v.languages, focus: [...focusBox.querySelectorAll("[data-focus]:checked")].map((c) => c.value),
         meets: [...meetBox.querySelectorAll("[data-meet]")].map((r) => r.read()), photos: readPhotos(), submit };
       const r = await post("/api/page", body);
