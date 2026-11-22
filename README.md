@@ -32,6 +32,7 @@ copied are listed in `commons.json`, each with where it came from.
 | Route | What it is |
 |---|---|
 | `/` | The front: the two phones (real screenshots of this site, with a sample ministry), who we are, how it works, what we run, giving, the directors (only once the founder gives their names, in `server/board-members.mjs`), the latest posts, six questions, contact. The two pictures are made by `node tools/make-front-shots.mjs` from the running app |
+| `/start` (also `/setup`) | Set up your ministry, step by step: the US, Nigeria and anywhere else, each step linked to the government's own page; not legal advice |
 | `/ministries`, `/ministries?country=NG` | Every public ministry, by country (migration 0012): its place, its page's line and picture, what it needs now (its public, still-open asks), "See their page", and its own donation link while the giving door is open. A ministry in any country joins with a country; a US ministry also chooses its state |
 | `/board`, `/board/<id>`, `/terms`, `/privacy` | Public pages, built whole on the server from the database's public view. The terms and the privacy page are drafts a lawyer has not read, and say so at the top |
 | `/giving`, `/give`, `/api/giving` | Where the money went: every approved and paid grant, totals added up from the rows (no donor is ever named), the last twelve months as an inline SVG chart, the status line, the Form 990 link once set. `/give` is the Give button's page: no payment service is connected, so it says so and has no form |

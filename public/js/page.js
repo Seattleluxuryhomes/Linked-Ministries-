@@ -1,7 +1,7 @@
 /* page.js — the form that makes a ministry's public page (/m/<slug>), used on /me. One form, no code. The page says "public" only
    when the server says so, and "sent" only when the server took it. A picture is checked on the server: this script only sends bytes. */
 import { h, get, post, upload, msg, field, text, area, select, stateSelect, busy, values } from "/js/common.js";
-import { WORDS, PAGE_STATUS, MEET_DAYS, PAGE_LIMITS } from "/js/pure.js";
+import { WORDS, PAGE_STATUS, MEET_DAYS, PAGE_LIMITS, FOCUS, DENOMINATIONS } from "/js/pure.js";
 import { edenPanel } from "/js/eden.js";
 
 /** how the page is doing, in words, for the lead */
@@ -78,6 +78,28 @@ export function pageForm(me, pg, { onDone, onCancel }) {
   const slug = text("slug", pg.slug || pg.suggested_slug || "", { max: 60 });
   if (slugLocked) slug.disabled = true;
   const verseSel = select("verse", (pg.verses || []).map((v) => [v.key, `${v.ref}: ${v.text.slice(0, 48)}...`]), d.verse || "", WORDS.pageVerseNone);
+  /* the profile (0013): who leads it, what it stands for and believes, its church family, its year, who it serves, what it does */
+  const chosen = new Set(Array.isArray(d.focus) ? d.focus : []);
+  const focusBox = h("div", { class: "chips-pick", role: "group", "aria-label": WORDS.fieldFocus },
+    FOCUS.map(([k, label]) => { const cb = h("input", { type: "checkbox", value: k, "data-focus": "" }); cb.checked = chosen.has(k);
+      cb.addEventListener("change", () => { const on = focusBox.querySelectorAll("[data-focus]:checked"); if (on.length > 6) cb.checked = false; });
+      return h("label", { class: "pick" }, cb, h("span", {}, label)); }));
+  const denom = text("denomination", d.denomination, { max: 80 }); denom.setAttribute("list", "denoms");
+  const founded = text("founded", d.founded, { max: 4, mode: "numeric" });
+  const profile = h("div", { class: "profile-block", "data-profile": "" },
+    h("h4", {}, WORDS.profileHead), h("p", { class: "help" }, WORDS.profileHelp),
+    h("div", { class: "formgrid" },
+      field(WORDS.fieldLeaderName, text("leader_name", d.leader_name, { max: 120, auto: "name" })),
+      field(WORDS.fieldLeaderRole, text("leader_role", d.leader_role, { max: 60 }), WORDS.fieldLeaderRoleHelp),
+      field(WORDS.fieldLeaderBio, area("leader_bio", d.leader_bio, 800), null, "full"),
+      field(WORDS.fieldMission, area("mission", d.mission, 300), WORDS.fieldMissionHelp, "full"),
+      field(WORDS.fieldBeliefs, area("beliefs", d.beliefs, 2000), WORDS.fieldBeliefsHelp, "full"),
+      field(WORDS.fieldDenomination, denom, WORDS.fieldDenominationHelp),
+      field(WORDS.fieldFounded, founded),
+      field(WORDS.fieldServes, text("serves", d.serves, { max: 160 }), WORDS.fieldServesHelp),
+      field(WORDS.fieldLanguages, text("languages", d.languages, { max: 160 }))),
+    h("datalist", { id: "denoms" }, DENOMINATIONS.map((x) => h("option", { value: x }))),
+    h("div", { class: "field" }, h("p", { class: "label-like" }, WORDS.fieldFocus), h("p", { class: "help" }, WORDS.fieldFocusHelp), focusBox));
   const form = h("form", { class: "card formcard", novalidate: true, "data-page-form": "" },
     h("h3", {}, WORDS.pageTitle),
     h("p", { class: "note" }, WORDS.pageNameNote),
@@ -88,6 +110,7 @@ export function pageForm(me, pg, { onDone, onCancel }) {
       (me.ministry && me.ministry.country && me.ministry.country !== "US") ? h("input", { type: "hidden", name: "state", value: "" }) : field(WORDS.fieldState, stateSelect(m.state)),
       field(WORDS.pageTagline, text("tagline", d.tagline, { max: 140, required: true }), WORDS.pageTaglineHelp, "full"),
       field(WORDS.pageAbout, area("about", d.about, 3000), WORDS.pageAboutHelp, "full")),
+    profile,
     h("h4", {}, WORDS.pageMeets), h("p", { class: "help" }, WORDS.pageMeetsHelp), meetBox, h("p", {}, addRow),
     h("h4", {}, WORDS.pageReach), h("p", { class: "help" }, WORDS.pageReachHelp),
     h("div", { class: "formgrid" },
@@ -106,13 +129,16 @@ export function pageForm(me, pg, { onDone, onCancel }) {
   /* Eden: the one line and the about words, from a few words. They go into the form only when the person presses "Use these words"; a verse is only ever one from the list. */
   const eden = edenPanel({ job: "page_words", withVerse: true, getFields: () => { const v = values(form); return { name: v.name, city: v.city, state: v.state, tagline: v.tagline, about: v.about }; },
     onUse: (d, verse) => { form.elements.tagline.value = d.tagline; form.elements.about.value = d.about; if (verse && form.elements.verse) form.elements.verse.value = verse.key; } });
-  form.insertBefore(eden, form.querySelector("h4"));
+  form.insertBefore(eden, profile);
   const run = async (btn, submit) => {
     out.replaceChildren();
     await busy(btn, async () => {
       const v = values(form);
       const body = { name: v.name, city: v.city, state: v.state, slug: slugLocked ? undefined : v.slug, tagline: v.tagline, about: v.about, email: v.email, phone: v.phone, website: v.website,
-        give_url: v.give_url, verse: v.verse, meets: [...meetBox.querySelectorAll("[data-meet]")].map((r) => r.read()), photos: readPhotos(), submit };
+        give_url: v.give_url, verse: v.verse,
+        leader_name: v.leader_name, leader_role: v.leader_role, leader_bio: v.leader_bio, mission: v.mission, beliefs: v.beliefs, denomination: v.denomination,
+        founded: v.founded, serves: v.serves, languages: v.languages, focus: [...focusBox.querySelectorAll("[data-focus]:checked")].map((c) => c.value),
+        meets: [...meetBox.querySelectorAll("[data-meet]")].map((r) => r.read()), photos: readPhotos(), submit };
       const r = await post("/api/page", body);
       if (!r.ok) return out.replaceChildren(msg(r.data.words || WORDS.tryAgain));
       onDone(r.data.state === "approved" ? WORDS.pageNoChange : submit ? WORDS.pageSent : WORDS.pageSaved);

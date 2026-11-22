@@ -34,6 +34,27 @@ export const STATES = [
 ];
 export const STATE_CODES = STATES.map((s) => s[0]);
 
+/* a ministry's profile (migration 0013). Founder, 2026-11-22: "the LinkedIn for Ministry ... who's the leader and what they stand for,
+   basic information, denomination, what their purpose is." Up to six things it does, from this list (the database holds the same list). */
+export const FOCUS = [
+  ["church", "Church"], ["recovery", "Recovery"], ["housing", "Housing"], ["food", "Food"], ["prison", "Prison"], ["youth", "Youth"],
+  ["families", "Families"], ["women", "Women"], ["men", "Men"], ["missions", "Missions"], ["persecuted", "Persecuted church"],
+  ["disaster", "Disaster help"], ["medical", "Health care"], ["education", "School"], ["worship", "Worship"], ["teaching", "Teaching"],
+  ["prayer", "Prayer"], ["outreach", "Outreach"], ["refugees", "Refugees"], ["orphans", "Orphans"],
+];
+export const FOCUS_IDS = FOCUS.map((f) => f[0]);
+export const focusLabel = (id) => (FOCUS.find((f) => f[0] === id) || [id, String(id || "")])[1];
+/* church families a lead can pick from; any other name can be typed */
+export const DENOMINATIONS = ["Non-denominational", "Baptist", "Pentecostal", "Assemblies of God", "Methodist", "Presbyterian", "Lutheran", "Anglican",
+  "Catholic", "Orthodox", "Church of God", "Nazarene", "Evangelical", "Reformed", "Seventh-day Adventist", "Mennonite", "Charismatic", "Apostolic"];
+/* the ladder to the badge, and the kinds of papers a ministry can show */
+export const VERIFY_FORMS = [
+  ["us_501c3", "A US charity with an IRS letter (501(c)(3))"], ["us_church", "A US church (churches do not need the IRS letter)"],
+  ["us_state_nonprofit", "A US nonprofit registered with a state"], ["ng_incorporated_trustees", "Nigeria: incorporated trustees (CAC)"],
+  ["other_registered", "Registered with the government in another country"], ["other", "Something else (tell us below)"],
+];
+export const verifyFormLabel = (id) => (VERIFY_FORMS.find((f) => f[0] === id) || [id, String(id || "")])[1];
+
 /* every country a ministry can be in (ISO 3166-1 two-letter codes and their English names). Founder, 2026-11-22: ministries in
    Nigeria, Pakistan and everywhere else join the same way. A US ministry also chooses its state; elsewhere the city says where. */
 export const COUNTRIES = [
@@ -331,6 +352,55 @@ export const WORDS = {
   pageEmail: "Email",
   pagePhone: "Phone",
   pageWebsite: "Website",
+  verifyQueueHead: "Asking for the badge",
+  verifyQueueHelp: "Check each ministry's papers against a public record before you give the badge. You cannot check your own ministry.",
+  verifyHowTo: "Check a US charity in the IRS search (apps.irs.gov/app/eos). Check a US nonprofit in its state's list. Check a Nigerian group in the CAC search (search.cac.gov.ng). Or ask the ministry to email its papers.",
+  verifyChecked: "What you checked",
+  verifyCheckedHelp: "The public reads this line. Like: EIN found in the IRS list of tax-exempt groups.",
+  verifyNote: "A note for the ministry, if not yet",
+  verifyNoteHelp: "Say what is missing. The ministry reads it.",
+  verifyGrant: "Give the Verified badge",
+  verifyNotYetBtn: "Not yet",
+  verifyGranted: "The ministry now has the Verified badge.",
+  verifyNotYet: "Sent back with your note.",
+  verifiedListHead: "Ministries with the badge",
+  verifyRemove: "Take the badge off",
+  verifyRemoveNote: "Why (the ministry reads this)",
+  verifyRemoved: "The badge was taken off.",
+  profileHead: "About your ministry",
+  profileHelp: "This is your ministry's profile. All of it is optional. A person at Linked Ministries reads it with the rest of your page.",
+  fieldLeaderName: "Who leads it",
+  fieldLeaderRole: "Their role",
+  fieldLeaderRoleHelp: "Like Pastor, Director or Founder.",
+  fieldLeaderBio: "A few lines about them",
+  fieldMission: "What you stand for",
+  fieldMissionHelp: "One or two lines. Why does your ministry exist?",
+  fieldBeliefs: "What you believe",
+  fieldBeliefsHelp: "Your statement of faith, in your own words.",
+  fieldDenomination: "Church family",
+  fieldDenominationHelp: "Pick one, or type your own. Leave it empty if you would rather not say.",
+  fieldFounded: "Year you started",
+  fieldServes: "Who you serve",
+  fieldServesHelp: "Like: men coming out of prison, or families who lost their homes.",
+  fieldLanguages: "Languages you use",
+  fieldFocus: "What you do",
+  fieldFocusHelp: "Choose up to six.",
+  ladderHead: "Your badge",
+  ladderJoined: "Joined",
+  ladderRead: "Read by a person",
+  ladderSent: "Papers sent",
+  ladderVerified: "Verified",
+  ladderWhy: "The Verified badge is free. A person at Linked Ministries checks your papers against a public record. Then your page and the list of ministries show the badge.",
+  ladderWaitRead: "A person at Linked Ministries reads your ministry first. Then you can ask for the badge.",
+  ladderAsk: "Ask for the badge",
+  ladderForm: "What your ministry is on paper",
+  ladderNumber: "The number on your papers",
+  ladderNumberHelp: "Like an EIN, or a registration number. Only the Linked Ministries team sees it.",
+  ladderMessage: "Anything the team should know",
+  ladderMessageHelp: "Where they can see your papers, or who to call.",
+  ladderSentNote: "Sent. A person at Linked Ministries will check your papers. This can take a few days.",
+  ladderVerifiedNote: "Your ministry has the Verified badge.",
+  ladderGuide: "Not registered yet? See how to set up your ministry, step by step.",
   pageGive: "Your donation link",
   pageGiveHelp: "A link to your own donation page, like a Zeffy page. Your page then shows a Make a donation button. Linked Ministries never touches those donations.",
   pagePhotos: "Pictures",

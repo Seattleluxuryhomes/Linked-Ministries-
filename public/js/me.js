@@ -1,12 +1,12 @@
 /* me.js — /me: the ministry's own page. Its profile, its posts in every state, the answers it got and sent, its team, and the
    forms to post an ask or a give. A post says "On the board" only when a person at Linked Ministries has read it and the
    server says it is public; until then it says it is waiting. */
-import { h, get, post, msg, field, text, busy, ministryForm, postForm, toSignIn } from "/js/common.js";
+import { h, get, post, msg, field, text, area, select, busy, ministryForm, postForm, toSignIn } from "/js/common.js";
 import { pageCard, pageForm } from "/js/page.js";
 import { edenPanel, onEdenDraft, readHandoff } from "/js/eden.js";
 import { installCard } from "/js/install.js";
 import { values as formValues } from "/js/common.js";
-import { WORDS, KIND, POST_STATUS, MINISTRY_STATUS, CLOSE_REASON, categoryLabel, dateWords, placeWords } from "/js/pure.js";
+import { WORDS, KIND, POST_STATUS, MINISTRY_STATUS, CLOSE_REASON, categoryLabel, dateWords, placeWords, VERIFY_FORMS } from "/js/pure.js";
 
 const app = document.getElementById("app");
 let flash = null;          // one message shown at the top, from the last thing the person did
@@ -33,8 +33,8 @@ async function load() {
   if (!meR.ok || !meR.data.signed_in) return toSignIn("/me");
   const me = meR.data;
   if (!me.ministry) return location.assign("/join");
-  const [postsR, answersR, teamR, pageR] = await Promise.all([get("/api/my/posts"), get("/api/answers"), get("/api/team"), get("/api/page")]);
-  render(me, postsR.data.posts || [], answersR.data || { received: [], sent: [] }, teamR.data || { people: [], invites: [] }, pageR.data || { exists: false });
+  const [postsR, answersR, teamR, pageR, verifyR] = await Promise.all([get("/api/my/posts"), get("/api/answers"), get("/api/team"), get("/api/page"), get("/api/verify")]);
+  render(me, postsR.data.posts || [], answersR.data || { received: [], sent: [] }, teamR.data || { people: [], invites: [] }, pageR.data || { exists: false }, verifyR.ok ? verifyR.data : { state: "none" });
 }
 
 function say(words, ok) { flash = { words, ok }; }
@@ -46,7 +46,7 @@ async function act(button, path, body, okWords) {
   });
 }
 
-function render(me, posts, answers, team, pg) {
+function render(me, posts, answers, team, pg, vf = { state: "none" }) {
   const m = me.ministry;
   const parts = [];
   parts.push(h("div", { class: "row between" }, h("h1", {}, m.name), h("span", { class: "status" + (m.status === "public" ? " public" : "") }, m.status === "public" ? "Read" : m.status === "sent_back" ? "Sent back" : "Waiting")));
@@ -66,6 +66,10 @@ function render(me, posts, answers, team, pg) {
   /* the ministry's own public page */
   parts.push(h("div", { class: "sectionhead" }, h("h2", {}, WORDS.pageTitle)));
   parts.push(editingPage && me.lead ? pageForm(me, pg, { onDone: (w) => { editingPage = false; say(w, true); load(); }, onCancel: () => { editingPage = false; load(); } }) : pageCard(me, pg, { onEdit: () => { editingPage = true; load().then(() => document.querySelector("[data-page-form]") && document.querySelector("[data-page-form]").scrollIntoView()); } }));
+
+  /* the ladder to the Verified badge (0013) */
+  parts.push(h("div", { class: "sectionhead" }, h("h2", {}, WORDS.ladderHead)));
+  parts.push(ladderCard(me, vf));
 
   /* posts */
   parts.push(h("div", { class: "sectionhead" }, h("h2", {}, WORDS.yourPosts), posts.length ? h("span", { class: "count-pill" }, posts.length === 1 ? "1 post" : `${posts.length} posts`) : null));
@@ -91,6 +95,43 @@ function render(me, posts, answers, team, pg) {
   parts.push(h("p", { class: "quiet" }, `${WORDS.signedInAs} ${me.user.email}. `, h("button", { class: "link", type: "button", on: { click: async () => { await post("/api/auth/signout"); location.assign("/"); } } }, WORDS.signOut)));
   app.replaceChildren(...parts);
   installCard(installHere);
+}
+
+/* ---- the ladder: Joined -> Read by a person -> Papers sent -> Verified. A person on the team decides the last step, never a machine. ---- */
+let askingBadge = false;
+function ladderCard(me, vf) {
+  const read = me.ministry.status === "public", sent = vf.state === "requested" || vf.state === "verified", verified = vf.state === "verified";
+  const step = verified ? 4 : sent ? 3 : read ? 2 : 1;
+  const steps = [WORDS.ladderJoined, WORDS.ladderRead, WORDS.ladderSent, WORDS.ladderVerified];
+  const card = h("div", { class: "card", "data-ladder": vf.state },
+    h("ol", { class: "ladder", "aria-label": WORDS.ladderHead }, steps.map((w, i) => h("li", { class: i + 1 < step ? "done" : i + 1 === step ? "now done" : "", "aria-current": i + 1 === step ? "step" : null }, w))));
+  if (verified) { card.append(msg(WORDS.ladderVerifiedNote, "ok")); if (vf.checked) card.append(h("p", { class: "quiet" }, "What the team checked: ", vf.checked)); return card; }
+  if (vf.note) card.append(h("p", { class: "msg" }, h("strong", {}, "Their note: "), vf.note));
+  if (!read) { card.append(h("p", {}, WORDS.ladderWaitRead)); return card; }
+  if (vf.state === "requested") { card.append(msg(WORDS.ladderSentNote, "ok")); return card; }
+  card.append(h("p", {}, WORDS.ladderWhy));
+  if (!me.lead) return card;
+  if (!askingBadge) {
+    card.append(h("p", { class: "row" }, h("button", { class: "btn", type: "button", "data-act": "ask-badge", on: { click: () => { askingBadge = true; load(); } } }, WORDS.ladderAsk), h("a", { href: "/start" }, WORDS.ladderGuide)));
+    return card;
+  }
+  const out = h("div", { class: "out" });
+  const f = h("form", { class: "formcard", novalidate: true, "data-badge-form": "" },
+    field(WORDS.ladderForm, select("form", VERIFY_FORMS, vf.form || "", "Choose one")),
+    field(WORDS.ladderNumber, text("number", vf.number, { max: 60 }), WORDS.ladderNumberHelp),
+    field(WORDS.ladderMessage, area("message", vf.message, 1000), WORDS.ladderMessageHelp),
+    out,
+    h("p", { class: "row" }, h("button", { class: "btn", type: "submit" }, WORDS.ladderAsk), h("button", { class: "link", type: "button", on: { click: () => { askingBadge = false; load(); } } }, "Cancel")));
+  f.addEventListener("submit", async (ev) => {
+    ev.preventDefault(); out.replaceChildren();
+    await busy(f.querySelector("button[type=submit]"), async () => {
+      const r = await post("/api/verify", formValues(f));
+      if (!r.ok) return out.replaceChildren(msg(r.data.words || WORDS.tryAgain));
+      askingBadge = false; say(WORDS.ladderSentNote, true); load();
+    });
+  });
+  card.append(f);
+  return card;
 }
 
 /* a folded section that remembers whether it was open when the page is drawn again */

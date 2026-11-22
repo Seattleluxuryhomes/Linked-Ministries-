@@ -4,7 +4,7 @@
    text is never markup. No inline script, no style attribute, nothing from anyone else's server (every face is in /fonts, every
    picture is drawn here as inline SVG). */
 import { verse } from "./scripture.mjs";
-import { PRODUCT, CATEGORIES, KIND, KINDS, STATES, COUNTRIES, countryName, placeWords, categoryLabel, dateWords, CRISIS, NO_MONEY, STAY_SAFE, WORDS, money, methodLabel, receiptCode, GRANT_STATUS } from "../public/js/pure.js";
+import { PRODUCT, CATEGORIES, KIND, KINDS, STATES, COUNTRIES, countryName, placeWords, focusLabel, categoryLabel, dateWords, CRISIS, NO_MONEY, STAY_SAFE, WORDS, money, methodLabel, receiptCode, GRANT_STATUS } from "../public/js/pure.js";
 import { NONPROFIT_LINE, FLAGS, statusLine, deductibleAnswer, FOUNDER } from "./words.mjs";
 import { BOARD } from "./board-members.mjs";
 import { TERMS, PRIVACY, DRAFT_LINE, LAST_CHANGED } from "./legal.mjs";
@@ -31,6 +31,9 @@ export const ART_EMPTY = `<svg class="art-empty" viewBox="0 0 160 110" fill="non
 /* the one name for the button that takes a gift (founder, 2026-10-30: "it should say make a donation"). It shows in the top bar of
    every page, in the footer, on the giving page, the give page and the front, only while the giving door is open. */
 export const DONATE = "Make a donation";
+/* the Verified badge (0013): a person on the team checked the papers; never bought, never given by a machine */
+const ICO_VERIFIED = `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 1.5l2.6 2 3.3-.2 1 3.1 2.7 1.9-1 3.1 1 3.1-2.7 1.9-1 3.1-3.3-.2-2.6 2-2.6-2-3.3.2-1-3.1L2.4 14.4l1-3.1-1-3.1 2.7-1.9 1-3.1 3.3.2z"/><path fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M7.8 12.3l2.8 2.8 5.6-5.8"/></svg>`;
+export const verifiedBadge = (small = false) => `<span class="vbadge${small ? " small" : ""}" title="Verified by a person at Linked Ministries">${ICO_VERIFIED}<span>Verified</span></span>`;
 
 export function layout({ title, description, body, script, nav = "", base = "", path = "", noindex = false, notice = "", ogTitle = "", image = "", imageAlt = "", ogType = "website", donate = false }) {
   const t = title ? `${title} · ${PRODUCT.name}` : `${PRODUCT.name}: ministries helping ministries`;
@@ -306,6 +309,14 @@ export const privacyPage = (o = {}) => legalPage(PRIVACY, { ...o, path: "/privac
 const telHref = (p) => "tel:" + String(p).replace(/[^0-9+]/g, "");
 export function ministryPage({ page, base = "", notice = "", giving = { open: false }, preview = false, asks = [] }) {
   const c = page.live || {}, name = page.name, place = placeWords(page.city, page.state, page.country);
+  const facts = [c.denomination ? ["Church family", c.denomination] : null, c.founded ? ["Started", c.founded] : null, c.serves ? ["Who we serve", c.serves] : null,
+    c.languages ? ["Languages", c.languages] : null].filter(Boolean);
+  const focusTags = (c.focus || []).length ? `<ul class="tags" aria-label="What we do">${c.focus.map((f) => `<li>${e(focusLabel(f))}</li>`).join("")}</ul>` : "";
+  const leaderCard = c.leader_name ? `<section class="card mcard" aria-labelledby="m-lead"><h2 id="m-lead">Who leads us</h2><p class="lead-name"><strong>${e(c.leader_name)}</strong>${c.leader_role ? ` <span class="quiet">· ${e(c.leader_role)}</span>` : ""}</p>${c.leader_bio ? `<p class="words">${e(c.leader_bio)}</p>` : ""}</section>` : "";
+  const missionCard = c.mission ? `<section class="card mcard mission" aria-labelledby="m-mission"><h2 id="m-mission">What we stand for</h2><p class="words big">${e(c.mission)}</p></section>` : "";
+  const beliefsCard = c.beliefs ? `<section class="card mcard" aria-labelledby="m-believe"><h2 id="m-believe">What we believe</h2><p class="words">${e(c.beliefs)}</p></section>` : "";
+  const factsCard = facts.length || focusTags ? `<section class="card mcard" aria-labelledby="m-facts"><h2 id="m-facts">The basics</h2>${facts.length ? `<dl class="kv">${facts.map(([k, v]) => `<dt>${e(k)}</dt><dd>${e(v)}</dd>`).join("")}</dl>` : ""}${focusTags}</section>` : "";
+  const verifiedCard = page.verified ? `<section class="card mcard vcard" aria-labelledby="m-verified"><h2 id="m-verified">${verifiedBadge()}</h2><p>A person at Linked Ministries checked this ministry's papers on ${e(dateWords(page.verified_at))}.</p>${page.verify_checked ? `<p class="quiet">What they checked: ${e(page.verify_checked)}</p>` : ""}<p class="quiet">The badge is free. It means the papers matched a public record. It does not mean Linked Ministries vouches for the ministry's work.</p></section>` : "";
   const needs = (asks || []).length ? `<section class="card mcard" aria-labelledby="m-needs"><h2 id="m-needs">What we need now</h2><ul class="needs">${asks.map((a) => `<li><a href="/board/${e(a.id)}">${e(a.title)}</a><span class="quiet">${e(categoryLabel(a.category))} · open until ${e(dateWords(a.open_until))}</span></li>`).join("")}</ul><p><a class="btn small" href="/board?q=${encodeURIComponent(name)}">Help with a need</a></p></section>` : "";
   const photos = (c.photos || []).map((ph) => `<figure class="mphoto"><img src="/photos/${e(ph.id)}" alt="${e(ph.alt || "A picture from " + name)}" width="800" height="600" loading="lazy" decoding="async"></figure>`).join("");
   const meets = (c.meets || []).length ? `<section class="card mcard" aria-labelledby="m-meet"><h2 id="m-meet">When and where we meet</h2><ul class="meets">${c.meets.map((r) => `<li><strong>${e(r.day)}</strong><span class="when-at">${e(r.time)}</span><span class="where-at">${e(r.place)}</span></li>`).join("")}</ul></section>` : "";
@@ -314,19 +325,19 @@ export function ministryPage({ page, base = "", notice = "", giving = { open: fa
   const canGive = !!(giving && giving.open && c.give_url);
   const giveCard = canGive ? `<section class="card mcard give" aria-labelledby="m-give"><h2 id="m-give">${e(DONATE)} to ${e(name)}</h2><p>This link is ${e(name)}'s own. It goes to their own donation page. Linked Ministries does not collect or see a donation made there.</p><p><a class="btn donate" href="${e(c.give_url)}" rel="noopener nofollow">${e(DONATE)} to ${e(name)}</a></p></section>` : "";
   const read = preview ? `<p class="note">This is how your page will look. Only your ministry can see this. It is not public until a person at Linked Ministries reads it.</p>`
-    : `<p class="quiet mread">A person at Linked Ministries read this page on ${e(dateWords(page.live_at))}. Linked Ministries does not check or vouch for any ministry. ${notice ? `Something wrong? Write to <a href="mailto:${e(notice)}">${e(notice)}</a>.` : ""}</p>`;
+    : `<p class="quiet mread">A person at Linked Ministries read this page on ${e(dateWords(page.live_at))}. ${page.verified ? "A person also checked its papers. Linked Ministries does not vouch for any ministry's work." : "Linked Ministries does not check or vouch for any ministry."} ${notice ? `Something wrong? Write to <a href="mailto:${e(notice)}">${e(notice)}</a>.` : ""}</p>`;
   const body = `<article class="mpage">
 <header class="mhero"><div class="wrap wide">
 ${preview ? read : ""}<p class="eyebrow">A ministry on Linked Ministries</p>
-<h1>${e(name)}</h1>
+<h1>${e(name)}${page.verified ? " " + verifiedBadge() : ""}</h1>
 <p class="lead">${e(c.tagline)}</p>
 <p class="place">${e(place)}</p>
 <p class="cta">${canGive ? `<a class="btn donate" href="#m-give">${e(DONATE)} to ${e(name)}</a>` : ""}${c.website ? `<a class="btn ghost" href="${e(c.website)}" rel="noopener nofollow">Visit our website</a>` : ""}</p>
 </div></header>
 <div class="wrap wide mgrid">
 ${photos ? `<div class="mphotos${(c.photos || []).length === 1 ? " one" : ""}">${photos}</div>` : ""}
-<div class="mmain"><section class="card mcard" aria-labelledby="m-about"><h2 id="m-about">About us</h2><p class="words">${e(c.about)}</p></section>${needs}</div>
-<div class="mside">${meets}${reachCard}${giveCard}</div>
+<div class="mmain">${missionCard}<section class="card mcard" aria-labelledby="m-about"><h2 id="m-about">About us</h2><p class="words">${e(c.about)}</p></section>${needs}${beliefsCard}</div>
+<div class="mside">${verifiedCard}${leaderCard}${factsCard}${meets}${reachCard}${giveCard}</div>
 <div class="mfull">${c.verse ? verse(c.verse) : ""}</div>
 <div class="mfull">${preview ? "" : read}
 <p class="row mlinks"><a class="btn ghost" href="/board">See the board</a><a class="btn ghost" href="/giving">Where the money went</a></p></div>
@@ -350,7 +361,9 @@ export function directoryPage({ ministries = [], country = "", base = "", notice
     const give = open && m.give_url ? `<a class="btn donate small" href="${e(m.give_url)}" rel="noopener nofollow">${e(DONATE)}</a>` : "";
     const page = m.slug ? `<a class="btn small${give ? " ghost" : ""}" href="/m/${e(m.slug)}">See their page</a>` : (m.website ? `<a class="btn ghost small" href="${e(m.website)}" rel="noopener nofollow">Visit their website</a>` : "");
     const pic = m.photo ? `<img class="dphoto" src="/photos/${e(m.photo)}" alt="${e(m.photo_alt || "A picture from " + m.name)}" width="800" height="600" loading="lazy" decoding="async">` : "";
-    return `<li class="card lift dcard">${pic}<div class="dbody"><h3>${m.slug ? `<a href="/m/${e(m.slug)}">${e(m.name)}</a>` : e(m.name)}</h3><p class="place">${e(placeWords(m.city, m.state, m.country))}</p>${m.tagline ? `<p>${e(m.tagline)}</p>` : ""}${needs}<p class="row">${give}${page}${asks.length ? `<a class="btn ghost small" href="/board?q=${encodeURIComponent(m.name)}">Help with a need</a>` : ""}</p></div></li>`;
+    const meta = [m.denomination, m.leader_name ? `Led by ${m.leader_name}${m.leader_role ? ", " + m.leader_role : ""}` : ""].filter(Boolean).join(" · ");
+    const tags = (m.focus || []).length ? `<ul class="tags small">${m.focus.slice(0, 4).map((f) => `<li>${e(focusLabel(f))}</li>`).join("")}</ul>` : "";
+    return `<li class="card lift dcard">${pic}<div class="dbody"><h3>${m.slug ? `<a href="/m/${e(m.slug)}">${e(m.name)}</a>` : e(m.name)}${m.verified ? " " + verifiedBadge(true) : ""}</h3><p class="place">${e(placeWords(m.city, m.state, m.country))}</p>${m.tagline ? `<p>${e(m.tagline)}</p>` : ""}${meta ? `<p class="quiet">${e(meta)}</p>` : ""}${tags}${needs}<p class="row">${give}${page}${asks.length ? `<a class="btn ghost small" href="/board?q=${encodeURIComponent(m.name)}">Help with a need</a>` : ""}</p></div></li>`;
   };
   const list = groups.length ? groups.map(([c, l]) => `<section class="dgroup" aria-labelledby="c-${e(c)}"><h2 id="c-${e(c)}">${e(countryName(c))} <span class="quiet">${l.length === 1 ? "1 ministry" : `${l.length} ministries`}</span></h2><ul class="dlist">${l.map(card).join("")}</ul></section>`).join("\n")
     : `<div class="empty card"><h2>${country ? `No ministries in ${e(countryName(country))} yet.` : "No ministries are listed yet."}</h2><p>A ministry shows here after a person at Linked Ministries reads it.</p><p class="row center"><a class="btn" href="/join">Join the network</a>${country ? `<a class="btn ghost" href="/ministries">See every country</a>` : ""}</p></div>`;
@@ -365,6 +378,44 @@ ${list}
 </div>`;
   return layout({ title: "Ministries", body, nav: "ministries", base, path: "/ministries" + (country ? "?country=" + country : ""), notice, donate: open,
     description: "Ministries in the Linked Ministries network, by country: their pages, what they need now, and how to give." });
+}
+
+/* ---- /start: set up a ministry, step by step (founder, 2026-11-22). General steps with each one's official page; never legal or tax advice. ---- */
+export const START_STEPS = {
+  us: { title: "In the United States", intro: "Many US ministries first form a nonprofit. Then they ask the IRS to count them as a charity. That is called 501(c)(3). Gifts to it may then be deducted by the giver. A church does not have to ask the IRS, but many do.", steps: [
+    ["Pick a name and a board", "Choose a name no one in your state uses. Pick the people who will lead it. Many states ask for three or more board members. Check your state's rule.", "https://www.usa.gov/state-business", "Find your state's business office"],
+    ["Form a nonprofit in your state", "File papers with your state to form the nonprofit. To be a charity later, the papers must say it does church or charity work. They must also say where its things go if it closes.", "https://www.irs.gov/charities-non-profits/charitable-organizations/exemption-requirements-501c3-organizations", "What the IRS asks of a charity"],
+    ["Get an EIN", "An EIN is your ministry's tax number. It is free from the IRS. Never pay a website for it.", "https://www.irs.gov/businesses/small-businesses-self-employed/get-an-employer-identification-number", "Get an EIN from the IRS"],
+    ["Write your bylaws", "Bylaws are your own rules: how the board meets and votes. Add a rule for what a board member does when they could gain from a choice.", "https://www.irs.gov/charities-non-profits/charitable-organizations/governance-and-related-topics-501c3-organizations", "IRS notes on running a charity well"],
+    ["Ask the IRS: Form 1023-EZ or Form 1023", "A small group may use Form 1023-EZ ($275). It is for groups that take in $50,000 a year or less and hold $250,000 or less, and you must fill in its worksheet first. Others use Form 1023 ($600). A church cannot use the short form. You file and pay online at Pay.gov. File within 27 months of forming, so the IRS can count you as a charity from the day you formed.", "https://www.irs.gov/charities-non-profits/form-1023-and-1023-ez-amount-of-user-fee", "The IRS fee for each form"],
+    ["Register before you ask the public for money", "Many states want a charity to sign up before it asks people to give. In Washington, you sign up with the Secretary of State.", "https://www.sos.wa.gov/charities", "Washington Charities Program"],
+    ["Keep it up every year", "Most charities send the IRS a Form 990 every year. A small one may send the short e-Postcard (990-N). Three years with none and the IRS takes the status away. Churches do not have to file it. Your state may want a yearly report too.", "https://www.irs.gov/charities-non-profits/annual-filing-and-forms", "The IRS yearly forms"],
+  ] },
+  ng: { title: "In Nigeria", intro: "In Nigeria, a church can sign up with the CAC. The CAC is the office for companies. You sign up as Incorporated Trustees. The law is CAMA 2020, Part F. Rules change, so check each step with the CAC or a lawyer.", steps: [
+    ["Check and hold your name", "Search the CAC list to see if your name is free, then ask the CAC to hold it for you.", "https://search.cac.gov.ng", "CAC public search"],
+    ["Choose your trustees", "Trustees are the people who hold the ministry's things for it. Choose people you trust, and get their details and photos ready.", "https://www.cac.gov.ng", "Corporate Affairs Commission"],
+    ["Write your constitution", "The constitution says what the ministry is for and how the trustees act. Since 2020 it no longer needs a clause about a common seal.", "https://www.cac.gov.ng", "Corporate Affairs Commission"],
+    ["Apply online", "Fill in the form for Incorporated Trustees on the CAC website. Pay the fee it shows.", "https://icrp.cac.gov.ng", "CAC online portal"],
+    ["Keep it up every year", "Incorporated Trustees file a yearly return with the CAC (form CAC/IT 4).", "https://www.cac.gov.ng", "Corporate Affairs Commission"],
+  ] },
+  other: { title: "Anywhere else", intro: "Every country has its own way to register a church or charity. Ask your government's office for companies or charities. A local lawyer can help.", steps: [
+    ["Find the right office", "Look for the office in your country that signs up churches and charities.", "", ""],
+    ["Register, and keep the papers", "Keep the paper that shows your ministry is registered, and the number on it.", "", ""],
+    ["Ask for the Verified badge", "Join Linked Ministries, make your page, then ask for the badge. A person on our team checks your papers.", "/join", "Join the network"],
+  ] },
+};
+export function startPage({ base = "", notice = "", donate = false } = {}) {
+  const tabs = Object.entries(START_STEPS);
+  const body = `<div class="wrap">
+<div class="pagehead"><p class="eyebrow">A free guide</p><h1 class="rise">Set up your ministry, step by step</h1>
+<p class="lead rise">Make it real on paper, so people can trust it and give to it. Pick where you are. Tick each step as you go.</p>
+<p class="note">This is a plain guide, not legal or tax advice. Laws and fees change. Each step links to the government's own page. Check there, or ask a lawyer.</p></div>
+<nav class="row start-tabs" aria-label="Where you are">${tabs.map(([k, t]) => `<a class="btn ghost small" href="#${k}">${e(t.title)}</a>`).join("")}</nav>
+${tabs.map(([k, t]) => `<section class="card start" id="${k}" aria-labelledby="h-${k}"><h2 id="h-${k}">${e(t.title)}</h2><p>${e(t.intro)}</p>
+<ol class="steps-check">${t.steps.map(([h, w, url, label], i) => `<li><label class="stepcheck"><input type="checkbox" data-step="${k}-${i}"><span class="stephead">${e(h)}</span></label><p>${e(w)}</p>${url ? `<p><a href="${e(url)}"${url.startsWith("http") ? ' rel="noopener"' : ""}>${e(label)}</a></p>` : ""}</li>`).join("")}</ol></section>`).join("\n")}
+<div class="card cta-card"><div><h2>Then show it on Linked Ministries</h2><p>Make your free page. Post what you need. Ask for the Verified badge, and a person on our team checks your papers.</p></div><p class="row"><a class="btn" href="/join">Join the network</a><a class="btn ghost" href="/take-donations">How to take donations</a></p></div>
+</div>`;
+  return layout({ title: "Set up your ministry", body, nav: "", base, path: "/start", notice, donate, description: "A free, plain guide to setting up a ministry on paper: in the US, in Nigeria and anywhere else, with each step's official page." });
 }
 
 /* ---- giving: where the money went, and the door ---------------------------------------------------------------------------------------------------------- */
