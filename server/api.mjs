@@ -75,7 +75,8 @@ function pageFields(b) {
       /* the profile (0013): every one optional; the database checks each */
       leader_name: str(b.leader_name, 120), leader_role: str(b.leader_role, 60), leader_bio: str(b.leader_bio, 800), mission: str(b.mission, 300), beliefs: str(b.beliefs, 2000),
       denomination: str(b.denomination, 80), founded: str(b.founded, 4), serves: str(b.serves, 160), languages: str(b.languages, 160),
-      focus: (Array.isArray(b.focus) ? b.focus : []).map((x) => str(x, 20)).filter((x) => FOCUS_IDS.includes(x)).slice(0, 6) } };
+      focus: (Array.isArray(b.focus) ? b.focus : []).map((x) => str(x, 20)).filter((x) => FOCUS_IDS.includes(x)).slice(0, 6),
+      template: ["church", "recovery", "mission", "mercy"].includes(str(b.template, 12)) ? str(b.template, 12) : "" } };
   if (f.name.length < 2) throw bad("Type your ministry's name.", 422, "name_needed");
   if (f.city.length < 2) throw bad("Type your city.", 422, "city_needed");
   if (f.state && !STATE_CODES.includes(f.state)) throw bad("Choose your state.", 422, "state_needed");

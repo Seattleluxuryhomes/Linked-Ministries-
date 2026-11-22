@@ -44,6 +44,15 @@ export const FOCUS = [
 ];
 export const FOCUS_IDS = FOCUS.map((f) => f[0]);
 export const focusLabel = (id) => (FOCUS.find((f) => f[0] === id) || [id, String(id || "")])[1];
+/* the four page styles (0014): the same light page, in the order that fits the ministry */
+export const TEMPLATES = [
+  ["", "Classic", "About you first, then what you need."],
+  ["church", "Church", "When and where you meet comes first, with a Visit us button."],
+  ["recovery", "Recovery house", "Get help today comes first: your phone and email, and the 988 line."],
+  ["mission", "Mission abroad", "What you need comes first, with your donation button."],
+  ["mercy", "Food and mercy", "When and where you serve comes first, then what you need."],
+];
+
 /* church families a lead can pick from; any other name can be typed */
 export const DENOMINATIONS = ["Non-denominational", "Baptist", "Pentecostal", "Assemblies of God", "Methodist", "Presbyterian", "Lutheran", "Anglican",
   "Catholic", "Orthodox", "Church of God", "Nazarene", "Evangelical", "Reformed", "Seventh-day Adventist", "Mennonite", "Charismatic", "Apostolic"];
@@ -367,6 +376,8 @@ export const WORDS = {
   verifyRemove: "Take the badge off",
   verifyRemoveNote: "Why (the ministry reads this)",
   verifyRemoved: "The badge was taken off.",
+  templateHead: "Pick a style for your page",
+  templateHelp: "Each style puts different things first. Your words stay the same. You can change it any time.",
   profileHead: "About your ministry",
   profileHelp: "This is your ministry's profile. All of it is optional. A person at Linked Ministries reads it with the rest of your page.",
   fieldLeaderName: "Who leads it",

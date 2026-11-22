@@ -323,21 +323,23 @@ export function ministryPage({ page, base = "", notice = "", giving = { open: fa
   const reach = [c.email ? `<dt>Email</dt><dd><a href="mailto:${e(c.email)}">${e(c.email)}</a></dd>` : "", c.phone ? `<dt>Phone</dt><dd><a href="${e(telHref(c.phone))}">${e(c.phone)}</a></dd>` : "", c.website ? `<dt>Website</dt><dd><a href="${e(c.website)}" rel="noopener nofollow">${e(c.website.replace(/^https?:\/\//, ""))}</a></dd>` : ""].join("");
   const reachCard = reach ? `<section class="card mcard" aria-labelledby="m-reach"><h2 id="m-reach">How to reach us</h2><dl class="kv">${reach}</dl></section>` : "";
   const canGive = !!(giving && giving.open && c.give_url);
+  /* the template (0014): the same cards, in the order that fits the ministry, and one first button that fits it */
+  const tp = ["church", "recovery", "mission", "mercy"].includes(c.template) ? c.template : "";
+  const helpNow = tp === "recovery" && (c.phone || c.email) ? `<section class="card mcard helpnow" aria-labelledby="m-help"><h2 id="m-help">Need help today?</h2><p>Call or write to us. A person will answer.</p><p class="row">${c.phone ? `<a class="btn" href="${e(telHref(c.phone))}">Call ${e(c.phone)}</a>` : ""}${c.email ? `<a class="btn ghost" href="mailto:${e(c.email)}">Email us</a>` : ""}</p><p class="quiet">${e(CRISIS)}</p></section>` : "";
   const giveCard = canGive ? `<section class="card mcard give" aria-labelledby="m-give"><h2 id="m-give">${e(DONATE)} to ${e(name)}</h2><p>This link is ${e(name)}'s own. It goes to their own donation page. Linked Ministries does not collect or see a donation made there.</p><p><a class="btn donate" href="${e(c.give_url)}" rel="noopener nofollow">${e(DONATE)} to ${e(name)}</a></p></section>` : "";
   const read = preview ? `<p class="note">This is how your page will look. Only your ministry can see this. It is not public until a person at Linked Ministries reads it.</p>`
     : `<p class="quiet mread">A person at Linked Ministries read this page on ${e(dateWords(page.live_at))}. ${page.verified ? "A person also checked its papers. Linked Ministries does not vouch for any ministry's work." : "Linked Ministries does not check or vouch for any ministry."} ${notice ? `Something wrong? Write to <a href="mailto:${e(notice)}">${e(notice)}</a>.` : ""}</p>`;
-  const body = `<article class="mpage">
+  const body = `<article class="mpage${tp ? " t-" + tp : ""}">
 <header class="mhero"><div class="wrap wide">
 ${preview ? read : ""}<p class="eyebrow">A ministry on Linked Ministries</p>
 <h1>${e(name)}${page.verified ? " " + verifiedBadge() : ""}</h1>
 <p class="lead">${e(c.tagline)}</p>
 <p class="place">${e(place)}</p>
-<p class="cta">${canGive ? `<a class="btn donate" href="#m-give">${e(DONATE)} to ${e(name)}</a>` : ""}${c.website ? `<a class="btn ghost" href="${e(c.website)}" rel="noopener nofollow">Visit our website</a>` : ""}</p>
+<p class="cta">${tp === "church" && meets ? `<a class="btn" href="#m-meet">Visit us</a>` : ""}${tp === "recovery" && helpNow ? `<a class="btn" href="#m-help">Get help today</a>` : ""}${tp === "mission" && (asks || []).length ? `<a class="btn${canGive ? " ghost" : ""}" href="#m-needs">See what we need</a>` : ""}${tp === "mercy" && meets ? `<a class="btn" href="#m-meet">When we serve</a>` : ""}${canGive ? `<a class="btn donate" href="#m-give">${e(DONATE)} to ${e(name)}</a>` : ""}${c.website ? `<a class="btn ghost" href="${e(c.website)}" rel="noopener nofollow">Visit our website</a>` : ""}</p>
 </div></header>
 <div class="wrap wide mgrid">
 ${photos ? `<div class="mphotos${(c.photos || []).length === 1 ? " one" : ""}">${photos}</div>` : ""}
-<div class="mmain">${missionCard}<section class="card mcard" aria-labelledby="m-about"><h2 id="m-about">About us</h2><p class="words">${e(c.about)}</p></section>${needs}${beliefsCard}</div>
-<div class="mside">${verifiedCard}${leaderCard}${factsCard}${meets}${reachCard}${giveCard}</div>
+${layoutFor(tp, { missionCard, about: `<section class="card mcard" aria-labelledby="m-about"><h2 id="m-about">About us</h2><p class="words">${e(c.about)}</p></section>`, needs, beliefsCard, verifiedCard, leaderCard, factsCard, meets, reachCard, giveCard, helpNow })}
 <div class="mfull">${c.verse ? verse(c.verse) : ""}</div>
 <div class="mfull">${preview ? "" : read}
 <p class="row mlinks"><a class="btn ghost" href="/board">See the board</a><a class="btn ghost" href="/giving">Where the money went</a></p></div>
@@ -347,6 +349,19 @@ ${photos ? `<div class="mphotos${(c.photos || []).length === 1 ? " one" : ""}">$
   const desc = `${c.tagline} ${place}.`.slice(0, 200);
   return layout({ title: name, body, base, path: "/m/" + page.slug, noindex: preview, ogType: "profile", donate: !!(giving && giving.open), ogTitle: `${name} · ${place}`, description: desc,
     image: first ? "/photos/" + first.id : "", imageAlt: first ? (first.alt || "A picture from " + name) : "", notice });
+}
+
+/* the four page styles: which cards go in the wide column and which at the side, in what order */
+export const TEMPLATE_ORDER = {
+  "":       { main: ["missionCard", "about", "needs", "beliefsCard"], side: ["verifiedCard", "leaderCard", "factsCard", "meets", "reachCard", "giveCard"] },
+  church:   { main: ["meets", "missionCard", "about", "beliefsCard", "needs"], side: ["verifiedCard", "leaderCard", "factsCard", "reachCard", "giveCard"] },
+  recovery: { main: ["helpNow", "missionCard", "about", "meets", "needs"], side: ["verifiedCard", "leaderCard", "factsCard", "reachCard", "giveCard", "beliefsCard"] },
+  mission:  { main: ["needs", "missionCard", "about", "beliefsCard"], side: ["verifiedCard", "giveCard", "leaderCard", "factsCard", "reachCard", "meets"] },
+  mercy:    { main: ["meets", "needs", "missionCard", "about"], side: ["verifiedCard", "giveCard", "reachCard", "leaderCard", "factsCard", "beliefsCard"] },
+};
+function layoutFor(tp, cards) {
+  const o = TEMPLATE_ORDER[tp] || TEMPLATE_ORDER[""];
+  return `<div class="mmain">${o.main.map((k) => cards[k] || "").join("")}</div>\n<div class="mside">${o.side.map((k) => cards[k] || "").join("")}</div>`;
 }
 
 /* ---- every ministry, by country: its page, what it needs now, and how to give (founder, 2026-11-22) -------------------------------------- */

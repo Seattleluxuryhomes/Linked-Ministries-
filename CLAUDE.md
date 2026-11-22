@@ -111,6 +111,14 @@ decides), that is a new ruling to record here first.
 state charity sign-up, yearly 990), Nigeria (CAC Incorporated Trustees, CAMA 2020 Part F) and anywhere else; every step links to the government's own
 page and the page says it is not legal or tax advice. Tests: `tests/api-profile-test.mjs`.
 
+## Four page styles (migration 0014)
+
+Founder, 2026-11-22: "the best website templates for new Ministries." A lead picks a style on the page form (`TEMPLATES` in `public/js/pure.js`):
+Classic, Church (when it meets first, a Visit us button), Recovery house (a Need help today card with the phone, the email and the 988 line first),
+Mission abroad (what it needs first, with the donation button), Food and mercy (when and where it serves first). A style is only the order of the
+same cards (`TEMPLATE_ORDER` in `server/pages.mjs`) and the first button: one gold, light only (rule 5), the ministry's own words. The style is part of
+the page's copy, read by a person with the rest (rule 2). 0013's `lm.page_clean` is kept whole as `lm.page_clean_0013`; the new one wraps it.
+
 ## Installable app
 
 The site installs to a phone (founder, 2026-10-18: "Make sure the app is downloadable to a phone"). The pattern is Cross Universal's D-290,

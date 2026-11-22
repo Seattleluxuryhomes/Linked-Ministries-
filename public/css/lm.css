@@ -503,3 +503,17 @@ h1 .vbadge{font-size:16px;margin-left:6px}
 .chips-pick .pick{position:relative}
 .chips-pick .pick:has(input:checked) span::before{content:"✓ ";color:var(--gold-ink);font-weight:700}
 .chips-pick .pick:has(input:focus-visible){outline:3px solid var(--gold);outline-offset:2px}
+
+/* the four page styles (0014): picking one, and the small marks each style adds on the light page */
+.styles{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:8px}
+.style-pick{position:relative;display:flex;flex-direction:column;gap:4px;border:1px solid #d9cfbf;border-radius:14px;padding:14px;min-height:44px;cursor:pointer;background:#fff}
+.style-pick input{position:absolute;opacity:0;width:0;height:0;margin:0}
+.style-pick:has(input:checked){border:2px solid var(--gold);background:var(--gold-soft)}
+.style-pick:has(input:focus-visible){outline:3px solid var(--gold);outline-offset:2px}
+.style-name{font-weight:700}
+.style-pick:has(input:checked) .style-name::before{content:"✓ ";color:var(--gold-ink)}
+.style-blurb{font-size:14px;color:#5c5348}
+.helpnow{border:2px solid var(--gold)}
+.t-church #m-meet,.t-mercy #m-meet{font-size:24px}
+.t-church .meets li,.t-mercy .meets li{font-size:18px}
+.t-mission #m-needs{font-size:24px}

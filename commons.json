@@ -177,7 +177,7 @@
       "origin_path": "behavioral-health-app/server/api.mjs",
       "origin_sha256": "d181a933847ec6245881206eea307ad9c4a818e936ac05d2e14fc98ca7822c55",
       "local_path": "server/api.mjs",
-      "local_sha256": "a8005a1eaec5842c503e7b03cd6d2e68d2a18b50f6ff10546ed99764c233086f",
+      "local_sha256": "f762905de555589de30c2117d159ef57e1f6d0e60bfded56fadc9e405eb575e5",
       "note": "Same pattern (asUser, functions decide, early friendly checks). The routes are this product's: ministries, team, posts, answers, stewards."
     },
     {
@@ -320,7 +320,7 @@
       "origin_path": "behavioral-health-app/tests/db-test.mjs",
       "origin_sha256": "42b82181b4c1199b22a4548c76c1ec937413ecb684b367356721995cac3c5cfd",
       "local_path": "tests/db-test.mjs",
-      "local_sha256": "5d07dde85ac6fab2682e18ae4230e9d009ad1d833a5db78410afc000cca67115",
+      "local_sha256": "b6a6e9ad5ca38b0943c69060721fb6e6973a2e5c968497e98c1af4a3115120e3",
       "note": "Same method; this product's rules."
     },
     {
@@ -441,7 +441,7 @@
       "origin_path": "behavioral-health-app/CLAUDE.md",
       "origin_sha256": "3c403645fae7028168c5ee3e1201d85863a7ebbf30225d2007cef282ce16842e",
       "local_path": "CLAUDE.md",
-      "local_sha256": "b0e4e3829270c4fc5d6a80758d1f1e5268a8aa572a89ba9ee6e4b6da95213979",
+      "local_sha256": "afeb70dc20a0f9240e64961179c91363c3b24875e3caeb4726d9f16e8590fa62",
       "note": "Same form; this product's hard rules."
     },
     {
