@@ -85,6 +85,15 @@ Founder, 2026-10-18: "So if a ministry wants something or needs something we nee
     authenticated in the same migration, and grant only what a signed-in person needs (0004's blanket revoke covered only what existed then).
     Whatever reads a contact address, or erases a person, runs on the service connection alone.
 
+## Ministries in any country, and the list of them (migration 0012)
+
+Founder, 2026-11-22: "we need to have a place where these countries and Ministries can showcase their websites and their need lists."
+A ministry has a `country` (ISO two-letter code, `COUNTRIES` in `public/js/pure.js`, 'US' for every ministry that was already here). A US
+ministry still chooses its state; anywhere else the state is empty and the city says where (`placeWords`: "Lagos, Nigeria"). Changing the
+country sends a public ministry back to be read. `/ministries` (in the top bar and the footer) lists every public ministry by country with
+its page, what it needs now (`lm.asks_public`) and its own donation link while the giving door is open (`lm.directory_public`); a ministry's
+page lists "What we need now". The board filters by country. Tests: `tests/api-countries-test.mjs`.
+
 ## Installable app
 
 The site installs to a phone (founder, 2026-10-18: "Make sure the app is downloadable to a phone"). The pattern is Cross Universal's D-290,

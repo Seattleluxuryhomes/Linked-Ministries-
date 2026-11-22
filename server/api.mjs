@@ -5,7 +5,7 @@
 import { asUser, asAdmin } from "./db.mjs";
 import { whoami, limited, validEmail } from "./auth.mjs";
 import { sendEmail, emailConfigured } from "./mail.mjs";
-import { CATEGORY_IDS, STATE_CODES, KINDS, REPORT_REASONS } from "../public/js/pure.js";
+import { CATEGORY_IDS, STATE_CODES, COUNTRY_CODES, KINDS, REPORT_REASONS } from "../public/js/pure.js";
 import { answerEmail, inviteEmail, reportEmail } from "./emails.mjs";
 import { boardPost } from "./board.mjs";
 import express from "express";
@@ -36,11 +36,13 @@ export function dayLimits(now = Date.now()) {
 }
 
 function ministryFields(b) {
-  const f = { name: str(b.name, 120), city: str(b.city, 80), state: str(b.state, 2).toUpperCase(), about: str(b.about, 1200), website: str(b.website, 200),
+  const f = { name: str(b.name, 120), city: str(b.city, 80), state: str(b.state, 2).toUpperCase(), country: (str(b.country, 2) || "US").toUpperCase(), about: str(b.about, 1200), website: str(b.website, 200),
     contact_name: str(b.contact_name, 120), contact_email: str(b.contact_email, 254).toLowerCase() };
   if (f.name.length < 2) throw bad("Type your ministry's name.", 422, "name_needed");
   if (f.city.length < 2) throw bad("Type your city.", 422, "city_needed");
-  if (!STATE_CODES.includes(f.state)) throw bad("Choose your state.", 422, "state_needed");
+  if (!COUNTRY_CODES.includes(f.country)) throw bad("Choose your country.", 422, "country_needed");
+  if (f.country !== "US") f.state = "";
+  else if (!STATE_CODES.includes(f.state)) throw bad("Choose your state.", 422, "state_needed");
   if (f.about.length < 10) throw bad("Say what your ministry does, in a few plain sentences.", 422, "about_needed");
   if (f.website && !/^https?:\/\/[^\s]+$/i.test(f.website)) throw bad("A website starts with http:// or https://. Or leave it empty.", 422, "website_not_readable");
   if (f.contact_name.length < 2) throw bad("Type the name of the person who answers.", 422, "contact_needed");
@@ -72,7 +74,7 @@ function pageFields(b) {
     draft: { tagline: str(b.tagline, 140), about: str(b.about, 3000), meets, email: str(b.email, 254).toLowerCase(), phone: str(b.phone, 30), website: str(b.website, 200), give_url: str(b.give_url, 300), verse, photos } };
   if (f.name.length < 2) throw bad("Type your ministry's name.", 422, "name_needed");
   if (f.city.length < 2) throw bad("Type your city.", 422, "city_needed");
-  if (!STATE_CODES.includes(f.state)) throw bad("Choose your state.", 422, "state_needed");
+  if (f.state && !STATE_CODES.includes(f.state)) throw bad("Choose your state.", 422, "state_needed");
   if (f.draft.tagline.length < 5) throw bad("Write one line that says what your ministry is.", 422, "tagline_needed");
   if (f.draft.about.length < 20) throw bad("Tell people about your ministry in your own words. At least 20 letters.", 422, "about_page_needed");
   if (f.draft.email && !EMAIL.test(f.draft.email)) throw bad("That email address does not look right. Or leave it empty.", 422, "email_not_readable");
@@ -113,12 +115,12 @@ export function mount(app, { wrap, publicBase, env = process.env, now = () => Da
   post("/api/ministry", async (req) => {
     const f = ministryFields(req.body || {});
     await slow(req, "ministry", 5);
-    const m = await one(req, "select lm.ministry_create($1,$2,$3,$4,$5,$6,$7) as id", [f.name, f.city, f.state, f.about, f.website || null, f.contact_name, f.contact_email]);
+    const m = await one(req, "select lm.ministry_create($1,$2,$3,$4,$5,$6,$7,$8) as id", [f.name, f.city, f.state, f.about, f.website || null, f.contact_name, f.contact_email, f.country]);
     return { ok: true, id: m.id, status: "waiting", words: "Thank you. A person at Linked Ministries will read your page." };
   }, 201);
   post("/api/ministry/update", async (req) => {
     const f = ministryFields(req.body || {});
-    const r = await one(req, "select lm.ministry_update($1,$2,$3,$4,$5,$6,$7) as status", [f.name, f.city, f.state, f.about, f.website || null, f.contact_name, f.contact_email]);
+    const r = await one(req, "select lm.ministry_update($1,$2,$3,$4,$5,$6,$7,$8) as status", [f.name, f.city, f.state, f.about, f.website || null, f.contact_name, f.contact_email, f.country]);
     return { ok: true, status: r.status };
   });
 
@@ -144,6 +146,7 @@ export function mount(app, { wrap, publicBase, env = process.env, now = () => Da
   get("/api/page", async (req) => ({ ...((await one(req, "select lm.page_mine() as p")).p || { exists: false }), verses: Object.entries(VERSES).map(([key, v]) => ({ key, ref: v.ref, text: v.text })) }));
   post("/api/page", async (req) => {
     const b = req.body || {}, f = pageFields(b);
+    if (!f.state) { const me = await whoami(req.user); f.state = me.ministry && (me.ministry.country || "US") === "US" ? me.ministry.state : ""; }
     await slow(req, "page", 60);
     const r = await one(req, "select lm.page_save($1,$2,$3,$4,$5::jsonb,$6) as r", [f.name, f.city, f.state, f.slug, JSON.stringify(f.draft), b.submit === true]);
     return { ok: true, ...r.r };
@@ -229,7 +232,7 @@ export function mount(app, { wrap, publicBase, env = process.env, now = () => Da
     if (!to) throw bad("That post is not open any more.", 409, "post_not_open");
     /* one post, and one ministry's contact, can only be written to so often in a day, however many ministries ask */
     if (await limited(`answer-post:${pid}`, 25, 24 * 3600 * 1000) || await limited(`answer-to:${p.to_ministry_id}`, 60, 24 * 3600 * 1000)) throw bad("This ministry has had a lot of answers today. Please try again tomorrow.", 429, "too_many");
-    const mail = answerEmail({ toContact: to.to_contact, fromMinistry: p.from_ministry, place: `${p.from_city}, ${p.from_state}`, kind: p.kind, title: p.title, words, fromName: p.from_name, fromEmail: p.from_email, phone, website: p.from_website });
+    const mail = answerEmail({ toContact: to.to_contact, fromMinistry: p.from_ministry, place: [p.from_city, p.from_state].filter(Boolean).join(", "), kind: p.kind, title: p.title, words, fromName: p.from_name, fromEmail: p.from_email, phone, website: p.from_website });
     const sent = await sendEmail({ to: to.to_email, subject: mail.subject, text: mail.text, replyTo: p.from_email });
     if (!sent.sent) throw bad("The email did not go out, so nothing was saved. Try again in a minute.", 502, "mail_failed");
     /* the provider took it: now, and only now, it is a row */

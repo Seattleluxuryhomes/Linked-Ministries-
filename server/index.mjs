@@ -11,12 +11,12 @@ import { mount, dayLimits } from "./api.mjs";
 import { emailConfigured } from "./mail.mjs";
 import { keyIsSet } from "./eden-engine.mjs";
 import { refusal } from "./words.mjs";
-import { boardQuery, boardPost } from "./board.mjs";
+import { boardQuery, boardPost, directory, asksOf } from "./board.mjs";
 import { publicPage, publicPageList, photo, myPage, givingPublic, givingDoor } from "./site.mjs";
-import { frontPage, boardPage, postPage, missingPostPage, shellPage, notFoundPage, termsPage, privacyPage, ministryPage, givingPage, givePage, takeDonationsPage } from "./pages.mjs";
+import { frontPage, boardPage, postPage, missingPostPage, shellPage, notFoundPage, termsPage, privacyPage, ministryPage, directoryPage, givingPage, givePage, takeDonationsPage } from "./pages.mjs";
 import { noticeEmail } from "../lib/email.mjs";
 import { zeffyGiveUrl } from "../public/js/pure.js";
-import { PRODUCT, CATEGORIES, STATES } from "../public/js/pure.js";
+import { PRODUCT, CATEGORIES, STATES, COUNTRY_CODES } from "../public/js/pure.js";
 
 const PUBLIC = path.join(ROOT, "public");
 const COOKIE = "lm_session";
@@ -165,16 +165,22 @@ export function buildApp({ env = process.env } = {}) {
   app.get("/m/:slug", wrap(async (req, res) => {
     const pg = await publicPage(req.params.slug);
     res.set("cache-control", "no-cache");
-    if (pg) return html(res, 200, ministryPage({ page: pg, ...(await where(req)), giving: { open: await givingDoor() } }));
+    if (pg) return html(res, 200, ministryPage({ page: pg, asks: await asksOf(pg.ministry_id), ...(await where(req)), giving: { open: await givingDoor() } }));
     const t = cookies(req)[COOKIE]; let u = null; if (t) { try { u = await sessionUser(t); } catch (e) { u = null; } }
     if (u) {
       const mine = await myPage(u.id);
       if (mine && mine.exists && mine.slug === String(req.params.slug).toLowerCase()) {
         res.set("cache-control", "private, no-store");
-        return html(res, 200, ministryPage({ page: { slug: mine.slug, name: mine.ministry.name, city: mine.ministry.city, state: mine.ministry.state, live: mine.draft, live_at: null }, ...(await where(req)), giving: { open: false }, preview: true }));
+        return html(res, 200, ministryPage({ page: { slug: mine.slug, name: mine.ministry.name, city: mine.ministry.city, state: mine.ministry.state, country: u && (await whoami(u)).ministry?.country, live: mine.draft, live_at: null }, ...(await where(req)), giving: { open: false }, preview: true }));
       }
     }
     html(res, 404, notFoundPage(await where(req)));
+  }));
+  /* every public ministry, by country, with its page, what it needs now and its donation link (only while the giving door is open) */
+  app.get("/ministries", wrap(async (req, res) => {
+    const c = String(req.query.country || "").toUpperCase().slice(0, 2);
+    res.set("cache-control", "no-cache");
+    html(res, 200, directoryPage({ ministries: await directory(), country: COUNTRY_CODES.includes(c) ? c : "", ...(await where(req)), giving: { open: await givingDoor() } }));
   }));
   /* a picture: public while the page a person on the team read names it; otherwise only to the ministry's own people, or a team member reading it */
   app.get("/photos/:id", wrap(async (req, res) => {
@@ -204,7 +210,7 @@ export function buildApp({ env = process.env } = {}) {
   app.get("/sitemap.xml", wrap(async (req, res) => {
     const b = publicBase(req), r = await boardQuery({}, { limit: 500 });
     const pg = await publicPageList();
-    const urls = [["/", null], ["/board", null], ["/giving", null], ["/take-donations", null], ["/terms", null], ["/privacy", null], ...pg.map((p) => ["/m/" + p.slug, p.live_at]), ...r.posts.map((p) => ["/board/" + p.id, p.posted_at])];
+    const urls = [["/", null], ["/ministries", null], ["/board", null], ["/giving", null], ["/take-donations", null], ["/terms", null], ["/privacy", null], ...pg.map((p) => ["/m/" + p.slug, p.live_at]), ...r.posts.map((p) => ["/board/" + p.id, p.posted_at])];
     res.type("application/xml").set("cache-control", "public, max-age=300").send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(([u, d]) => `<url><loc>${b}${u}</loc>${d ? `<lastmod>${d}</lastmod>` : ""}</url>`).join("\n")}\n</urlset>\n`);
   }));
   app.get("/favicon.ico", (req, res) => res.type("image/x-icon").set("cache-control", "public, max-age=86400").sendFile(path.join(PUBLIC, "favicon.ico")));

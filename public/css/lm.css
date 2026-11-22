@@ -455,3 +455,17 @@ section[aria-labelledby] h2{margin-bottom:.6em}
 .install-slot:empty{display:none}
 .eden-sub{margin:16px 0 4px;padding-top:12px;border-top:1px solid var(--line)}
 .eden-free .field{margin-bottom:8px}
+
+/* /ministries: every ministry, by country (founder, 2026-11-22) */
+.dgroup{margin:28px 0}
+.dgroup h2 .quiet{font-size:15px;font-weight:500;margin-left:8px}
+.dlist{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+.dcard{display:flex;flex-direction:column;padding:0;overflow:hidden}
+.dcard .dbody{padding:18px 18px 16px;display:flex;flex-direction:column;gap:8px;flex:1}
+.dcard h3{margin:0}
+.dcard .place{margin:0;color:var(--gold-ink);font-weight:600;font-size:15px}
+.dphoto{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;border-bottom:1px solid var(--line, #e7e0d4)}
+.dneeds ul,.needs{margin:6px 0 0;padding-left:20px}
+.dneeds li,.needs li{margin:4px 0}
+.needs li .quiet{display:block;font-size:14px}
+.dcard .row{margin-top:auto;flex-wrap:wrap;gap:8px}

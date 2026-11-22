@@ -4,7 +4,7 @@
    text is never markup. No inline script, no style attribute, nothing from anyone else's server (every face is in /fonts, every
    picture is drawn here as inline SVG). */
 import { verse } from "./scripture.mjs";
-import { PRODUCT, CATEGORIES, KIND, KINDS, STATES, categoryLabel, dateWords, CRISIS, NO_MONEY, STAY_SAFE, WORDS, money, methodLabel, receiptCode, GRANT_STATUS } from "../public/js/pure.js";
+import { PRODUCT, CATEGORIES, KIND, KINDS, STATES, COUNTRIES, countryName, placeWords, categoryLabel, dateWords, CRISIS, NO_MONEY, STAY_SAFE, WORDS, money, methodLabel, receiptCode, GRANT_STATUS } from "../public/js/pure.js";
 import { NONPROFIT_LINE, FLAGS, statusLine, deductibleAnswer, FOUNDER } from "./words.mjs";
 import { BOARD } from "./board-members.mjs";
 import { TERMS, PRIVACY, DRAFT_LINE, LAST_CHANGED } from "./legal.mjs";
@@ -72,7 +72,7 @@ ${image ? "" : `<meta property="og:image:width" content="1200">
 <a class="skip" href="#main">Skip to the page</a>
 <header class="top"><div class="wrap wide">
 <a class="lock" href="/" aria-label="${e(PRODUCT.name)}, home">${MARK}<span class="words"><span class="name">${e(PRODUCT.name)}</span><span class="small">${e(PRODUCT.domain)}</span></span></a>
-<nav class="nav" aria-label="Main"><a href="/board"${nav === "board" ? ' aria-current="page"' : ""}>Board</a><a href="/giving"${nav === "giving" ? ' aria-current="page"' : ""}>Giving</a><a href="/me"${nav === "me" ? ' aria-current="page"' : ""}>My ministry</a>${donate ? `<a class="btn small donate" href="/give"${nav === "give" ? ' aria-current="page"' : ""}>${e(DONATE)}</a>` : ""}<a class="btn small${donate ? " ghost" : ""}" href="/join"${nav === "join" ? ' aria-current="page"' : ""}>Join the network</a></nav>
+<nav class="nav" aria-label="Main"><a href="/ministries"${nav === "ministries" ? ' aria-current="page"' : ""}>Ministries</a><a href="/board"${nav === "board" ? ' aria-current="page"' : ""}>Board</a><a href="/giving"${nav === "giving" ? ' aria-current="page"' : ""}>Giving</a><a href="/me"${nav === "me" ? ' aria-current="page"' : ""}>My ministry</a>${donate ? `<a class="btn small donate" href="/give"${nav === "give" ? ' aria-current="page"' : ""}>${e(DONATE)}</a>` : ""}<a class="btn small${donate ? " ghost" : ""}" href="/join"${nav === "join" ? ' aria-current="page"' : ""}>Join the network</a></nav>
 </div></header>
 <main id="main" tabindex="-1">
 ${body}
@@ -84,7 +84,7 @@ ${verse("jas_1_27","small")}
 <p class="line">${e(NONPROFIT_LINE)}</p>
 <p>${e(CRISIS)}</p>
 </div>
-<p class="links"><a href="/board">Board</a> <a href="/giving">Giving</a> ${donate ? `<a href="/give">${e(DONATE)}</a> ` : ""}<a href="/join">Join the network</a> <a href="/terms">Terms</a> <a href="/privacy">Privacy</a> <a href="${e(PRODUCT.da.url)}" rel="noopener">${e(PRODUCT.da.name)}</a></p>
+<p class="links"><a href="/ministries">Ministries</a> <a href="/board">Board</a> <a href="/giving">Giving</a> ${donate ? `<a href="/give">${e(DONATE)}</a> ` : ""}<a href="/join">Join the network</a> <a href="/terms">Terms</a> <a href="/privacy">Privacy</a> <a href="${e(PRODUCT.da.url)}" rel="noopener">${e(PRODUCT.da.name)}</a></p>
 </div>
 </div></footer>
 <script type="module" src="/js/pwa.js"></script>
@@ -98,12 +98,12 @@ ${script ? `<script type="module" src="${e(script)}"></script>` : ""}
 /* ---- one post, as a card ---------------------------------------------------------------------------------------------------- */
 export function postCard(p, { button = true, link = true, heading = "h3" } = {}) {
   const k = KIND[p.kind] || KIND.ask;
-  const place = p.city !== p.ministry_city || p.state !== p.ministry_state ? `<p class="place"><span class="label">Where</span> ${e(p.city)}, ${e(p.state)}</p>` : "";
+  const place = p.city !== p.ministry_city || p.state !== p.ministry_state ? `<p class="place"><span class="label">Where</span> ${e(placeWords(p.city, p.state, p.ministry_country))}</p>` : "";
   const report = `<a class="reportlink" href="/board/${e(p.id)}#report" data-report="${e(p.id)}">${e(WORDS.report)}</a>`;
   return `<article class="post card lift" id="post-${e(p.id)}" data-post="${e(p.id)}" data-kind="${e(p.kind)}">
 <div class="meta"><span class="tag ${e(p.kind)}">${e(k.label)}</span><span class="cat">${e(categoryLabel(p.category))}</span></div>
 <${heading} class="post-title">${link ? `<a href="/board/${e(p.id)}">${e(p.title)}</a>` : e(p.title)}</${heading}>
-<p class="who">${p.page_slug ? `<a href="/m/${e(p.page_slug)}">${e(p.ministry)}</a>` : e(p.ministry)} <span class="dot" aria-hidden="true">·</span> ${e(p.ministry_city)}, ${e(p.ministry_state)}</p>
+<p class="who">${p.page_slug ? `<a href="/m/${e(p.page_slug)}">${e(p.ministry)}</a>` : e(p.ministry)} <span class="dot" aria-hidden="true">·</span> ${e(placeWords(p.ministry_city, p.ministry_state, p.ministry_country))}</p>
 ${place}
 <p class="words">${e(p.body)}</p>
 <p class="when">Posted ${e(dateWords(p.posted_at))} <span class="dot" aria-hidden="true">·</span> Open until ${e(dateWords(p.open_until))}</p>
@@ -144,7 +144,7 @@ export function frontPage({ latest, base = "", notice = "", giving = { open: fal
 <h1 class="rise">Ministries helping ministries.</h1>
 <p class="lead rise">Linked Ministries is a place where a ministry says what it needs, or what it can give. Another ministry answers. A person at Linked Ministries reads every post before it goes up.</p>
 ${verse("gal_6_2","rise")}
-<p class="cta rise">${giving && giving.open ? `<a class="btn donate" href="/give">${e(DONATE)}</a> ` : ""}<a class="btn${giving && giving.open ? " ghost" : ""}" href="/board">See the board</a> <a class="btn ghost" href="/join">Join the network</a></p>
+<p class="cta rise">${giving && giving.open ? `<a class="btn donate" href="/give">${e(DONATE)}</a> ` : ""}<a class="btn${giving && giving.open ? " ghost" : ""}" href="/ministries">See the ministries</a> <a class="btn ghost" href="/board">See the board</a> <a class="btn ghost" href="/join">Join the network</a></p>
 <ul class="chips rise" aria-label="What to know">
 <li>${ICO_FREE}<span>Free to use</span></li>
 <li>${ICO_PERSON}<span>Read by a person</span></li>
@@ -157,7 +157,12 @@ ${verse("gal_6_2","rise")}
 <p class="sample">Screenshots of this site, with a sample ministry.</p>
 </div>
 </div></section>
-<section class="band" id="who"><div class="wrap wide">
+<section class="band" id="world"><div class="wrap wide">
+<h2>Here and around the world</h2>
+<p class="lead">We link people, help and faith with those who need them most. Some are near us. Some are far away, in lands like Nigeria and Pakistan. There, Christian families are hurt for their faith.</p>
+<p class="row"><a class="btn" href="/ministries">See every ministry and what it needs</a>${giving && giving.open ? `<a class="btn donate" href="/give">${e(DONATE)}</a>` : ""}</p>
+</div></section>
+<section class="band alt" id="who"><div class="wrap wide">
 <h2>Who we are</h2>
 <div class="who-grid"><div><p class="lead">${e(statusLine(flags))}</p><p>It was started by ${e(FOUNDER)}.</p></div>
 <div class="card"><p class="label">Its three works</p><ul class="plain"><li><strong>The network.</strong> A free board where ministries ask and give.</li><li><strong>${e(PRODUCT.da.name)}.</strong> A free 24-week program for faith and recovery.</li><li><strong>Housing.</strong> Sober-living housing for people in recovery. It is planned, and it is not open yet.</li></ul></div></div>
@@ -217,14 +222,14 @@ function options(list, value, first) {
 }
 export function pageHref(f, page) {
   const u = new URLSearchParams();
-  for (const k of ["kind", "category", "state", "city", "q"]) if (f[k]) u.set(k, f[k]);
+  for (const k of ["kind", "category", "country", "state", "city", "q"]) if (f[k]) u.set(k, f[k]);
   if (page > 1) u.set("page", String(page));
   const s = u.toString();
   return "/board" + (s ? "?" + s : "");
 }
 export function boardPage({ result, base = "", notice = "" }) {
   const { posts, total, page, pages, filters: f } = result;
-  const filtered = !!(f.kind || f.category || f.state || f.city || f.q);
+  const filtered = !!(f.kind || f.category || f.country || f.state || f.city || f.q);
   const list = posts.length ? posts.map((p) => postCard(p)).join("\n") : emptyBoard({ filtered });
   const pager = pages > 1 ? `<nav class="pager" aria-label="More posts">${page > 1 ? `<a class="btn ghost" href="${e(pageHref(f, page - 1))}">Newer</a>` : ""}<span class="muted">Page ${page} of ${pages}</span>${page < pages ? `<a class="btn ghost" href="${e(pageHref(f, page + 1))}">Older</a>` : ""}</nav>` : "";
   const body = `<div class="wrap wide">
@@ -236,6 +241,7 @@ export function boardPage({ result, base = "", notice = "" }) {
 <div class="grid">
 <div class="field"><label for="f-kind">${e(WORDS.filterKind)}</label><select id="f-kind" name="kind">${options(KINDS.map((k) => [k, KIND[k].plural]), f.kind, "Asks and gives")}</select></div>
 <div class="field"><label for="f-cat">${e(WORDS.filterCategory)}</label><select id="f-cat" name="category">${options(CATEGORIES, f.category, "Anything")}</select></div>
+<div class="field"><label for="f-country">${e(WORDS.filterCountry)}</label><select id="f-country" name="country">${options(COUNTRIES, f.country, "Any country")}</select></div>
 <div class="field"><label for="f-state">${e(WORDS.filterState)}</label><select id="f-state" name="state">${options(STATES.map(([c, n]) => [c, `${n} (${c})`]), f.state, "Any state")}</select></div>
 <div class="field"><label for="f-city">${e(WORDS.filterCity)}</label><input id="f-city" name="city" type="text" maxlength="80" value="${e(f.city)}" autocomplete="off"></div>
 </div>
@@ -298,8 +304,9 @@ export const privacyPage = (o = {}) => legalPage(PRIVACY, { ...o, path: "/privac
 
 /* ---- a ministry's own page, at /m/<slug>: built whole on the server from the copy a steward read ------------------------------------------- */
 const telHref = (p) => "tel:" + String(p).replace(/[^0-9+]/g, "");
-export function ministryPage({ page, base = "", notice = "", giving = { open: false }, preview = false }) {
-  const c = page.live || {}, name = page.name, place = `${page.city}, ${page.state}`;
+export function ministryPage({ page, base = "", notice = "", giving = { open: false }, preview = false, asks = [] }) {
+  const c = page.live || {}, name = page.name, place = placeWords(page.city, page.state, page.country);
+  const needs = (asks || []).length ? `<section class="card mcard" aria-labelledby="m-needs"><h2 id="m-needs">What we need now</h2><ul class="needs">${asks.map((a) => `<li><a href="/board/${e(a.id)}">${e(a.title)}</a><span class="quiet">${e(categoryLabel(a.category))} · open until ${e(dateWords(a.open_until))}</span></li>`).join("")}</ul><p><a class="btn small" href="/board?q=${encodeURIComponent(name)}">Help with a need</a></p></section>` : "";
   const photos = (c.photos || []).map((ph) => `<figure class="mphoto"><img src="/photos/${e(ph.id)}" alt="${e(ph.alt || "A picture from " + name)}" width="800" height="600" loading="lazy" decoding="async"></figure>`).join("");
   const meets = (c.meets || []).length ? `<section class="card mcard" aria-labelledby="m-meet"><h2 id="m-meet">When and where we meet</h2><ul class="meets">${c.meets.map((r) => `<li><strong>${e(r.day)}</strong><span class="when-at">${e(r.time)}</span><span class="where-at">${e(r.place)}</span></li>`).join("")}</ul></section>` : "";
   const reach = [c.email ? `<dt>Email</dt><dd><a href="mailto:${e(c.email)}">${e(c.email)}</a></dd>` : "", c.phone ? `<dt>Phone</dt><dd><a href="${e(telHref(c.phone))}">${e(c.phone)}</a></dd>` : "", c.website ? `<dt>Website</dt><dd><a href="${e(c.website)}" rel="noopener nofollow">${e(c.website.replace(/^https?:\/\//, ""))}</a></dd>` : ""].join("");
@@ -318,7 +325,7 @@ ${preview ? read : ""}<p class="eyebrow">A ministry on Linked Ministries</p>
 </div></header>
 <div class="wrap wide mgrid">
 ${photos ? `<div class="mphotos${(c.photos || []).length === 1 ? " one" : ""}">${photos}</div>` : ""}
-<div class="mmain"><section class="card mcard" aria-labelledby="m-about"><h2 id="m-about">About us</h2><p class="words">${e(c.about)}</p></section></div>
+<div class="mmain"><section class="card mcard" aria-labelledby="m-about"><h2 id="m-about">About us</h2><p class="words">${e(c.about)}</p></section>${needs}</div>
 <div class="mside">${meets}${reachCard}${giveCard}</div>
 <div class="mfull">${c.verse ? verse(c.verse) : ""}</div>
 <div class="mfull">${preview ? "" : read}
@@ -329,6 +336,35 @@ ${photos ? `<div class="mphotos${(c.photos || []).length === 1 ? " one" : ""}">$
   const desc = `${c.tagline} ${place}.`.slice(0, 200);
   return layout({ title: name, body, base, path: "/m/" + page.slug, noindex: preview, ogType: "profile", donate: !!(giving && giving.open), ogTitle: `${name} · ${place}`, description: desc,
     image: first ? "/photos/" + first.id : "", imageAlt: first ? (first.alt || "A picture from " + name) : "", notice });
+}
+
+/* ---- every ministry, by country: its page, what it needs now, and how to give (founder, 2026-11-22) -------------------------------------- */
+export function directoryPage({ ministries = [], country = "", base = "", notice = "", giving = { open: false } }) {
+  const open = !!(giving && giving.open);
+  const here = [...new Set(ministries.map((m) => m.country))].sort((a, b) => countryName(a).localeCompare(countryName(b)));
+  const shown = country ? ministries.filter((m) => m.country === country) : ministries;
+  const groups = here.filter((c) => !country || c === country).map((c) => [c, shown.filter((m) => m.country === c)]).filter(([, l]) => l.length);
+  const card = (m) => {
+    const asks = m.asks || [], first = asks.slice(0, 3);
+    const needs = asks.length ? `<div class="dneeds"><p class="label">What they need now</p><ul>${first.map((a) => `<li><a href="/board/${e(a.id)}">${e(a.title)}</a></li>`).join("")}</ul>${asks.length > first.length ? `<p class="quiet">${asks.length - first.length} more on the board</p>` : ""}</div>` : `<p class="quiet">No open needs on the board right now.</p>`;
+    const give = open && m.give_url ? `<a class="btn donate small" href="${e(m.give_url)}" rel="noopener nofollow">${e(DONATE)}</a>` : "";
+    const page = m.slug ? `<a class="btn small${give ? " ghost" : ""}" href="/m/${e(m.slug)}">See their page</a>` : (m.website ? `<a class="btn ghost small" href="${e(m.website)}" rel="noopener nofollow">Visit their website</a>` : "");
+    const pic = m.photo ? `<img class="dphoto" src="/photos/${e(m.photo)}" alt="${e(m.photo_alt || "A picture from " + m.name)}" width="800" height="600" loading="lazy" decoding="async">` : "";
+    return `<li class="card lift dcard">${pic}<div class="dbody"><h3>${m.slug ? `<a href="/m/${e(m.slug)}">${e(m.name)}</a>` : e(m.name)}</h3><p class="place">${e(placeWords(m.city, m.state, m.country))}</p>${m.tagline ? `<p>${e(m.tagline)}</p>` : ""}${needs}<p class="row">${give}${page}${asks.length ? `<a class="btn ghost small" href="/board?q=${encodeURIComponent(m.name)}">Help with a need</a>` : ""}</p></div></li>`;
+  };
+  const list = groups.length ? groups.map(([c, l]) => `<section class="dgroup" aria-labelledby="c-${e(c)}"><h2 id="c-${e(c)}">${e(countryName(c))} <span class="quiet">${l.length === 1 ? "1 ministry" : `${l.length} ministries`}</span></h2><ul class="dlist">${l.map(card).join("")}</ul></section>`).join("\n")
+    : `<div class="empty card"><h2>${country ? `No ministries in ${e(countryName(country))} yet.` : "No ministries are listed yet."}</h2><p>A ministry shows here after a person at Linked Ministries reads it.</p><p class="row center"><a class="btn" href="/join">Join the network</a>${country ? `<a class="btn ghost" href="/ministries">See every country</a>` : ""}</p></div>`;
+  const body = `<div class="wrap wide">
+<div class="pagehead"><h1 class="rise">Ministries in the network</h1>
+<p class="lead rise">Ministries from many places. See each one's page, what it needs now, and how to help. A person at Linked Ministries read every ministry here.</p>
+${open ? `<p class="cta rise"><a class="btn donate" href="/give">${e(DONATE)} to Linked Ministries</a></p>` : ""}</div>
+${here.length > 1 ? `<form class="filters card" method="get" action="/ministries"><div class="grid"><div class="field"><label for="d-country">${e(WORDS.filterCountry)}</label><select id="d-country" name="country">${options(here.map((c) => [c, countryName(c)]), country, "Every country")}</select></div><div class="field"><label class="sr" for="d-go">Show</label><button id="d-go" class="btn" type="submit">Show</button></div></div></form>` : ""}
+${list}
+<div class="card cta-card"><div><h2>Is your ministry not here?</h2><p>Join the network. It is free. Then make your own page from one form, and post what you need.</p></div><p class="row"><a class="btn" href="/join">Join the network</a><a class="btn ghost" href="/take-donations">How your ministry can take donations</a></p></div>
+<p class="quiet">Linked Ministries does not check or vouch for any ministry. A donation made on a ministry's own page goes to that ministry. Linked Ministries does not collect or see it.</p>
+</div>`;
+  return layout({ title: "Ministries", body, nav: "ministries", base, path: "/ministries" + (country ? "?country=" + country : ""), notice, donate: open,
+    description: "Ministries in the Linked Ministries network, by country: their pages, what they need now, and how to give." });
 }
 
 /* ---- giving: where the money went, and the door ---------------------------------------------------------------------------------------------------------- */

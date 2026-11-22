@@ -85,7 +85,7 @@ export function pageForm(me, pg, { onDone, onCancel }) {
       field(WORDS.fieldName, text("name", m.name, { max: 120, required: true, auto: "organization" })),
       h("div", { class: "field" }),
       field(WORDS.fieldCity, text("city", m.city, { max: 80, required: true, auto: "address-level2" })),
-      field(WORDS.fieldState, stateSelect(m.state)),
+      (me.ministry && me.ministry.country && me.ministry.country !== "US") ? h("input", { type: "hidden", name: "state", value: "" }) : field(WORDS.fieldState, stateSelect(m.state)),
       field(WORDS.pageTagline, text("tagline", d.tagline, { max: 140, required: true }), WORDS.pageTaglineHelp, "full"),
       field(WORDS.pageAbout, area("about", d.about, 3000), WORDS.pageAboutHelp, "full")),
     h("h4", {}, WORDS.pageMeets), h("p", { class: "help" }, WORDS.pageMeetsHelp), meetBox, h("p", {}, addRow),

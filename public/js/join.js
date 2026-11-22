@@ -1,7 +1,7 @@
 /* join.js — /join: sign in by an email code, then (if this person has no ministry yet) join the one that asked them, or add their
    own. Nothing says "sent" unless the server said the mail provider took it. */
 import { h, get, post, msg, field, text, busy, values, ministryForm, safeNext, agreeLine } from "/js/common.js";
-import { WORDS } from "/js/pure.js";
+import { WORDS, placeWords } from "/js/pure.js";
 import { installCard } from "/js/install.js";
 
 const app = document.getElementById("app");
@@ -90,7 +90,7 @@ function inviteCard(inv, me, done) {
   const name = text("name", me.user.name && me.user.name !== me.user.email ? me.user.name : "", { max: 120, required: true, auto: "name" });
   const out = h("div", { class: "out" });
   const form = h("form", { class: "card formcard", novalidate: true },
-    h("h3", {}, WORDS.invitedTitle), h("p", {}, `${inv.ministry} (${inv.city}, ${inv.state})`),
+    h("h3", {}, WORDS.invitedTitle), h("p", {}, `${inv.ministry} (${placeWords(inv.city, inv.state, inv.country)})`),
     field(WORDS.yourName, name), out,
     h("p", { class: "row" }, h("button", { class: "btn", type: "submit" }, WORDS.invitedJoin)));
   form.addEventListener("submit", async (ev) => {

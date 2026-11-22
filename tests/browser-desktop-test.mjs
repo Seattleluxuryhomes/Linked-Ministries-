@@ -64,7 +64,7 @@ for (const [name, url, who, wait, act] of PAGES) {
   ok(cols.length > 0 && Math.max(...cols) <= 1120 && (await v.page.evaluate(() => document.querySelector("main .wrap, main article .wrap").getBoundingClientRect().left)) >= 150, `${name}: content sits in a centred column no wider than 1120 pixels`, cols);
   /* the top of the page */
   const lock = await box(v.page, ".top .lock"), links = await v.page.evaluate(() => [...document.querySelectorAll(".top .nav a:not(.btn)")].map((a) => { const r = a.getBoundingClientRect(); return { x: r.x, r: r.right }; })), join = await box(v.page, ".top .nav a.btn"), wrap = await box(v.page, ".top .wrap");
-  ok(links.length === 3 && links[0].x - lock.r <= 60 && links[0].x > lock.r, `${name}: the ways around (Board, Giving, My ministry) sit beside the name, not across the page from it`, { gap: links[0].x - lock.r });
+  ok(links.length === 4 && links[0].x - lock.r <= 60 && links[0].x > lock.r, `${name}: the ways around (Ministries, Board, Giving, My ministry) sit beside the name, not across the page from it`, { gap: links[0].x - lock.r });
   ok(Math.abs(join.r - (wrap.r - 16)) <= 2 && join.x > links[2].r + 100, `${name}: the Join button sits at the right edge of the column, apart from the links and not floating`, { joinRight: join.r, edge: wrap.r - 16 });
   ok(Math.abs(lock.h - join.h) < 30 && Math.abs((lock.y + lock.h / 2) - (join.y + join.h / 2)) <= 3, `${name}: the name and the Join button are centred on one line`);
   /* the first thing on the page starts a steady distance below the top line */

@@ -1,7 +1,7 @@
 /* common.js — what the signed-in pages share: building the page without ever writing a person's words as markup (text goes in
    as text, never as HTML), calling the API, and the few form pieces. No inline script, no style attribute, nothing from
    anyone else's server (shaped on Behavioral Health's public/js/common.js; origin in commons.json). */
-import { WORDS, STATES, CATEGORIES, KIND } from "/js/pure.js";
+import { WORDS, STATES, COUNTRIES, CATEGORIES, KIND } from "/js/pure.js";
 
 /** h("div", { class: "card", on: { click } }, "text", child) — text is always text */
 export function h(tag, props, ...kids) {
@@ -56,6 +56,14 @@ export function select(name, options, value, first) {
   return s;
 }
 export const stateSelect = (value) => select("state", STATES.map(([c, n]) => [c, `${n} (${c})`]), value, "Choose a state");
+export const countrySelect = (value) => select("country", COUNTRIES, value || "US", "Choose a country");
+/** the country list, and the state list that shows only for the United States (a ministry anywhere else gives its city) */
+export function placeFields(v = {}) {
+  const country = countrySelect(v.country), stateField = field(WORDS.fieldState, stateSelect(v.state));
+  const sync = () => { stateField.hidden = country.value !== "US"; };
+  country.addEventListener("change", sync); sync();
+  return [field(WORDS.fieldCountry, country), stateField];
+}
 export const categorySelect = (value) => select("category", CATEGORIES, value, "Choose one");
 
 /** the values of a form by field name */
@@ -75,7 +83,7 @@ export function ministryForm({ v = {}, email, submit, onSubmit, note, agree = fa
       field(WORDS.fieldName, text("name", v.name, { max: 120, required: true, auto: "organization" })),
       field(WORDS.fieldContact, text("contact_name", v.contact_name, { max: 120, required: true, auto: "name" })),
       field(WORDS.fieldCity, text("city", v.city, { max: 80, required: true, auto: "address-level2" })),
-      field(WORDS.fieldState, stateSelect(v.state)),
+      ...placeFields(v),
       field(WORDS.fieldAbout, area("about", v.about, 1200), WORDS.fieldAboutHelp, "full"),
       field(WORDS.fieldWebsite, text("website", v.website, { type: "url", max: 200, mode: "url", placeholder: "https://" })),
       field(WORDS.fieldContactEmail, text("contact_email", v.contact_email || email, { type: "email", max: 254, required: true, auto: "email" }), WORDS.fieldContactEmailHelp)),
